@@ -1,0 +1,3 @@
+# DISCLAIMER
+
+**THE CONTENS OF THIS DIRECTORY ARE EXTRACTED FROM http://www.facom.ufu.br/~elaine/MINAS**
