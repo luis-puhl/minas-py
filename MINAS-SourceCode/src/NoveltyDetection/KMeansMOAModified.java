@@ -70,8 +70,10 @@ public class KMeansMOAModified {
         return new Clustering(centers);
     }
 
-    public void getRadiusMeanDistance(ArrayList<ArrayList<Cluster>> clustering, Clustering centers,
-            ArrayList<Double> maxDistance, ArrayList<Double> meanDistance) {
+    public void getRadiusMeanDistance(
+        ArrayList<ArrayList<Cluster>> clustering, Clustering centers,
+        ArrayList<Double> maxDistance, ArrayList<Double> meanDistance
+    ) {
         int k = centers.size();
         double[] centro;
         double maiorDist;

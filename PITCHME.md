@@ -138,7 +138,13 @@ Received: 10 November 2014 / Accepted: 9 August 2015 / Published online: 22 Augu
 
 ### Overview (i)
 
-![overview_ND_procedure.jpg](overview_ND_procedure.j./ref/pg)
+![overview-2015.png](./ref/overview-2015.png)
+
+---
+
+### Overview (ii)
+
+![overview_ND_procedure.jpg](./ref/overview_ND_procedure.jpg)
 
 ---
 
@@ -219,6 +225,12 @@ end for
 
 ---
 
+### Online Phase (iii)
+
+![alg-online-2015.png](./ref/alg-online-2015.png)
+
+---
+
 ### Novelty Detection (i)
 
 ```
@@ -293,3 +305,33 @@ for all exemplo in FCD do
   end if
 end for
 ```
+
+---
+
+# Porpostas de Implementação
+
+## Algoritmo mínimo
+  - Entradas constantes em source-code
+  - Próximo do pseudo-code
+
+---
+
+## Usar poligonos (retângulos) _versus_ esferas
+Atualmente representa um _micro-cluster_ ($M$) pela esfera $(\overrightarrow{centroid}, radius)$ onde _radius = standard deviation of the distance between the examples and the centroid_. Um exemplo $\vec{x} \in M \iff dist(\vec{x}, M_{centroid}) < f*M_{raidus}$
+
+Poderia representar um _micro-cluster_ ($M$) pelo retângulo $M = (\vec{c}, \vec{r})$ onde $\vec{c}_i$ é a média e $\vec{r}_i$ é o desvio padrão para o componente $i$ dos exeplos desse _micro-cluster_. Então a pertinência de um exemlo não rotulado à um _micro-cluser_ seria:
+$\large\vec{x} \in M \iff \lVert(\vec{x}_i - M_{\vec{c}_i})\rVert < \lVert f*M_{\vec{r}_i} \rVert$
+
+Pode-se deduzir que esse processo pode ser mais preciso em data sets onde exitam, por exemplo, classes retangulares prómixas e paralelas em um dos atributos onde uma esfera cobriria ambas classes.
+
+Além disso, como esses valores já são calculados indiretamente, somente o custo de armazenamento iria aumentar (pouquissimo)
+
+---
+
+## Paralelismo (i)
+
+<!-- Modelo $M$ contém $k$ clusters, cada cluster é formado por $(\vec{c}, r)$ e, para que um exemplo $\vec{x}$ perteça ao cluster -->
+
+$$\large \lfloor_{0 \le i\le k} \sum_{0 \le j \le n} (M_{i, c_{j}} - x_{j})^2 \rfloor < M_{i, r}$$
+
+Pode-se distribuir na função mínimo, distribuindo clusters, ou na fução soma, distribuindo atributos.
