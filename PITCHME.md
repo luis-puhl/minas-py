@@ -269,6 +269,43 @@ return Model
 
 ---
 
+# Intepretação
+
+Given an model $M$, an example $\vec{p}$; Clusters $C_1$ and $C_2$. Composed as 
+$M = \begin{cases}
+  C:& \text{cluster set}\\
+  f^t:& \text{radius factor}\\
+  N^t:& \text{representation Thr.}\\
+  T^t:& \text{Novelty Threshold}\\
+\end{cases}
+$ and $C_i = \begin{cases}
+  \vec{c}:& \text{center}\\
+  r:& \text{radius }\sigma\\
+  l:& \text{label}\\
+  n:& \text{counter}\\
+\end{cases}
+$.
+
+$$\begin{aligned}
+\text{Classify: }& \vec{p} \in C_1 \iff d(C_{1.\vec{c}}, \space \vec{p}) \lt f^t \sdot C_{1 .r} ;\\
+
+\text{Validity: } & C_1 \text{ is valid } \iff
+ \underbrace{
+  C_{1.n} \gt N^t
+}_{\text{ is representative }}
+\land
+ \underbrace{
+  \nexists C_2 / d(C_{1.\vec{c}}, \space C_{2.\vec{c}}) \le C_1{ .r}
+}_{\text{ is cohesive }}
+  ;\\
+
+\text{Extention: }& C_{1.l} = C_{2.l} \iff d(C_{1.\vec{c}}, \space C_{2.\vec{c}}) \le T^t ;\\
+
+\text{Novelty: }&  C_{1.l} \text{ is new label} \iff \nexists C_2 / d(C_{1.\vec{c}}, \space C_{2.\vec{c}}) \gt T^t .\\
+\end{aligned}$$
+
+---
+
 ## Novelty detection in data streams (2015)
 
 ### Elaine R. Faria, Isabel J. C. R. Gonçalves, André C. P. L. F. de Carvalho, João Gama
