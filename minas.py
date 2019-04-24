@@ -17,7 +17,7 @@ class Model:
   #ExClu
   representationThr = 3
   def representationThrFn(self):
-    return len self.unknownBuffer / self.k
+    return len(self.unknownBuffer) / self.k
   # Window size to forget outdated data
   forgetThr = 1000
   def forgetThrFn(self):
@@ -57,9 +57,10 @@ class Minas(Model):
   return Model
   """
   def offline(self, training_set=[]):
+    assert len(training_set) > 0
     # training_set = Example[]
     model = Model()
-    training_set.sort('label')
+    training_set.sort(key=lambda x: x.label)
     current_label = training_set[0].label
     current_examples = []
     for example in training_set:
@@ -156,9 +157,10 @@ if __name__ == "__main__":
           example.label = 'Class #' + str(labelIndex)
           example.item = [np.random.normal(loc=mu, scale=sigma) for i in range(attributes)]
           examples.append(example)
+  np.random.shuffle(examples)
   #
   minas = Minas()
-  minas.offline()
+  minas.offline(examples[:int(len(examples) * .1)])
 
 def plotExamples2D(examples):
   import matplotlib.pyplot as plt
