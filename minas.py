@@ -123,6 +123,7 @@ class Model:
   unk: List[Example] = []
   sleepClusters: List[Cluster] = []
   noveltyIndex = 0
+  counter = 0
   # ------------------------------------------------------------------------------------------------
   def __str__(self):
     return 'Model(k={k}, clusters={ncls})({cls}\n)'.format(
@@ -188,9 +189,9 @@ class Model:
   # 
   def classify(self, example: Example):
     cluster, dist = self.closestClusterExample(example)
-    return dist <= (self.radiusFactor * cluster.radius())
+    return (dist <= (self.radiusFactor * cluster.radius()), cluster, dist)
 
-class Minas(Model):
+class Minas:
   model = None
   def __init__(self, model=Model()):
     self.model = model
@@ -223,7 +224,6 @@ class Minas(Model):
         cluster.label = label
       self.model.clusters.extend(clusters)
     self.model.ndProcedureThr = len(training_set)
-    print(self.model)
     return self
   
   # should be async
@@ -260,41 +260,54 @@ class Minas(Model):
       end for
     """
     # example = Example(item=await stream.read())
+    ranNoveltyDetection = False
+    globalCount = 0
+    discarted = 0
+    activeClusters = 0
     for ex in stream:
+      globalCount += 1
       example = Example(item=ex)
       self.model.lastExapleTMS = example.timestamp
+      if activeClusters != len(self.model.clusters):
+        print('Active Clusters', len(self.model.clusters))
+      activeClusters = len(self.model.clusters)
       cluster, dist = self.model.closestClusterExample(example)
       if dist <= (self.model.radiusFactor * cluster.radius()):
         example.label = cluster.label
         cluster.addExample(example)
-        print('known', cluster.label, 'dist:', dist)
+        self.model.counter += 1
       else:
         # None is unknown class
-        self.unk.append(example)
-        if len(self.unk) > self.model.ndProcedureThr:
-          self.model = self.noveltyDetection(self.model, self.unk, self.sleepClusters)
-        print('unknown', cluster.label, 'dist:', dist)
+        self.model.unk.append(example)
+        if len(self.model.unk) > self.model.ndProcedureThr:
+          ranNoveltyDetection = True
+          self.model = self.noveltyDetection(self.model)
       #
-      if (example.timestamp - self.model.lastCleaningCycle) > self.model.windowTimeSize:
-        print('[Cleaning Cycle]')
+      if (example.timestamp - self.model.lastCleaningCycle) > self.model.windowTimeSize or ranNoveltyDetection:
+        print('known={c}\tunkown={u}\ttotal={t}\tdiff={d}\tdiscarted={dis}'.format(
+          c=self.model.counter, u=len(self.model.unk), t=globalCount, d=globalCount-self.model.counter, dis=discarted
+        ))
+        ranNoveltyDetection = False
         # Model ← move-sleepMem(Model, SleepMem, CurrentTime, windowSize)
         newSleepClusters = [cl for cl in self.model.clusters if cl.lastExapleTMS < self.model.lastCleaningCycle]
-        self.sleepClusters.extend(newSleepClusters)
+        print('Sleep', len(newSleepClusters))
+        self.model.sleepClusters.extend(newSleepClusters)
         self.model.clusters = [cl for cl in self.model.clusters if cl.lastExapleTMS >= self.model.lastCleaningCycle]
         self.model.lastCleaningCycle = example.timestamp
         # ShortMem ← remove-oldExamples(ShortMem, windowsize)
-        ogLen = len(self.unk)
-        self.unk = []
-        for ex in self.unk:
-          if ex.timestamp >= self.model.lastCleaningCycle and ex.classificationTries < 3:
+        ogLen = len(self.model.unk)
+        self.model.unk = []
+        for ex in self.model.unk:
+          if ex.timestamp >= self.model.lastCleaningCycle:
             ex.classificationTries += 1
-            self.unk.append(ex)
-        print('Discarting {n} examples'.format(n=ogLen - len(self.unk)))
+            self.model.unk.append(ex)
+        discarted += ogLen - len(self.model.unk)
+        print('[Cleaning Cycle]\tDiscarting {n} examples'.format(n=ogLen - len(self.model.unk)))
     #
     return self
 
   #
-  def noveltyDetection(self, model: Model, unk: List[Example], sleepClusters: List[Cluster]) -> Model:
+  def noveltyDetection(self, model: Model) -> Model:
     """noveltyDetection
       Require:
         Model: current decision model,
@@ -322,6 +335,8 @@ class Minas(Model):
       end for
       return Model
     """
+    unk: List[Example] = model.unk
+    sleepClusters: List[Cluster] = model.sleepClusters
     print('[noveltyDetection]\t', 'unk:', len(unk), 'sleepClusters:', len(sleepClusters))
     def ValidationCriterion(cluster):
       isRepresentative = cluster.counter > model.representationThr
@@ -333,11 +348,13 @@ class Minas(Model):
     sleepModel.clusters = sleepClusters
     #
     newModel = deepcopy(model)
-    for cluster in model.clustering(unk):
-      T = model.noveltyThr
-      # T = model.noveltyThrFn(cluster)
+    newModel.clusters = deepcopy(model.clusters)
+    newModel.sleepClusters = deepcopy(model.sleepClusters)
+    for cluster in newModel.clustering(unk):
+      T = newModel.noveltyThr
+      # T = newModel.noveltyThrFn(cluster)
       if ValidationCriterion(cluster):
-        near, dist = model.closestClusterCluster(cluster)
+        near, dist = newModel.closestClusterCluster(cluster)
         if dist <= T:
           cluster.label = near.label
         else:
@@ -345,11 +362,14 @@ class Minas(Model):
           if dist <= T:
             cluster.label = near.label
             # wakeup
+            print('wakeup')
             newModel.clusters.append(near)
             newModel.sleepClusters.remove(near)
           else:
             newModel.noveltyIndex += 1
             cluster.label = 'Novelty ' + str(newModel.noveltyIndex)
+            print(cluster.label)
+            newModel.clusters.append(cluster)
     return newModel
 
 if __name__ == "__main__":

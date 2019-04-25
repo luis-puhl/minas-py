@@ -1,6 +1,7 @@
 import os
 import asyncio
 import signal
+from copy import deepcopy
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -32,12 +33,42 @@ def selfTest(Minas):
   plotExamples2D('1-training_set', training_set)
   basicModel = basicModel.offline(training_set)
   #
-  plotExamples2D('2-offline_clusters', [], basicModel.clusters)
-  plotExamples2D('3-offline_training', training_set, basicModel.clusters)
-  plotExamples2D('3-offline_all_data', examples, basicModel.clusters)
+  print(basicModel.model)
+  plotExamples2D('2-offline_clusters', [], basicModel.model.clusters)
+  plotExamples2D('3-offline_training', training_set, basicModel.model.clusters)
+  plotExamples2D('3-offline_all_data', examples, basicModel.model.clusters)
   # ------------------------------------------------------------------------------------------------
-  baseStream = (ex.item for ex in examples[int(len(examples) * .1):])
-  basicModel.online(baseStream)
+  testSet = examples[int(len(examples) * .1):]
+  np.random.shuffle(testSet)
+  baseStream = (ex.item for ex in testSet)
+  resultModel = basicModel.online(baseStream)
+  results = []
+  positiveCount = 0
+  negativeCount = 0
+  unknownCount = 0
+  for ex in examples:
+    ex = deepcopy(ex)
+    hasLabel, cluster, d = resultModel.model.classify(ex)
+    if hasLabel:
+      if cluster.label == ex.label:
+        ex.label = 'Positive'
+        positiveCount += 1
+      else:
+        ex.label = 'Negative'
+        negativeCount += 1
+    else:
+      ex.label = 'Unknown'
+      unknownCount += 1
+    results.append(ex)
+  print(resultModel.model)
+  print(
+    'positiveCount', positiveCount,
+    'negativeCount', negativeCount,
+    'unknownCount', unknownCount,
+  )
+  plotExamples2D('5-online_clusters', [], resultModel.model.clusters)
+  plotExamples2D('5-online_resutls', results, resultModel.model.clusters)
+
   # 
   # def signal_handler(signal, frame):
   #   loop.stop()
