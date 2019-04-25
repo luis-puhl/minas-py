@@ -1,12 +1,84 @@
+import itertools as intertools
+
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import scipy as scipy
 import sklearn as sk
 from sklearn.cluster import KMeans
 
+import self_test as self_test
+
 class Example:
-  label = None
-  item = []
+  def __init__(self, label=None, item=[], index=0):
+    self.label = label
+    self.item = item
+    self.index = index
+
+"""
+  From \cite{Faria2015}:
+  > Each micro-cluster is composed of four components:
+  >   N number of examples,
+  >   LS linear sum of the examples,
+  >   SS squared sum of the elements and[,]
+  >   T timestamp of the arrival of the last example classified in this micro-cluster.
+  > Using these measures it is possible to calculate the centroid and radio of a micro-cluster (Zhang et al. 1996).
+  > [...]
+  > each micro-cluster is represented by four components (N, LS, SS and T).
+  > Each micro-cluster is labeled to indicate to which class it belongs.
+  > Thus, the decision boundary of each class is defined by the union of its k micro-cluster.
+  > The initial decision model is composed of the union of the k micro-clusters obtained for each class.
+
+  From MINAS-SourceCode, `Cluster.java` is a bag:
+  ```java
+  public class Cluster {
+    private double meanDistance;
+    private double[] center;
+    private double size;
+    private double radius;
+    private String lblClasse;
+    private String category;
+    private int time;
+  ```
+  Also, from `KMeansMOAModified.java`:
+  ```java
+  // centers = cm.kMeans2(initialCenters, elemList, soma, clusterSize, elemCluster, radius, meanDistance);
+  public Clustering kMeans2(
+    Cluster[] centers, List<? extends Cluster> data, double soma[],
+    ArrayList<Integer> clusterSize, int elemCluster[], ArrayList<Double> maxDistance,
+    ArrayList<Double> meanDistance) {
+  ```
+  So, radius is renamed as maxDistance.
+"""
+class Cluster:
+  # ------------------------------------------------------------------------------------------------
+  # N number of examples,
+  counter = 0
+  # statistic summary
+  sumDistance = 0.0
+  meanDistance = 0.0
+  maxDistance = 0.0
+  minDistance = 0.0
+  # centroid
+  center = np.array([])
+  label = ''
+  def __str__(self):
+    return '[{label}]\tn={count}\tc={c},\tr={r:2.2f}'.format(
+      label=self.label,
+      count=self.counter,
+      c=', '.join(['{:2.2f}'.format(c) for c in self.center]),
+      r=self.maxDistance
+    )
+  def dist(self, example):
+    return scipy.spatial.distance.euclidean(self.center, example.item)
+  def addExample(self, example):
+    self.counter += 1
+    distance = self.dist(example)
+    self.sumDistance += distance
+    self.meanDistance = self.sumDistance / self.counter
+    if distance > self.maxDistance:
+      self.maxDistance = distance
+    if distance < self.minDistance:
+      self.maxDistance = distance
 
 class Model:
   k = 100
@@ -14,7 +86,8 @@ class Model:
   radiusFactor = 1.1
   noveltyThr = 100
   lastExapleTMS = 0
-  # -------- actions Thresholds ------------
+  # ------------------------------------------------------------------------------------------------
+  # actions Thresholds
   #ExND
   ndProcedureThr = 2000
   def ndProcedureThrFn(self):
@@ -27,18 +100,45 @@ class Model:
   forgetThr = 1000
   def forgetThrFn(self):
     return 2 * self.ndProcedureThr
+  # ------------------------------------------------------------------------------------------------
+  def __str__(self):
+    return 'Model(k={k}, clusters={ncls})({cls}\n)'.format(
+      k=self.k,
+      ncls=len(self.clusters),
+      cls=''.join(['\n\t' + str(c) for c in self.clusters])
+    )
+  """
+    After the execution of the clustering algorithm, each micro-cluster is represented
+    by four components (N, LS, SS and T).
+  """
+  def clustering(self, examples):
+    assert len(examples) > 0
+    
+    n_samples = len(examples)
+    n_clusters = self.k
+    if n_samples < n_clusters:
+      n_clusters = int(n_samples / 10)
+    assert n_samples >= n_clusters
+    df = pd.DataFrame(data=[ex.item for ex in examples])
+    kmeans = KMeans(n_clusters=n_clusters).fit(df)
+    centroids = kmeans.cluster_centers_
 
-class Cluster:
-  center = []
-  radius = 0
-  label = ''
-  counter = 0
-  # statistic summary
-  n = 0
-  mean = []
-  stdDev = 0
-  max = []
-  min = []
+    clusters = []
+    for centroid in kmeans.cluster_centers_:
+      c = Cluster()
+      c.center = centroid
+      clusters.append(c)
+    for ex in examples:
+      dist = float("inf")
+      nearCl = None
+      for cl in clusters:
+        d = cl.dist(ex)
+        if d < dist:
+          dist = d
+          nearCl = cl
+      if nearCl:
+        nearCl.addExample(ex)
+    return clusters
 
 class Minas(Model):
   model = None
@@ -64,19 +164,15 @@ class Minas(Model):
   def offline(self, training_set=[]):
     assert len(training_set) > 0
     # training_set = Example[]
-    model = Model()
-    training_set.sort(key=lambda x: x.label)
-    current_label = training_set[0].label
-    current_examples = []
-    for example in training_set:
-      if current_label != example.label:
-        clusters = self.clustering(current_examples)
-        for cluster in clusters:
-          cluster.label = current_label
-        self.clusters.extend(clusters)
-        current_examples = []
-        current_label = example.label
-      current_examples.append(example)
+    keyfunc = lambda x: x.label
+    training_set = sorted(training_set, key=keyfunc)
+    for label, examples in intertools.groupby(training_set, keyfunc):
+      clusters = self.model.clustering(list(examples))
+      # add labels
+      for cluster in clusters:
+        cluster.label = label
+      self.model.clusters.extend(clusters)
+    print(self.model)
     return self
   
   """
@@ -143,71 +239,5 @@ class Minas(Model):
   def noveltyDetection(self, parameter_list):
     pass
 
-  def clustering(self, examples):
-    assert len(examples) > 0
-    #
-    # Data = {
-    #   'x': [25,34,22,27,33,33,31,22,35,34,67,54,57,43,50,57,59,52,65,47,49,48,35,33,44,45,38,43,51,46],
-    #   'y': [79,51,53,78,59,74,73,57,69,75,51,32,40,47,53,36,35,58,59,50,25,20,14,12,20,5,29,27,8,7]
-    # }
-    df = pd.DataFrame(data=[ex.item for ex in examples])
-    
-    n_samples = len(examples)
-    n_clusters = self.k
-    if n_samples < n_clusters:
-      n_clusters = int(n_samples / 10)
-    print(n_samples, n_clusters)
-    assert n_samples >= n_clusters
-    kmeans = KMeans(n_clusters=n_clusters).fit(df)
-    centroids = kmeans.cluster_centers_
-    print(centroids, kmeans.inertia_, kmeans.labels_)
-
-    plt.scatter(df[0], df[1], c= kmeans.labels_.astype(float), s=50, alpha=0.5)
-    plt.scatter(centroids[:, 0], centroids[:, 1], c='red', s=50)
-    plt.show()
-
-    clusters = []
-    for centroid in kmeans.cluster_centers_:
-      c = Cluster()
-      c.center = centroid
-      clusters.append(c)
-
-    return clusters
-
-def selfTest():
-  print('Running self tests')
-  # setup fake examples
-  attributes = np.random.randint(2, 40)
-  examples = []
-  for labelIndex in range(np.random.randint(2, 5)):
-      mu = np.random.random() * 10
-      sigma = np.random.random() * 5
-      for exampleIndex in range(np.random.randint(200, 1000)):
-          example = Example()
-          example.index = labelIndex
-          example.label = 'Class #' + str(labelIndex)
-          example.item = [np.random.normal(loc=mu, scale=sigma) for i in range(attributes)]
-          examples.append(example)
-  np.random.shuffle(examples)
-  plotExamples2D(examples)
-  #
-  minas = Minas()
-  minas.offline(examples[:int(len(examples) * .1)])
-
-def plotExamples2D(examples):
-  fig, ax = plt.subplots()
-  for i in set([ex.index for ex in examples]):
-      exs = [ex for ex in examples if ex.index == i]
-      x=np.array([ex.item[0] for ex in exs])
-      y=np.array([ex.item[1] for ex in exs])
-      label=[ex.label for ex in examples if ex.index == i][0]
-      print(i, len(exs), len(x), len(y), label)
-      ax.scatter(x=x, y=y, label=label)
-
-  ax.legend()
-  ax.grid(True)
-
-  plt.show()
-
 if __name__ == "__main__":
-  selfTest()
+  self_test.selfTest()

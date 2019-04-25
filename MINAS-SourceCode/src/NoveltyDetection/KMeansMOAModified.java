@@ -12,6 +12,7 @@ import moa.cluster.SphereCluster;
 public class KMeansMOAModified {
     public static int bestK;
 
+    // centers = cm.kMeans2(initialCenters, elemList, soma, clusterSize, elemCluster, radius, meanDistance);
     public Clustering kMeans2(Cluster[] centers, List<? extends Cluster> data, double soma[],
             ArrayList<Integer> clusterSize, int elemCluster[], ArrayList<Double> maxDistance,
             ArrayList<Double> meanDistance) {

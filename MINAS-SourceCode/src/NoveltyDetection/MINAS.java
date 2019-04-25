@@ -33,9 +33,7 @@ public class MINAS {
     private boolean flagMicroClusters;
     private int lastCheck = 0;
 
-    /*******************************************************************************
-     ******************** Methods: Set *********************************************
-     ********************************************************************************/
+    /********************* Methods: Set **********************************************/
     public void setPar_minexcl(int minExClus) {
         this.minExCluster = minExClus;
     }
@@ -47,9 +45,7 @@ public class MINAS {
         this.numMicro = par_nromicro;
     }
 
-    /*******************************************************************************
-     ******************** Constructor *********************************************
-     ********************************************************************************/
+    /********************* Constructor ***********************************************/
     public MINAS(String fileOff, String fileOnl, String outDirec, String algOff, String algOnl, double threshold,
             int evaluationType, int thresholdForgetPast, int nMicro, boolean flag) throws IOException {
         this.filenameOffline = fileOff;
@@ -63,12 +59,16 @@ public class MINAS {
         this.thresholdForgettingPast = thresholdForgetPast;
         this.numMicro = nMicro;
         this.flagMicroClusters = flag;
-        createDirectory();
+        // createDirectory();
+        File dir = new File(outputDirectory);
+        if (dir.exists())
+            dir.delete();
+        else if (dir.mkdirs()) {
+            System.out.println("Directory created successfully");
+        }
     }
 
-    /*******************************************************************************
-     ******************** validationcriterion ***************************************
-     ********************************************************************************/
+    /********************* validationcriterion ***************************************/
     public void validationcriterion() {
         if (validationCriterion.compareTo("dec") != 0) {
             // if (validationCriterion.compareTo("wss") != 0 &&
@@ -79,34 +79,7 @@ public class MINAS {
         }
     }
 
-    /*******************************************************************************
-     ******************** createDirectory********************************************
-     ********************************************************************************/
-    public void createDirectory() {
-        File dir = new File(outputDirectory);
-        if (dir.exists())
-            dir.delete();
-        else if (dir.mkdirs()) {
-            System.out.println("Directory created successfully");
-        }
-    }
-
-    /*******************************************************************************
-     ******************** create_FileOut ********************************************
-     ********************************************************************************/
-    public void create_FileOut() throws IOException {
-        String nameFileOut = outputDirectory + "\\results";
-        String nameFileOutClasses = outputDirectory + "\\results" + "Classes";
-        fileOut = new FileWriter(new File(nameFileOut), false);
-        fileOutClasses = new FileWriter(new File(nameFileOutClasses), false);
-
-        fileOut.write("Results");
-        fileOut.write("\n\n \n\n");
-    }
-
-    /*******************************************************************************
-     ******************** Offline ***************************************************
-     ********************************************************************************/
+    /********************* Offline ***************************************************/
     public ArrayList<String> offline() throws IOException {
         // creating one training file per class
         SeparateFiles sp = new SeparateFiles();
@@ -139,9 +112,7 @@ public class MINAS {
         return classesOffline;
     }
 
-    /*******************************************************************************
-     ******************** stringResultClassification ********************************
-     ********************************************************************************/
+    /********************* stringResultClassification ********************************/
     public String stringResultClassification(String retorno[]) {
         String textoArq = "";
 
@@ -164,9 +135,7 @@ public class MINAS {
         return textoArq;
     }
 
-    /*******************************************************************************
-     ******************** classify *************************************************
-     *********************************************************************************/
+    /********************* classify ***************************************************/
     public int classify(Evaluation av, int count_k, String[] dataEx, String textFileOut, int countEx,
             ArrayList<Double> vectorMeasuresModelOffline, ArrayList<String> Novelties) throws IOException {
         int size = dataEx.length;
@@ -355,9 +324,7 @@ public class MINAS {
         return count_k;
     }
 
-    /*******************************************************************************
-     ******************** Online ****************************************************
-     ********************************************************************************/
+    /********************* Online ****************************************************/
     public void online(ArrayList<String> classesOffline, Evaluation av) throws IOException {
         int countEx = 0;
         String classeEx;
@@ -416,9 +383,7 @@ public class MINAS {
         av.printResultsGraph(filenameOut);
     }
 
-    /*******************************************************************************
-     ******************** adaptationK ***********************************************
-     ********************************************************************************/
+    /********************* adaptationK ***********************************************/
     public int adaptationK(int flgTodosInvalidos, int temp_count_toosparse, int temp_count_toofewex, int count_k,
             int tamDataUnk) {
         if (flgTodosInvalidos == 1) {
@@ -449,9 +414,7 @@ public class MINAS {
         return count_k;
     }
 
-    /*******************************************************************************
-     ******************** updateModel ***********************************************
-     ********************************************************************************/
+    /********************* updateModel ***********************************************/
     public void updateModel(Cluster validCluster, String classLabel, String category) {
         // updating de decision model, adding a new valid cluster
         validCluster.setCategory(category);
@@ -488,9 +451,7 @@ public class MINAS {
         }
     }
 
-    /*******************************************************************************
-     ******************** identClosestCluster ***************************************
-     ********************************************************************************/
+    /********************* identClosestCluster ***************************************/
     public ArrayList<String> identClosestCluster(Cluster validCluster, double threshold) {
         // find the closest cluster to the new valid cluster
         double minDist = 0;
@@ -519,9 +480,7 @@ public class MINAS {
         return results;
     }
 
-    /*******************************************************************************
-     ******************** createTmpModelUnk *****************************************
-     ********************************************************************************/
+    /********************* createTmpModelUnk *****************************************/
     public ArrayList<Cluster> createTmpModelUnk(int k, int[] vectorResClustering) throws IOException {
         ArrayList<Cluster> modelUnk = null;
         if (algClusteringOnl.equals("kmeans")) {
@@ -545,9 +504,7 @@ public class MINAS {
         return (modelUnk);
     }
 
-    /*******************************************************************************
-     ******************** createModelKMeans *****************************************
-     ********************************************************************************/
+    /********************* createModelKMeans *****************************************/
     public ArrayList<Cluster> createModelKMeans(String filename, int k, String cl, ArrayList<String[]> data,
             int[] clusters) throws NumberFormatException, IOException {
         String line;
@@ -623,9 +580,7 @@ public class MINAS {
         return clusterSet;
     }
 
-    /*******************************************************************************
-     ******************** createModelClustream **************************************
-     ********************************************************************************/
+    /********************* createModelClustream **************************************/
     public ArrayList<Cluster> createModelClustream(String filename, String cl, int[] vectorResClustering)
             throws NumberFormatException, IOException {
         ArrayList<double[]> centers = null;
@@ -658,9 +613,7 @@ public class MINAS {
         return clusterSet;
     }
 
-    /*******************************************************************************
-     ******************** identifyExample *******************************************
-     ********************************************************************************/
+    /********************* identifyExample *******************************************/
     public String[] identifyExample(double[] dataEx) {
         double dist = 0.0;
         double minDist = Double.MAX_VALUE;
@@ -690,9 +643,7 @@ public class MINAS {
         return (null);
     }
 
-    /*******************************************************************************
-     ******************** putClustersSleepModeMem ***********************************
-     ********************************************************************************/
+    /********************* putClustersSleepModeMem ***********************************/
     public void putClustersSleepModeMem(int timestamp, int T) {
         for (int i = 0; i < model.size(); i++) {
             if (model.get(i).getTime() < (timestamp - T)) {
@@ -703,9 +654,7 @@ public class MINAS {
 
     }
 
-    /*******************************************************************************
-     ******************** verifyClassRecurrence ************************************
-     ********************************************************************************/
+    /********************* verifyClassRecurrence *************************************/
     public boolean verifyClassRecurrence(Cluster validCluster) {
         double dist, minDist;
         if (SleepModeMem.size() > 0) {
@@ -734,9 +683,7 @@ public class MINAS {
         return false;
     }
 
-    /*******************************************************************************
-     ******************** funcao max ************************************************
-     ********************************************************************************/
+    /********************* funcao max ************************************************/
     public double max(ArrayList<Double> L) {
         double maior = L.get(0);
         for (int i = 0; i < L.size(); i++)
@@ -745,12 +692,18 @@ public class MINAS {
         return maior;
     }
 
-    /*******************************************************************************
-     ******************** execution *************************************************
-     ********************************************************************************/
+    /********************* execution *************************************************/
     public void execution() throws IOException {
         Evaluation av = new Evaluation(flagEvaluationType);
-        create_FileOut();
+        // create_FileOut();
+        String nameFileOut = outputDirectory + "\\results";
+        String nameFileOutClasses = outputDirectory + "\\results" + "Classes";
+        fileOut = new FileWriter(new File(nameFileOut), false);
+        fileOutClasses = new FileWriter(new File(nameFileOutClasses), false);
+
+        fileOut.write("Results");
+        fileOut.write("\n\n \n\n");
+        //
         System.out.println("\n Processing " + outputDirectory + "_" + " initial phase...\n\n");
         timestamp++;
         SleepModeMem = new ArrayList<Cluster>();
@@ -765,9 +718,7 @@ public class MINAS {
         // av.ExibeResultadosFolds(par_outdir + "Res.csv");
     }
 
-    /*******************************************************************************
-     ******************** printModelInformation **************************************
-     ********************************************************************************/
+    /********************* printModelInformation **************************************/
     public void printModelInformation(double clusterSize[], double clusterRadius[], double meandDistance[]) {
         int j;
         System.out.print("\n Size of each cluster: ");
@@ -787,9 +738,7 @@ public class MINAS {
         System.out.println("\n");
     }
 
-    /*******************************************************************************
-     ******************** funcao Main************************************************
-     ********************************************************************************/
+    /********************* funcao Main************************************************/
     public static void main(String[] args) throws IOException {
         MINAS m;
         // m = new MINAS("balancescale_nor1", "C:\\Users\\Elaine\\Documents\\", "clustream", 1.1, "data_s_n_f_s");
