@@ -1,14 +1,18 @@
+import os
+import asyncio
+import signal
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as matplotlib
-import os
 
 import minas as minas
 
 def selfTest():
-  # print('Running self tests')
+  print('Running self tests')
   # ------------------------------------------------------------------------------------------------
   # setup fake examples
+  np.random.seed(200)
   attributes = np.random.randint(2, 40)
   examples = []
   for labelIndex in range(np.random.randint(2, 5)):
@@ -16,7 +20,6 @@ def selfTest():
     sigma = np.random.random() * 5
     for exampleIndex in range(np.random.randint(200, 1000)):
       example = minas.Example()
-      example.index = labelIndex
       example.label = 'Class #' + str(labelIndex)
       example.item = [np.random.normal(loc=mu, scale=sigma) for i in range(attributes)]
       examples.append(example)
@@ -33,11 +36,27 @@ def selfTest():
   plotExamples2D('3-offline_training', training_set, basicModel.clusters)
   plotExamples2D('3-offline_all_data', examples, basicModel.clusters)
   # ------------------------------------------------------------------------------------------------
+  baseStream = (ex.item for ex in examples[int(len(examples) * .1):])
+  basicModel.online(baseStream)
+  # 
+  # def signal_handler(signal, frame):
+  #   loop.stop()
+  #   client.close()
+  #   sys.exit(0)
+  # signal.signal(signal.SIGINT, signal_handler)
+
+  # loop = asyncio.get_event_loop()
+  # async def producer():
+
+  # asyncio.ensure_future(get_reddit_top('python', client))  
+  # asyncio.ensure_future(get_reddit_top('programming', client))  
+  # asyncio.ensure_future(get_reddit_top('compsci', client))  
+  # loop.run_forever()
 
 def plotExamples2D(name='plotExamples2D', examples=[], clusters=[]):
   labels = [ex.label for ex in examples]
   labels.extend([ex.label for ex in clusters])
-  labelSet = set(labels)
+  labelSet = sorted(set(labels))
 
   fig, ax = plt.subplots()
   for i, label in enumerate(labelSet):
@@ -54,9 +73,8 @@ def plotExamples2D(name='plotExamples2D', examples=[], clusters=[]):
       ax.scatter(
         x=x, y=y, c=clusterColor,
         label='cluster {l} ({n})'.format(l=label, n=len(exs)),
-        s=scale,
-        # markersize=scale,
-        alpha=0.3,
+        s=200,
+        alpha=0.1,
         edgecolors=clusterColor
       )
     # 
@@ -67,7 +85,12 @@ def plotExamples2D(name='plotExamples2D', examples=[], clusters=[]):
     # label=label
     # print('plotExamples2D', label, len(exs), len(x), len(y), label)
     if len(exs) > 0:
-      ax.scatter(x=x, y=y, c=color, label='{l} ({n})'.format(l=label, n=len(exs)))
+      ax.scatter(
+        x=x, y=y, c=color,
+        label='{l} ({n})'.format(l=label, n=len(exs)),
+        alpha=0.3,
+        edgecolors=color
+      )
   
   ax.legend()
   ax.grid(True)
@@ -77,7 +100,6 @@ def plotExamples2D(name='plotExamples2D', examples=[], clusters=[]):
   if not os.path.exists(directory):
     os.makedirs(directory)
   plt.savefig(directory + name + '.png')
-
 
 if __name__ == "__main__":
   selfTest()
