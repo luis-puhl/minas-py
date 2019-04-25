@@ -8,7 +8,7 @@ import matplotlib as matplotlib
 
 import minas as minas
 
-def selfTest():
+def selfTest(Minas):
   print('Running self tests')
   # ------------------------------------------------------------------------------------------------
   # setup fake examples
@@ -26,7 +26,7 @@ def selfTest():
   np.random.shuffle(examples)
   plotExamples2D('0-fake_base', examples)
   # ------------------------------------------------------------------------------------------------
-  basicModel = minas.Minas()
+  basicModel = Minas()
   # 10 %
   training_set = examples[:int(len(examples) * .1)]
   plotExamples2D('1-training_set', training_set)
@@ -102,4 +102,4 @@ def plotExamples2D(name='plotExamples2D', examples=[], clusters=[]):
   plt.savefig(directory + name + '.png')
 
 if __name__ == "__main__":
-  selfTest()
+  selfTest(minas.Minas)

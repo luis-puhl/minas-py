@@ -269,7 +269,18 @@ return Model
 
 ---
 
-# Intepretação
+# Intepretação (i)
+
+> A new micro-cluster is representative if it contains a minimal number of examples
+> A new micro-cluster is cohesive if its silhouette coefficient is larger than 0 (see Eq. 1). [...] $Silhouette = \frac{b − a}{max(b, a)}$ 
+> [...] In Eq. 1, _b_ represents the Euclidean distance between the centroid of the new micro-cluster and the centroid of its closest micro-cluster, and _a_ represents the standard deviation of the distances between the examples of the new micro-cluster and the centroid of the new micro-cluster.
+
+Portanto $b = closestClusterDist(C_i)$ e $a = C_r$
+
+---
+
+
+# Intepretação (ii)
 
 Given an model $M$, an example $\vec{p}$; Clusters $C_1$ and $C_2$. Composed as 
 $M = \begin{cases}
@@ -280,11 +291,11 @@ $M = \begin{cases}
 \end{cases}
 $ and $C_i = \begin{cases}
   \vec{c}:& \text{center}\\
-  r:& \text{radius }\sigma\\
+  r:& \text{radius, } \sigma\big(d(\vec{c}, \vec{x_i}) \big)\\
   l:& \text{label}\\
   n:& \text{counter}\\
 \end{cases}
-$.
+$
 
 $$\begin{aligned}
 \text{Classify: }& \vec{p} \in C_1 \iff d(C_{1.\vec{c}}, \space \vec{p}) \lt f^t \sdot C_{1 .r} ;\\
