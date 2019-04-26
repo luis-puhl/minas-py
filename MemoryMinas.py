@@ -8,9 +8,10 @@ import scipy as scipy
 import sklearn as sk
 from sklearn.cluster import KMeans
 
+import minas as minas
 import self_test as self_test
 
-class MemoryMinas(Minas):
+class MemoryMinas(minas.Minas):
   allClustersModel: Model = None
   def noveltyThrReset(self, sleepClusters):
     self.allClustersModel = Model()

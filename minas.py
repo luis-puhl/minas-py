@@ -13,7 +13,7 @@ import self_test as self_test
 
 class Example:
   __slots__ = ['label', 'item', 'timestamp', 'classificationTries']
-  def __init__(self, label=None, item=[]):
+  def __init__(self, label=None, item: List[float]=[]):
     self.label = label
     self.item = item
     self.timestamp = time.time()
@@ -57,18 +57,14 @@ class Cluster:
   """
   # ------------------------------------------------------------------------------------------------
   # N number of examples,
+  label = ''
+  center = np.array([])
   counter = 0
+  lastExapleTMS = -float("inf")
   # statistic summary
   sumDistance = 0.0
   meanDistance = 0.0
   maxDistance = 0.0
-  minDistance = 0.0
-  stdDevDistance = 0.0
-  # centroid
-  center = np.array([])
-  label = ''
-  #
-  lastExapleTMS = -float("inf")
   def __str__(self):
     return '[{label}]\tn={count}\tc={c},\tr={r:2.2f}'.format(
       label=self.label,
@@ -80,50 +76,50 @@ class Cluster:
     return self.__str__()
   def radius(self):
     return self.maxDistance
-  def dist(self, example):
-    return scipy.spatial.distance.euclidean(self.center, example.item)
-  def distCl(self, other):
-    return scipy.spatial.distance.euclidean(self.center, other.center)
-  def addExample(self, example):
+  def dist(self, vec: List[float] = []):
+    return scipy.spatial.distance.euclidean(self.center, vec)
+  def addExample(self, example, distance=None):
     self.counter += 1
-    self.lastExapleTMS = example.timestamp
-    distance = self.dist(example)
+    if example.timestamp > self.lastExapleTMS:
+      self.lastExapleTMS = example.timestamp
+    if distance == None:
+      distance = self.dist(example.item)
     self.sumDistance += distance
     self.meanDistance = self.sumDistance / self.counter
     if distance > self.maxDistance:
       self.maxDistance = distance
-    if distance < self.minDistance:
-      self.minDistance = distance
 
 class Model:
+  # CONSTS
   k = 100
-  clusters: List[Cluster] = []
   radiusFactor = 1.1
   noveltyThr = 100
-  lastExapleTMS = -float("inf")
-  lastCleaningCycle = -float("inf")
   windowTimeSize = 100
-  # ------------------------------------------------------------------------------------------------
   # actions Thresholds
   #ExND
   ndProcedureThr = 2000
-  def ndProcedureThrFn(self):
-    return self.representationThr * self.k
+  # def ndProcedureThrFn(self):
+  #   return self.representationThr * self.k
   #ExClu
   representationThr = 3
   def representationThrFn(self):
     return len(self.unknownBuffer) / self.k
   # Window size to forget outdated data
-  forgetThr = 1000
-  def forgetThrFn(self):
-    return 2 * self.ndProcedureThr
-  def noveltyThrFn(cluster):
-    return cluster.stdDevDistance * self.radiusFactor,
+  # forgetThr = 1000
+  # def forgetThrFn(self):
+  #   return 2 * self.ndProcedureThr
+  # def noveltyThrFn(cluster):
+  #   return cluster.stdDevDistance * self.radiusFactor,
   # ------------------------------------------------------------------------------------------------
-  unk: List[Example] = []
+  # VAR ATTRIBUTES
+  globalCount = 0
+  lastExapleTMS = -float("inf")
+  lastCleaningCycle = -float("inf")
+  clusters: List[Cluster] = []
   sleepClusters: List[Cluster] = []
-  noveltyIndex = 0
   counter = 0
+  unknownBuffer: List[Example] = []
+  noveltyIndex = 0
   # ------------------------------------------------------------------------------------------------
   def __str__(self):
     return 'Model(k={k}, clusters={ncls})({cls}\n)'.format(
@@ -133,6 +129,11 @@ class Model:
     )
   def __repr__(self):
     return self.__str__()
+  def statusStr(self):
+    return 'clusters: {clusters}, sleepers: {sleepers}, known: {known}, unkown: {u} ({diff}), total={globalCount}'.format(
+      clusters=len(self.clusters), sleepers=len(self.sleepClusters),
+      known=self.counter, u=len(self.unknownBuffer), diff=self.globalCount-self.counter, globalCount=self.globalCount
+    )
   def clustering(self, examples):
     """
     After the execution of the clustering algorithm, each micro-cluster is represented
@@ -158,37 +159,28 @@ class Model:
       dist = float("inf")
       nearCl = None
       for cl in clusters:
-        d = cl.dist(ex)
+        d = cl.dist(ex.item)
         if d < dist:
           dist = d
           nearCl = cl
       if nearCl:
         nearCl.addExample(ex)
     return clusters
-  def closestClusterExample(self, example: Example) -> (Cluster, float):
+  def closestCluster(self, vec: List[float], clusters = None) -> (Cluster, float):
     """Returns the nearest cluster and its distance (nearCl, dist)"""
     dist = float("inf")
     nearCl = None
-    for cl in self.clusters:
-      d = cl.dist(example)
-      if d < dist:
-        dist = d
-        nearCl = cl
-    return nearCl, dist
-  # 
-  def closestClusterCluster(self, other: Cluster) -> (Cluster, float):
-    """Returns the nearest cluster and its distance (nearCl, dist)"""
-    dist = float("inf")
-    nearCl = None
-    for cl in self.clusters:
-      d = cl.distCl(other)
+    if clusters == None:
+      clusters = self.clusters
+    for cl in clusters:
+      d = cl.dist(vec)
       if d < dist:
         dist = d
         nearCl = cl
     return nearCl, dist
   # 
   def classify(self, example: Example):
-    cluster, dist = self.closestClusterExample(example)
+    cluster, dist = self.closestCluster(example.item)
     return (dist <= (self.radiusFactor * cluster.radius()), cluster, dist)
 
 class Minas:
@@ -260,49 +252,53 @@ class Minas:
       end for
     """
     # example = Example(item=await stream.read())
-    ranNoveltyDetection = False
-    globalCount = 0
-    discarted = 0
-    activeClusters = 0
     for ex in stream:
-      globalCount += 1
+      self.model.globalCount += 1
       example = Example(item=ex)
       self.model.lastExapleTMS = example.timestamp
-      if activeClusters != len(self.model.clusters):
-        print('Active Clusters', len(self.model.clusters))
-      activeClusters = len(self.model.clusters)
-      cluster, dist = self.model.closestClusterExample(example)
+      cluster, dist = self.model.closestCluster(example.item)
+      example.classificationTries += 1
       if dist <= (self.model.radiusFactor * cluster.radius()):
         example.label = cluster.label
         cluster.addExample(example)
         self.model.counter += 1
       else:
         # None is unknown class
-        self.model.unk.append(example)
-        if len(self.model.unk) > self.model.ndProcedureThr:
-          ranNoveltyDetection = True
-          self.model = self.noveltyDetection(self.model)
+        self.model.unknownBuffer.append(example)
       #
-      if (example.timestamp - self.model.lastCleaningCycle) > self.model.windowTimeSize or ranNoveltyDetection:
-        print('known={c}\tunkown={u}\ttotal={t}\tdiff={d}\tdiscarted={dis}'.format(
-          c=self.model.counter, u=len(self.model.unk), t=globalCount, d=globalCount-self.model.counter, dis=discarted
-        ))
-        ranNoveltyDetection = False
+      if len(self.model.unknownBuffer) > self.model.ndProcedureThr:
+        print(self.model.statusStr())
+        for sleepExample in self.model.unknownBuffer:
+          cluster, dist = self.model.closestCluster(sleepExample.item, self.model.sleepClusters)
+          sleepExample.classificationTries += 1
+          if cluster and dist <= (self.model.radiusFactor * cluster.radius()):
+            sleepExample.label = cluster.label
+            cluster.addExample(sleepExample)
+            self.model.unknownBuffer.remove(sleepExample)
+            # wakeup
+            print('wakeup')
+            self.model.clusters.append(cluster)
+            self.model.sleepClusters.remove(cluster)
+            self.model.counter += 1
+        print('[after sleep check]', self.model.statusStr())
+        # 
+        self.model = self.noveltyDetection(self.model)
+        print('[after novelty Detection]', self.model.statusStr())
         # Model ← move-sleepMem(Model, SleepMem, CurrentTime, windowSize)
         newSleepClusters = [cl for cl in self.model.clusters if cl.lastExapleTMS < self.model.lastCleaningCycle]
         print('Sleep', len(newSleepClusters))
         self.model.sleepClusters.extend(newSleepClusters)
         self.model.clusters = [cl for cl in self.model.clusters if cl.lastExapleTMS >= self.model.lastCleaningCycle]
-        self.model.lastCleaningCycle = example.timestamp
+        self.model.lastCleaningCycle = time.time()
+        print('[after Sleep Clean]', self.model.statusStr())
         # ShortMem ← remove-oldExamples(ShortMem, windowsize)
-        ogLen = len(self.model.unk)
-        self.model.unk = []
-        for ex in self.model.unk:
-          if ex.timestamp >= self.model.lastCleaningCycle:
-            ex.classificationTries += 1
-            self.model.unk.append(ex)
-        discarted += ogLen - len(self.model.unk)
-        print('[Cleaning Cycle]\tDiscarting {n} examples'.format(n=ogLen - len(self.model.unk)))
+        ogLen = len(self.model.unknownBuffer)
+        self.model.unknownBuffer = []
+        for ex in self.model.unknownBuffer:
+          if ex.classificationTries >= 3:
+            self.model.unknownBuffer.append(ex)
+        print('[Cleaning Cycle]\tDiscarting {n} examples'.format(n=ogLen - len(self.model.unknownBuffer)))
+        print('[after Unkown Clean]', self.model.statusStr())
     #
     return self
 
@@ -335,30 +331,35 @@ class Minas:
       end for
       return Model
     """
-    unk: List[Example] = model.unk
-    sleepClusters: List[Cluster] = model.sleepClusters
-    print('[noveltyDetection]\t', 'unk:', len(unk), 'sleepClusters:', len(sleepClusters))
-    def ValidationCriterion(cluster):
+    print('[noveltyDetection]\t', 'unknownBuffer:', len(model.unknownBuffer), 'sleepClusters:', len(model.sleepClusters))
+    def ValidationCriterion(cluster: Cluster, unknownBuffer):
       isRepresentative = cluster.counter > model.representationThr
-      near, dist = model.closestClusterCluster(cluster)
+      near, dist = model.closestCluster(cluster.center)
       silhouette = lambda a, b: (b - a) / max([a, b])
-      isCohesive = silhouette(dist, cluster.stdDevDistance) > 0
+      # 
+      distances = []
+      for ex in unknownBuffer:
+        d = cluster.dist(ex.item)
+        if d <= (model.radiusFactor * cluster.radius()):
+          distances.append(d)
+      mean = sum(distances) / len(distances)
+      devianceSqrSum = sum([(d - mean) **2 for d in distances])
+      var = devianceSqrSum / len(distances)
+      stdDevDistance = var **0.5
+      # 
+      isCohesive = silhouette(dist, stdDevDistance) > 0
       return isRepresentative and isCohesive
-    sleepModel = Model()
-    sleepModel.clusters = sleepClusters
     #
     newModel = deepcopy(model)
-    newModel.clusters = deepcopy(model.clusters)
-    newModel.sleepClusters = deepcopy(model.sleepClusters)
-    for cluster in newModel.clustering(unk):
+    for cluster in newModel.clustering(model.unknownBuffer):
       T = newModel.noveltyThr
       # T = newModel.noveltyThrFn(cluster)
-      if ValidationCriterion(cluster):
-        near, dist = newModel.closestClusterCluster(cluster)
+      if ValidationCriterion(cluster, model.unknownBuffer):
+        near, dist = newModel.closestCluster(cluster.center)
         if dist <= T:
           cluster.label = near.label
         else:
-          near, dist = sleepModel.closestClusterCluster(cluster)
+          near, dist = model.closestCluster(cluster.center, model.sleepClusters)
           if dist <= T:
             cluster.label = near.label
             # wakeup
