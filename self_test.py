@@ -36,6 +36,8 @@ def selfTest(Minas):
       np.random.shuffle(examples)
       plotExamples2D(dirr, '0-fake_base', examples)
       # ------------------------------------------------------------------------------------------------
+      sys.stdout = log
+      #
       basicModel = Minas()
       training_set = examples[:int(len(examples) * .1)]
       with open(dirr + 'training_set.csv', 'w') as training_set_csv:
@@ -51,11 +53,14 @@ def selfTest(Minas):
       testSet = examples[int(len(examples) * .1):]
       baseStream = (ex.item for ex in testSet)
       resultModel = basicModel.online(baseStream)
+      #
+      sys.stdout = stdout_ # restore the previous stdout.
+      # ------------------------------------------------------------------------------------------------
       results = []
       positiveCount = 0
       negativeCount = 0
       unknownCount = 0
-      sys.stdout = stdout_ # restore the previous stdout.
+      totalExamples = len(examples)
       with open(dirr + 'examples.csv', 'w') as csv:
         for ex in examples:
           ex = deepcopy(ex)
@@ -79,11 +84,13 @@ def selfTest(Minas):
           results.append(ex)
           # end results map
       print(resultModel.model)
-      print(
-        'positiveCount', positiveCount,
-        'negativeCount', negativeCount,
-        'unknownCount', unknownCount,
+      resultsPNU = 'positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%}), '.format(
+        p=positiveCount, pp=positiveCount/totalExamples,
+        n=negativeCount, nn=negativeCount/totalExamples,
+        u=unknownCount, uu=unknownCount/totalExamples,
       )
+      log.write('\n=== Final Results ===\n{model}\n\n{results}'.format(model=str(resultModel.model), results=resultsPNU))
+      print('\n' + resultsPNU)
       plotExamples2D(dirr, '5-online_clusters', [], resultModel.model.clusters)
       plotExamples2D(dirr, '6-online_resutls', results, resultModel.model.clusters)
       break

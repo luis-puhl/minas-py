@@ -107,4 +107,48 @@ Model(k=100, clusters=108)(
 	[Class #2]	n=1	c=7.71, 7.46, 8.12, 7.77, 7.69, 7.43, 7.74, 8.14, 7.90, 7.90, 7.59, 7.96, 7.58, 7.45, 7.53, 7.45, 8.10, 7.32, 7.55, 7.59, 7.86, 7.44, 7.39, 8.30, 7.59, 7.47, 7.64, 7.70,	r=0.00
 	[Class #2]	n=1	c=7.78, 8.09, 7.83, 7.04, 7.15, 8.00, 7.19, 7.99, 7.62, 7.72, 7.16, 7.48, 7.56, 7.87, 7.77, 7.77, 7.61, 7.16, 7.52, 7.30, 7.42, 7.94, 7.77, 7.73, 8.05, 7.27, 7.57, 7.37,	r=0.00
 	[Class #2]	n=1	c=7.86, 7.73, 7.77, 7.71, 7.82, 7.71, 7.72, 7.76, 8.00, 7.42, 7.63, 7.52, 7.34, 7.59, 7.32, 7.51, 7.62, 7.26, 7.57, 7.50, 7.51, 7.28, 7.68, 7.21, 7.66, 7.70, 7.92, 7.38,	r=0.00
+)clusters: 108, sleepers: 0, known: 147, unkown: 189 (189), total=336
+[after sleep check] clusters: 108, sleepers: 0, known: 147, unkown: 189 (189), total=336
+[noveltyDetection]	 unknownBuffer: 189 sleepClusters: 0
+[after novelty Detection] clusters: 108, sleepers: 0, known: 147, unkown: 189 (189), total=336
+Sleep 0
+[after Sleep Clean] clusters: 108, sleepers: 0, known: 147, unkown: 189 (189), total=336
+[Cleaning Cycle]	Discarting 189 examples
+[after Unkown Clean] clusters: 108, sleepers: 0, known: 147, unkown: 0 (189), total=336
+clusters: 108, sleepers: 0, known: 318, unkown: 189 (378), total=696
+[after sleep check] clusters: 108, sleepers: 0, known: 318, unkown: 189 (378), total=696
+[noveltyDetection]	 unknownBuffer: 189 sleepClusters: 0
+[after novelty Detection] clusters: 108, sleepers: 0, known: 318, unkown: 189 (378), total=696
+Sleep 101
+[after Sleep Clean] clusters: 7, sleepers: 101, known: 318, unkown: 189 (378), total=696
+[Cleaning Cycle]	Discarting 189 examples
+[after Unkown Clean] clusters: 7, sleepers: 101, known: 318, unkown: 0 (378), total=696
+clusters: 7, sleepers: 101, known: 510, unkown: 189 (567), total=1077
+[after sleep check] clusters: 7, sleepers: 101, known: 510, unkown: 189 (567), total=1077
+[noveltyDetection]	 unknownBuffer: 189 sleepClusters: 101
+[after novelty Detection] clusters: 7, sleepers: 101, known: 510, unkown: 189 (567), total=1077
+Sleep 0
+[after Sleep Clean] clusters: 7, sleepers: 101, known: 510, unkown: 189 (567), total=1077
+[Cleaning Cycle]	Discarting 189 examples
+[after Unkown Clean] clusters: 7, sleepers: 101, known: 510, unkown: 0 (567), total=1077
+clusters: 7, sleepers: 101, known: 684, unkown: 189 (756), total=1440
+[after sleep check] clusters: 7, sleepers: 101, known: 684, unkown: 189 (756), total=1440
+[noveltyDetection]	 unknownBuffer: 189 sleepClusters: 101
+[after novelty Detection] clusters: 7, sleepers: 101, known: 684, unkown: 189 (756), total=1440
+Sleep 0
+[after Sleep Clean] clusters: 7, sleepers: 101, known: 684, unkown: 189 (756), total=1440
+[Cleaning Cycle]	Discarting 189 examples
+[after Unkown Clean] clusters: 7, sleepers: 101, known: 684, unkown: 0 (756), total=1440
+
+=== Final Results ===
+Model(k=100, clusters=7)(
+	[Class #0]	n=295	c=1.95, 2.40, 1.14, 2.22, 0.24, 1.60, 2.70, 1.79, 1.48, 2.37, 2.01, 1.86, 1.55, 0.88, 2.19, 2.21, 2.34, 2.49, 2.33, 2.19, 1.37, 1.59, 3.51, 2.95, 1.64, 3.79, 2.47, 2.09,	r=20.57
+	[Class #0]	n=79	c=3.79, 1.46, 5.91, 1.08, 2.33, 0.89, 1.72, 4.56, 3.15, 2.72, 3.69, 2.84, 3.16, 7.03, 2.61, 3.04, 2.57, 2.25, 0.53, 1.70, 4.03, 1.09, 0.43, 1.18, 2.90, 2.62, 2.43, 3.50,	r=19.68
+	[Class #1]	n=180	c=1.90, 3.48, 2.88, 4.83, 2.83, 2.96, 3.39, 4.08, 1.42, 1.43, 2.81, 2.16, 0.53, 2.83, 4.12, 2.44, 2.74, 2.39, 1.26, 3.06, 2.53, 3.91, 3.22, 4.53, 3.23, 2.19, 1.43, 2.63,	r=20.74
+	[Class #1]	n=81	c=0.42, 2.33, 1.36, 1.24, 2.85, 0.88, 4.72, 2.03, 4.17, 2.99, 1.03, 2.97, 5.21, -0.28, 2.35, 1.41, 4.22, 2.36, 4.40, 3.07, 1.69, 1.75, 1.78, 1.22, 5.28, 4.32, 4.27, 3.31,	r=19.09
+	[Class #1]	n=89	c=4.84, 2.18, 2.73, 2.83, 5.60, 2.34, 1.33, 5.07, 2.52, 3.16, 3.40, 0.22, 2.11, 3.91, 2.35, 4.13, 4.58, 1.94, 3.38, 0.73, 2.64, 1.39, 1.32, 2.88, 3.83, -0.12, 1.24, 3.23,	r=20.12
+	[Class #1]	n=90	c=3.21, -0.84, 0.34, 2.72, 0.45, 2.78, 1.01, 5.17, 2.79, 2.73, 3.92, 3.68, 4.64, 1.75, 3.56, 0.60, 3.93, 2.31, 1.13, 3.19, 4.23, 2.49, 2.79, 1.65, 3.04, 2.25, 0.62, 0.44,	r=18.76
+	[Class #1]	n=78	c=0.51, 4.05, 2.79, 0.86, 6.93, 1.79, 2.59, 0.65, 2.57, 3.51, 3.78, 4.60, 2.55, 4.22, 4.99, 2.16, 3.56, 3.29, 2.79, 1.23, 4.80, 1.93, 0.21, -0.03, 0.69, 1.12, 2.15, 2.37,	r=20.71
 )
+
+positive: 548(29.10%), negative: 360(19.12%), unknown: 975(51.78%), 
