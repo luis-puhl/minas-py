@@ -42,7 +42,7 @@ def selfTest(Minas):
       training_set = examples[:int(len(examples) * .1)]
       with open(dirr + 'training_set.csv', 'w') as training_set_csv:
         for ex in training_set:
-          training_set_csv.write(','.join([str(i) for i in ex.item]) + ',' + ex.label)
+          training_set_csv.write(','.join([str(i) for i in ex.item]) + ',' + ex.label + '\n')
       plotExamples2D(dirr, '1-training_set', training_set)
       basicModel = basicModel.offline(training_set)
       log.write(str(basicModel.model))
@@ -61,15 +61,16 @@ def selfTest(Minas):
       negativeCount = 0
       unknownCount = 0
       totalExamples = len(examples)
-      with open(dirr + 'examples.csv', 'w') as csv:
+      with open(dirr + 'examples.csv', 'w') as examplesCsv:
         for ex in examples:
           ex = deepcopy(ex)
           hasLabel, cluster, d = resultModel.model.classify(ex)
-          csv.write(
+          examplesCsv.write(
             ','.join([str(i) for i in ex.item]) + ',' +
             ex.label + ',' +
             (cluster.label if hasLabel else 'Unknown') + ',' +
-            ('Positive' if cluster.label == ex.label else 'Negative')
+            ('Positive' if cluster.label == ex.label else 'Negative') +
+            '\n'
           )
           if hasLabel:
             if cluster.label == ex.label:
