@@ -383,3 +383,8 @@ Além disso, como esses valores já são calculados indiretamente, somente o cus
 $$\large \lfloor_{0 \le i\le k} \sum_{0 \le j \le n} (M_{i, c_{j}} - x_{j})^2 \rfloor < M_{i, r}$$
 
 Pode-se distribuir na função mínimo, distribuindo clusters, ou na fução soma, distribuindo atributos.
+
+---
+
+- Usar data-set KYOTO
+- Offilne serial

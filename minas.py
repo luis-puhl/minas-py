@@ -1,5 +1,5 @@
 import itertools as intertools
-import time
+import time, sys
 from typing import List
 from copy import deepcopy
 
@@ -142,13 +142,22 @@ class Model:
     assert len(examples) > 0
     
     n_samples = len(examples)
-    n_clusters = min(self.k, int(n_samples / 10))
+    n_clusters = min(self.k, int(n_samples / (3 * self.representationThr)))
     # by 2, so at least 2 examples per cluster
     # if n_samples < n_clusters / 2:
     #   n_clusters = int(n_samples / 10)
     assert n_samples >= n_clusters
-    df = pd.DataFrame(data=[ex.item for ex in examples])
-    kmeans = KMeans(n_clusters=n_clusters).fit(df)
+    data=[ex.item for ex in examples]
+    df = pd.DataFrame(data=data)
+    try:
+      kmeans = KMeans(n_clusters=n_clusters).fit(df)
+    except Exception as exc:
+      for ex in data:
+        if np.isinf(ex).any():
+          print('[np.isinf]', ex)
+        if np.isnan(ex).any():
+          print('[np.isnan]', ex)
+      raise RuntimeError('Minas Clustering Error') from exc
 
     clusters = []
     for centroid in kmeans.cluster_centers_:

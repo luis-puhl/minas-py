@@ -15,46 +15,21 @@ def selfTest(Minas):
   if os.path.exists('run'):
     shutil.rmtree('run')
   testInit = time.time()
-  while time.time() - testInit < 1 * 60:
+  # run for 15 seconds
+  while time.time() - testInit < 15:
     dirr = 'run/seed_' + str(seed) + '/'
     if not os.path.exists(dirr):
       os.makedirs(dirr)
-    with open(dirr + 'run.log', 'w') as log:
+    with Logger(dirr + 'run.log') as log:
       # ------------------------------------------------------------------------------------------------
-      # setup fake examples
-      np.random.seed(seed)
-      attributes = np.random.randint(2, 40)
-      examples = []
-      for labelIndex in range(np.random.randint(2, 5)):
-        mu = np.random.random() * 10
-        sigma = np.random.random() * 5
-        for exampleIndex in range(np.random.randint(200, 1000)):
-          example = minas.Example()
-          example.label = 'Class #' + str(labelIndex)
-          example.item = [np.random.normal(loc=mu, scale=sigma) for i in range(attributes)]
-          examples.append(example)
-      np.random.shuffle(examples)
+      examples = setupFakeExamples(seed)
       plotExamples2D(dirr, '0-fake_base', examples)
       # ------------------------------------------------------------------------------------------------
-      sys.stdout = log
-      #
-      basicModel = Minas()
-      training_set = examples[:int(len(examples) * .1)]
-      with open(dirr + 'training_set.csv', 'w') as training_set_csv:
-        for ex in training_set:
-          training_set_csv.write(','.join([str(i) for i in ex.item]) + ',' + ex.label + '\n')
-      plotExamples2D(dirr, '1-training_set', training_set)
-      basicModel = basicModel.offline(training_set)
-      log.write(str(basicModel.model))
-      plotExamples2D(dirr, '2-offline_clusters', [], basicModel.model.clusters)
-      plotExamples2D(dirr, '3-offline_training', training_set, basicModel.model.clusters)
-      plotExamples2D(dirr, '4-offline_all_data', examples, basicModel.model.clusters)
-      # ------------------------------------------------------------------------------------------------
-      testSet = examples[int(len(examples) * .1):]
-      baseStream = (ex.item for ex in testSet)
-      resultModel = basicModel.online(baseStream)
-      #
-      sys.stdout = stdout_ # restore the previous stdout.
+      try:
+        runMinas()
+      except:
+        e = sys.exc_info()
+        print('Exception on Minas\n{e}\n'.format(e=str(e[0])))
       # ------------------------------------------------------------------------------------------------
       results = []
       positiveCount = 0
@@ -64,7 +39,9 @@ def selfTest(Minas):
       with open(dirr + 'examples.csv', 'w') as examplesCsv:
         for ex in examples:
           ex = deepcopy(ex)
-          hasLabel, cluster, d = resultModel.model.classify(ex)
+          hasLabel, cluster, d = None, None, None
+          if resultModel:
+            hasLabel, cluster, d = resultModel.model.classify(ex)
           examplesCsv.write(
             ','.join([str(i) for i in ex.item]) + ',' +
             ex.label + ',' +
@@ -94,11 +71,56 @@ def selfTest(Minas):
       print('\n' + resultsPNU)
       plotExamples2D(dirr, '5-online_clusters', [], resultModel.model.clusters)
       plotExamples2D(dirr, '6-online_resutls', results, resultModel.model.clusters)
-      break
+      # run once?
+      # break
     # ------------------------------------------------------------------------------------------------
     seed += 1
 
+def setupFakeExamples(seed)
+  np.random.seed(seed)
+  attributes = np.random.randint(2, 40)
+  examples = []
+  for labelIndex in range(np.random.randint(2, 5)):
+    mu = np.random.random() * 10
+    sigma = np.random.random() * 5
+    for exampleIndex in range(np.random.randint(200, 1000)):
+      example = minas.Example()
+      example.label = 'Class #' + str(labelIndex)
+      example.item = []
+      for i in range(attributes):
+        value = np.random.normal(loc=mu, scale=sigma)
+        example.item.append(float(value))
+      examples.append(example)
+  np.random.shuffle(examples)
+  return examples
+
+def runMinas(examples)
+  basicModel = Minas()
+  training_set = examples[:int(len(examples) * .1)]
+  with open(dirr + 'training_set.csv', 'w') as training_set_csv:
+    for ex in training_set:
+      training_set_csv.write(','.join([str(i) for i in ex.item]) + ',' + ex.label + '\n')
+  plotExamples2D(dirr, '1-training_set', training_set)
+  basicModel = basicModel.offline(training_set)
+  log.write(str(basicModel.model))
+  plotExamples2D(dirr, '2-offline_clusters', [], basicModel.model.clusters)
+  plotExamples2D(dirr, '3-offline_training', training_set, basicModel.model.clusters)
+  plotExamples2D(dirr, '4-offline_all_data', examples, basicModel.model.clusters)
+  # ------------------------------------------------------------------------------------------------
+  testSet = examples[int(len(examples) * .1):]
+  baseStream = (ex.item for ex in testSet)
+  resultModel = basicModel.online(baseStream)
+
 def plotExamples2D(directory, name='plotExamples2D', examples=[], clusters=[]):
+  fig, ax = mkPlot(examples=examples, clusters=clusters)
+  # 
+  # plt.show()
+  if not os.path.exists(directory):
+    os.makedirs(directory)
+  plt.savefig(directory + name + '.png')
+  plt.close(fig)
+
+def mkPlot(examples=[], clusters=[]):
   labels = [ex.label for ex in examples]
   labels.extend([ex.label for ex in clusters])
   labelSet = sorted(set(labels))
@@ -135,11 +157,27 @@ def plotExamples2D(directory, name='plotExamples2D', examples=[], clusters=[]):
   # 
   ax.legend()
   ax.grid(True)
-  # 
-  # plt.show()
-  if not os.path.exists(directory):
-    os.makedirs(directory)
-  plt.savefig(directory + name + '.png')
+  return fig, ax
+
+class Logger(object):
+  __slots__ = ['fileName', 'terminal', 'log']
+  def __init__(self, fileName):
+    self.terminal = sys.stdout
+    self.fileName = fileName
+  def __enter__(self):
+    self.log = open(self.fileName, "a")
+    return self
+  def __exit__(self, exc_type, exc_value, traceback):
+    pass
+  def write(self, message):
+    self.terminal.write(message)
+    self.log.write(message)
+
+  def flush(self):
+    #this flush method is needed for python 3 compatibility.
+    #this handles the flush command by doing nothing.
+    #you might want to specify some extra behavior here.
+    pass
 
 if __name__ == "__main__":
   selfTest(minas.Minas)
