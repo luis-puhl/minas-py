@@ -20,7 +20,7 @@ class Example:
     self.classificationTries = 0
 
 class Cluster:
-  """
+  """Cluster class holds and updates
     From \cite{Faria2015}:
     > Each micro-cluster is composed of four components:
     >   N number of examples,
@@ -142,19 +142,20 @@ class Model:
     assert len(examples) > 0
     
     n_samples = len(examples)
-    n_clusters = self.k
-    if n_samples < n_clusters:
-      n_clusters = int(n_samples / 10)
+    n_clusters = min(self.k, int(n_samples / 10))
+    # by 2, so at least 2 examples per cluster
+    # if n_samples < n_clusters / 2:
+    #   n_clusters = int(n_samples / 10)
     assert n_samples >= n_clusters
     df = pd.DataFrame(data=[ex.item for ex in examples])
     kmeans = KMeans(n_clusters=n_clusters).fit(df)
-    centroids = kmeans.cluster_centers_
 
     clusters = []
     for centroid in kmeans.cluster_centers_:
       c = Cluster()
       c.center = centroid
       clusters.append(c)
+    # Add examples to its cluster
     for ex in examples:
       dist = float("inf")
       nearCl = None
@@ -166,6 +167,25 @@ class Model:
       if nearCl:
         nearCl.addExample(ex)
     return clusters
+  #
+  def validationCriterion(self, cluster: Cluster, unknownBuffer):
+    isRepresentative = cluster.counter > self.representationThr
+    # 
+    near, dist = self.closestCluster(cluster.center)
+    silhouette = lambda a, b: (b - a) / max([a, b])
+    distances = []
+    for ex in unknownBuffer:
+      d = cluster.dist(ex.item)
+      if d <= (self.radiusFactor * cluster.radius()):
+        distances.append(d)
+    mean = sum(distances) / len(distances)
+    devianceSqrSum = sum([(d - mean) **2 for d in distances])
+    var = devianceSqrSum / len(distances)
+    stdDevDistance = var **0.5
+    # 
+    isCohesive = silhouette(dist, stdDevDistance) > 0
+    return isRepresentative and isCohesive
+  #
   def closestCluster(self, vec: List[float], clusters = None) -> (Cluster, float):
     """Returns the nearest cluster and its distance (nearCl, dist)"""
     dist = float("inf")
@@ -208,13 +228,16 @@ class Minas:
     assert len(training_set) > 0
     # training_set = Example[]
     keyfunc = lambda x: x.label
+    self.model.clusters = []
     training_set = sorted(training_set, key=keyfunc)
     for label, examples in intertools.groupby(training_set, keyfunc):
       clusters = self.model.clustering(list(examples))
       # add labels
       for cluster in clusters:
-        cluster.label = label
-      self.model.clusters.extend(clusters)
+        isRepresentative = cluster.counter > self.model.representationThr
+        if isRepresentative:
+          cluster.label = label
+          self.model.clusters.append(cluster)
     self.model.ndProcedureThr = len(training_set)
     return self
   
@@ -285,10 +308,17 @@ class Minas:
         self.model = self.noveltyDetection(self.model)
         print('[after novelty Detection]', self.model.statusStr())
         # Model ← move-sleepMem(Model, SleepMem, CurrentTime, windowSize)
-        newSleepClusters = [cl for cl in self.model.clusters if cl.lastExapleTMS < self.model.lastCleaningCycle]
+        newSleepClusters = []
+        newClusters = []
+        for cl in self.model.clusters:
+          if cl.lastExapleTMS < self.model.lastCleaningCycle:
+            newSleepClusters.append(cl)
+          if cl.lastExapleTMS >= self.model.lastCleaningCycle:
+            newClusters.append(cl)
+        #
         print('Sleep', len(newSleepClusters))
         self.model.sleepClusters.extend(newSleepClusters)
-        self.model.clusters = [cl for cl in self.model.clusters if cl.lastExapleTMS >= self.model.lastCleaningCycle]
+        self.model.clusters = newClusters
         self.model.lastCleaningCycle = time.time()
         print('[after Sleep Clean]', self.model.statusStr())
         # ShortMem ← remove-oldExamples(ShortMem, windowsize)
@@ -332,29 +362,11 @@ class Minas:
       return Model
     """
     print('[noveltyDetection]\t', 'unknownBuffer:', len(model.unknownBuffer), 'sleepClusters:', len(model.sleepClusters))
-    def ValidationCriterion(cluster: Cluster, unknownBuffer):
-      isRepresentative = cluster.counter > model.representationThr
-      near, dist = model.closestCluster(cluster.center)
-      silhouette = lambda a, b: (b - a) / max([a, b])
-      # 
-      distances = []
-      for ex in unknownBuffer:
-        d = cluster.dist(ex.item)
-        if d <= (model.radiusFactor * cluster.radius()):
-          distances.append(d)
-      mean = sum(distances) / len(distances)
-      devianceSqrSum = sum([(d - mean) **2 for d in distances])
-      var = devianceSqrSum / len(distances)
-      stdDevDistance = var **0.5
-      # 
-      isCohesive = silhouette(dist, stdDevDistance) > 0
-      return isRepresentative and isCohesive
-    #
     newModel = deepcopy(model)
     for cluster in newModel.clustering(model.unknownBuffer):
       T = newModel.noveltyThr
       # T = newModel.noveltyThrFn(cluster)
-      if ValidationCriterion(cluster, model.unknownBuffer):
+      if model.validationCriterion(cluster, model.unknownBuffer):
         near, dist = newModel.closestCluster(cluster.center)
         if dist <= T:
           cluster.label = near.label
