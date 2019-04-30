@@ -97,3 +97,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Dask
+*lock
