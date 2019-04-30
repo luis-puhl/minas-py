@@ -8,6 +8,7 @@ import numpy as np
 import scipy as scipy
 import sklearn as sk
 from sklearn.cluster import KMeans
+from sklearn.externals import joblib
 
 import self_test as self_test
 
@@ -150,7 +151,9 @@ class Model:
     data=[ex.item for ex in examples]
     df = pd.DataFrame(data=data)
     try:
-      kmeans = KMeans(n_clusters=n_clusters).fit(df)
+      kmeans = KMeans(n_clusters=n_clusters)
+      with joblib.parallel_backend('dask'):
+        kmeans.fit(df)
     except Exception as exc:
       for ex in data:
         if np.isinf(ex).any():

@@ -4,6 +4,7 @@ from copy import deepcopy
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as matplotlib
+from dask.distributed import Client
 
 import minas as minas
 
@@ -16,6 +17,7 @@ def selfTest(Minas):
     shutil.rmtree('run')
   testInit = time.time()
   # run for 15 seconds
+  client = Client('tcp://localhost:8786')
   while time.time() - testInit < 15:
     dirr = 'run/seed_' + str(seed) + '/'
     if not os.path.exists(dirr):
@@ -25,11 +27,13 @@ def selfTest(Minas):
       examples = setupFakeExamples(seed)
       plotExamples2D(dirr, '0-fake_base', examples)
       # ------------------------------------------------------------------------------------------------
+      resultMinas = None
       try:
-        runMinas()
+        resultMinas = runMinas(Minas, examples, dirr)
       except:
         e = sys.exc_info()
-        print('Exception on Minas\n{e}\n'.format(e=str(e[0])))
+        print('Exception on Minas\t{e}\n'.format(e=e))
+        raise
       # ------------------------------------------------------------------------------------------------
       results = []
       positiveCount = 0
@@ -40,13 +44,13 @@ def selfTest(Minas):
         for ex in examples:
           ex = deepcopy(ex)
           hasLabel, cluster, d = None, None, None
-          if resultModel:
-            hasLabel, cluster, d = resultModel.model.classify(ex)
+          if resultMinas:
+            hasLabel, cluster, d = resultMinas.model.classify(ex)
           examplesCsv.write(
             ','.join([str(i) for i in ex.item]) + ',' +
             ex.label + ',' +
-            (cluster.label if hasLabel else 'Unknown') + ',' +
-            ('Positive' if cluster.label == ex.label else 'Negative') +
+            (cluster.label if cluster and hasLabel else 'Unknown') + ',' +
+            ('Positive' if cluster and cluster.label == ex.label else 'Negative') +
             '\n'
           )
           if hasLabel:
@@ -61,22 +65,24 @@ def selfTest(Minas):
             unknownCount += 1
           results.append(ex)
           # end results map
-      print(resultModel.model)
-      resultsPNU = 'positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%}), '.format(
-        p=positiveCount, pp=positiveCount/totalExamples,
-        n=negativeCount, nn=negativeCount/totalExamples,
-        u=unknownCount, uu=unknownCount/totalExamples,
-      )
-      log.write('\n=== Final Results ===\n{model}\n\n{results}'.format(model=str(resultModel.model), results=resultsPNU))
-      print('\n' + resultsPNU)
-      plotExamples2D(dirr, '5-online_clusters', [], resultModel.model.clusters)
-      plotExamples2D(dirr, '6-online_resutls', results, resultModel.model.clusters)
+      if resultMinas:
+        print(resultMinas.model)
+      print('\n=== Final Results ===\n{model}\n\n{results}'.format(
+        model=str(resultMinas.model if resultMinas else ''),
+        results='positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%}), '.format(
+          p=positiveCount, pp=positiveCount/totalExamples,
+          n=negativeCount, nn=negativeCount/totalExamples,
+          u=unknownCount, uu=unknownCount/totalExamples,
+        )
+      ))
+      plotExamples2D(dirr, '5-online_clusters', [], resultMinas.model.clusters if resultMinas else [])
+      plotExamples2D(dirr, '6-online_resutls', results, resultMinas.model.clusters if resultMinas else [])
       # run once?
       # break
     # ------------------------------------------------------------------------------------------------
     seed += 1
 
-def setupFakeExamples(seed)
+def setupFakeExamples(seed):
   np.random.seed(seed)
   attributes = np.random.randint(2, 40)
   examples = []
@@ -94,7 +100,7 @@ def setupFakeExamples(seed)
   np.random.shuffle(examples)
   return examples
 
-def runMinas(examples)
+def runMinas(Minas, examples, dirr):
   basicModel = Minas()
   training_set = examples[:int(len(examples) * .1)]
   with open(dirr + 'training_set.csv', 'w') as training_set_csv:
@@ -102,7 +108,7 @@ def runMinas(examples)
       training_set_csv.write(','.join([str(i) for i in ex.item]) + ',' + ex.label + '\n')
   plotExamples2D(dirr, '1-training_set', training_set)
   basicModel = basicModel.offline(training_set)
-  log.write(str(basicModel.model))
+  print(str(basicModel.model))
   plotExamples2D(dirr, '2-offline_clusters', [], basicModel.model.clusters)
   plotExamples2D(dirr, '3-offline_training', training_set, basicModel.model.clusters)
   plotExamples2D(dirr, '4-offline_all_data', examples, basicModel.model.clusters)
@@ -110,6 +116,7 @@ def runMinas(examples)
   testSet = examples[int(len(examples) * .1):]
   baseStream = (ex.item for ex in testSet)
   resultModel = basicModel.online(baseStream)
+  return resultModel
 
 def plotExamples2D(directory, name='plotExamples2D', examples=[], clusters=[]):
   fig, ax = mkPlot(examples=examples, clusters=clusters)
