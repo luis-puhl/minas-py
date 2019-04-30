@@ -150,16 +150,14 @@ class Model:
     assert n_samples >= n_clusters
     data=[ex.item for ex in examples]
     df = pd.DataFrame(data=data)
+    kmeans = KMeans(n_clusters=n_clusters)
     try:
-      kmeans = KMeans(n_clusters=n_clusters)
       with joblib.parallel_backend('dask'):
         kmeans.fit(df)
     except Exception as exc:
-      for ex in data:
-        if np.isinf(ex).any():
-          print('[np.isinf]', ex)
-        if np.isnan(ex).any():
-          print('[np.isnan]', ex)
+      print('\n------------------------ Exception ------------------------')
+      print(exc)
+      print(df)
       raise RuntimeError('Minas Clustering Error') from exc
 
     clusters = []

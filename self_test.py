@@ -1,14 +1,15 @@
-import os, asyncio, signal, time, sys, shutil
+import os, queue, asyncio, signal, time, sys, shutil
 from copy import deepcopy
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib as matplotlib
 from dask.distributed import Client
 
 import minas as minas
 
-def selfTest(Minas):
+async def selfTest(Minas):
   print('Running self tests')
   # ------------------------------------------------------------------------------------------------
   seed = 200
@@ -29,7 +30,7 @@ def selfTest(Minas):
       # ------------------------------------------------------------------------------------------------
       resultMinas = None
       try:
-        resultMinas = runMinas(Minas, examples, dirr)
+        resultMinas = await runMinas(Minas, examples, dirr)
       except:
         e = sys.exc_info()
         print('Exception on Minas\t{e}\n'.format(e=e))
@@ -114,8 +115,12 @@ def runMinas(Minas, examples, dirr):
   plotExamples2D(dirr, '4-offline_all_data', examples, basicModel.model.clusters)
   # ------------------------------------------------------------------------------------------------
   testSet = examples[int(len(examples) * .1):]
+  queue = queue.Queue()
+  t = threading.Thread(target=basicModel.online, args=(queue) )
+  t.start()
+  resultModel = basicModel.online(inputQueue)
+  t.join()
   baseStream = (ex.item for ex in testSet)
-  resultModel = basicModel.online(baseStream)
   return resultModel
 
 def plotExamples2D(directory, name='plotExamples2D', examples=[], clusters=[]):
@@ -187,4 +192,4 @@ class Logger(object):
     pass
 
 if __name__ == "__main__":
-  selfTest(minas.Minas)
+  asyncio.run(selfTest(minas.Minas))
