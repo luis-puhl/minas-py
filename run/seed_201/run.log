@@ -1,0 +1,77 @@
+./minas.py:157 Model.__init__ Model(k: 100, radiusFactor: 1.1, noveltyThr: 100, windowTimeSize: 100, ndProcedureThr: 2000, representationThr: 3, globalCount: 0, lastExapleTMS: -inf, lastCleaningCycle: -inf, clusters: 0, sleepClusters: [], counter: 0, unknownBuffer: [], noveltyIndex: 0, sleepers: 0, u: 0, diff: 0, known: 0 => clusters: 0, sleepers: 0, known: 0, unkown: 0 (0), total=0)(
+)
+./minas.py:201 clustering 84 [Ex]label: Class #0	len: 2	timestamp: 1556669923.834199	classificationTries: 0
+./minas.py:201 clustering 48 [Ex]label: Class #1	len: 2	timestamp: 1556669923.8441992	classificationTries: 0
+./minas.py:201 clustering 33 [Ex]label: Class #2	len: 2	timestamp: 1556669923.8491979	classificationTries: 0
+./minas.py:307 [offline end]
+Model(k: 100, radiusFactor: 1.1, noveltyThr: 100, windowTimeSize: 100, ndProcedureThr: 165, representationThr: 3, globalCount: 0, lastExapleTMS: -inf, lastCleaningCycle: -inf, clusters: 16, sleepClusters: [], counter: 0, unknownBuffer: [], noveltyIndex: 0, sleepers: 0, u: 0, diff: 0, known: 0 => clusters: 16, sleepers: 0, known: 0, unkown: 0 (0), total=0)(
+	[Class #0]	n=10	c=4.21, 4.29,	r=2.19
+	[Class #0]	n=7	c=10.94, 10.31,	r=3.17
+	[Class #0]	n=12	c=2.98, 9.22,	r=3.68
+	[Class #0]	n=12	c=8.14, 5.12,	r=2.54
+	[Class #0]	n=12	c=7.98, 9.01,	r=1.10
+	[Class #0]	n=10	c=10.78, 6.92,	r=2.25
+	[Class #0]	n=8	c=7.80, 12.72,	r=2.72
+	[Class #0]	n=10	c=5.94, 8.06,	r=1.52
+	[Class #1]	n=8	c=6.31, 6.28,	r=0.22
+	[Class #1]	n=15	c=6.41, 6.45,	r=0.12
+	[Class #1]	n=9	c=6.61, 6.41,	r=0.15
+	[Class #1]	n=5	c=6.66, 6.63,	r=0.10
+	[Class #1]	n=11	c=6.39, 6.63,	r=0.27
+	[Class #2]	n=11	c=0.70, 0.05,	r=1.13
+	[Class #2]	n=7	c=0.14, -0.95,	r=0.86
+	[Class #2]	n=15	c=-0.29, 0.30,	r=0.83
+)
+minas will run
+./minas.py:374 bufferFull clusters: 16, sleepers: 0, known: 989, unkown: 166 (166), total=1155
+./minas.py:387 [after sleep check] clusters: 16, sleepers: 0, known: 989, unkown: 166 (166), total=1155
+./minas.py:444 [noveltyDetection]	 unknownBuffer: 166 sleepClusters: 0
+./minas.py:201 clustering 166 [Ex]label: None	len: 2	timestamp: 1556669927.7811453	classificationTries: 2
+./minas.py:390 [after novelty Detection] clusters: 16, sleepers: 0, known: 989, unkown: 166 (166), total=1155
+./minas.py:400 Sleep 0
+./minas.py:404 [after Sleep Clean] clusters: 16, sleepers: 0, known: 989, unkown: 166 (166), total=1155
+./minas.py:411 [Cleaning Cycle]	Discarting 166 examples
+./minas.py:412 [after Unkown Clean] clusters: 16, sleepers: 0, known: 989, unkown: 0 (166), total=1155
+minas done
+Join <SpawnProcess(SpawnProcess-2, stopped)>
+aggregatin resutls
+Model(k: 100, radiusFactor: 1.1, noveltyThr: 100, windowTimeSize: 100, ndProcedureThr: 165, representationThr: 3, globalCount: 1489, lastExapleTMS: 1556669929.228129, lastCleaningCycle: 1556669929.0001383, clusters: 16, sleepClusters: [], counter: 1282, unknownBuffer: [[Ex]label: None	len: 2	timestamp: 1556669929.0001383	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0021305	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0051303	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0051303	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0061305	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0221317	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0381954	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.047192	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.049191	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.066132	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.070133	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0821934	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0831313	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0861893	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0871913	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0891893	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0961304	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.103191	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1041293	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1062012	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1111307	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1191285	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1221342	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1241314	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1271317	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1291301	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.130131	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.13213	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1361287	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.150133	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1511338	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1541338	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1661296	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1691349	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1801295	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1921291	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1971283	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1991284	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.20713	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.2221284	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.228129	classificationTries: 1], noveltyIndex: 0, sleepers: 0, u: 41, diff: 207, known: 1282 => clusters: 16, sleepers: 0, known: 1282, unkown: 41 (207), total=1489)(
+	[Class #0]	n=72	c=4.21, 4.29,	r=2.83
+	[Class #0]	n=62	c=10.94, 10.31,	r=3.48
+	[Class #0]	n=90	c=2.98, 9.22,	r=3.68
+	[Class #0]	n=98	c=8.14, 5.12,	r=3.19
+	[Class #0]	n=99	c=7.98, 9.01,	r=1.80
+	[Class #0]	n=107	c=10.78, 6.92,	r=3.05
+	[Class #0]	n=63	c=7.80, 12.72,	r=3.00
+	[Class #0]	n=70	c=5.94, 8.06,	r=2.04
+	[Class #1]	n=89	c=6.31, 6.28,	r=0.23
+	[Class #1]	n=109	c=6.41, 6.45,	r=0.14
+	[Class #1]	n=105	c=6.61, 6.41,	r=0.20
+	[Class #1]	n=60	c=6.66, 6.63,	r=0.16
+	[Class #1]	n=125	c=6.39, 6.63,	r=0.29
+	[Class #2]	n=114	c=0.70, 0.05,	r=1.13
+	[Class #2]	n=54	c=0.14, -0.95,	r=0.86
+	[Class #2]	n=127	c=-0.29, 0.30,	r=1.09
+)
+
+=== Final Results ===
+Model(k: 100, radiusFactor: 1.1, noveltyThr: 100, windowTimeSize: 100, ndProcedureThr: 165, representationThr: 3, globalCount: 1489, lastExapleTMS: 1556669929.228129, lastCleaningCycle: 1556669929.0001383, clusters: 16, sleepClusters: [], counter: 1282, unknownBuffer: [[Ex]label: None	len: 2	timestamp: 1556669929.0001383	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0021305	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0051303	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0051303	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0061305	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0221317	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0381954	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.047192	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.049191	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.066132	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.070133	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0821934	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0831313	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0861893	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0871913	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0891893	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.0961304	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.103191	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1041293	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1062012	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1111307	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1191285	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1221342	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1241314	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1271317	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1291301	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.130131	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.13213	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1361287	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.150133	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1511338	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1541338	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1661296	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1691349	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1801295	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1921291	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1971283	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.1991284	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.20713	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.2221284	classificationTries: 1, [Ex]label: None	len: 2	timestamp: 1556669929.228129	classificationTries: 1], noveltyIndex: 0, sleepers: 0, u: 41, diff: 207, known: 1282 => clusters: 16, sleepers: 0, known: 1282, unkown: 41 (207), total=1489)(
+	[Class #0]	n=72	c=4.21, 4.29,	r=2.83
+	[Class #0]	n=62	c=10.94, 10.31,	r=3.48
+	[Class #0]	n=90	c=2.98, 9.22,	r=3.68
+	[Class #0]	n=98	c=8.14, 5.12,	r=3.19
+	[Class #0]	n=99	c=7.98, 9.01,	r=1.80
+	[Class #0]	n=107	c=10.78, 6.92,	r=3.05
+	[Class #0]	n=63	c=7.80, 12.72,	r=3.00
+	[Class #0]	n=70	c=5.94, 8.06,	r=2.04
+	[Class #1]	n=89	c=6.31, 6.28,	r=0.23
+	[Class #1]	n=109	c=6.41, 6.45,	r=0.14
+	[Class #1]	n=105	c=6.61, 6.41,	r=0.20
+	[Class #1]	n=60	c=6.66, 6.63,	r=0.16
+	[Class #1]	n=125	c=6.39, 6.63,	r=0.29
+	[Class #2]	n=114	c=0.70, 0.05,	r=1.13
+	[Class #2]	n=54	c=0.14, -0.95,	r=0.86
+	[Class #2]	n=127	c=-0.29, 0.30,	r=1.09
+)
+
+[seed 201] positive: 1483(89.66%), negative: 2(0.12%), unknown: 169(10.22%), 

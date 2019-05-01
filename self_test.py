@@ -1,4 +1,5 @@
-import os, queue, asyncio, signal, time, sys, shutil
+import os, queue, asyncio, signal, time, sys, shutil, traceback
+import multiprocessing as mp
 from copy import deepcopy
 
 import numpy as np
@@ -7,9 +8,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from dask.distributed import Client
 
+from timeout import timeout
 import minas as minas
 
-async def selfTest(Minas):
+@timeout(30)
+def selfTest(Minas):
   print('Running self tests')
   # ------------------------------------------------------------------------------------------------
   seed = 200
@@ -19,7 +22,10 @@ async def selfTest(Minas):
   testInit = time.time()
   # run for 15 seconds
   client = Client('tcp://localhost:8786')
-  while time.time() - testInit < 15:
+  exception = None
+  while not exception:
+    print('Next seed: ', seed)
+    # dirr = input()
     dirr = 'run/seed_' + str(seed) + '/'
     if not os.path.exists(dirr):
       os.makedirs(dirr)
@@ -30,12 +36,14 @@ async def selfTest(Minas):
       # ------------------------------------------------------------------------------------------------
       resultMinas = None
       try:
-        resultMinas = await runMinas(Minas, examples, dirr)
-      except:
-        e = sys.exc_info()
-        print('Exception on Minas\t{e}\n'.format(e=e))
-        raise
+        resultMinas = runMinas(Minas, examples, dirr)
+      except Exception as exc:
+        traceback.print_stack()
+        print('Exception on Minas\t{e}\n'.format(e=exc))
+        print(exc)
+        exception = exc
       # ------------------------------------------------------------------------------------------------
+      print('aggregatin resutls')
       results = []
       positiveCount = 0
       negativeCount = 0
@@ -46,7 +54,7 @@ async def selfTest(Minas):
           ex = deepcopy(ex)
           hasLabel, cluster, d = None, None, None
           if resultMinas:
-            hasLabel, cluster, d = resultMinas.model.classify(ex)
+            hasLabel, cluster, d = resultMinas.classify(ex)
           examplesCsv.write(
             ','.join([str(i) for i in ex.item]) + ',' +
             ex.label + ',' +
@@ -67,21 +75,23 @@ async def selfTest(Minas):
           results.append(ex)
           # end results map
       if resultMinas:
-        print(resultMinas.model)
+        print(resultMinas)
       print('\n=== Final Results ===\n{model}\n\n{results}'.format(
-        model=str(resultMinas.model if resultMinas else ''),
-        results='positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%}), '.format(
+        model=str(resultMinas if resultMinas else ''),
+        results='[seed {seed}] positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%}), '.format(
+          seed=seed,
           p=positiveCount, pp=positiveCount/totalExamples,
           n=negativeCount, nn=negativeCount/totalExamples,
           u=unknownCount, uu=unknownCount/totalExamples,
         )
       ))
-      plotExamples2D(dirr, '5-online_clusters', [], resultMinas.model.clusters if resultMinas else [])
-      plotExamples2D(dirr, '6-online_resutls', results, resultMinas.model.clusters if resultMinas else [])
-      # run once?
-      # break
+      plotExamples2D(dirr, '5-online_clusters', [], resultMinas.clusters if resultMinas else [])
+      plotExamples2D(dirr, '6-online_resutls', results, resultMinas.clusters if resultMinas else [])
+    del resultMinas
     # ------------------------------------------------------------------------------------------------
     seed += 1
+  if exception:
+    raise RuntimeError('SelfTest Fail') from exception
 
 def setupFakeExamples(seed):
   np.random.seed(seed)
@@ -109,19 +119,38 @@ def runMinas(Minas, examples, dirr):
       training_set_csv.write(','.join([str(i) for i in ex.item]) + ',' + ex.label + '\n')
   plotExamples2D(dirr, '1-training_set', training_set)
   basicModel = basicModel.offline(training_set)
-  print(str(basicModel.model))
-  plotExamples2D(dirr, '2-offline_clusters', [], basicModel.model.clusters)
-  plotExamples2D(dirr, '3-offline_training', training_set, basicModel.model.clusters)
-  plotExamples2D(dirr, '4-offline_all_data', examples, basicModel.model.clusters)
+  print(str(basicModel))
+  plotExamples2D(dirr, '2-offline_clusters', [], basicModel.clusters)
+  plotExamples2D(dirr, '3-offline_training', training_set, basicModel.clusters)
+  plotExamples2D(dirr, '4-offline_all_data', examples, basicModel.clusters)
   # ------------------------------------------------------------------------------------------------
   testSet = examples[int(len(examples) * .1):]
-  queue = queue.Queue()
-  t = threading.Thread(target=basicModel.online, args=(queue) )
-  t.start()
-  resultModel = basicModel.online(inputQueue)
-  t.join()
-  baseStream = (ex.item for ex in testSet)
+  # 
+  ctx = mp.get_context('spawn')
+  queue = ctx.Queue()
+  p = ctx.Process(target=producer, args=(testSet, queue,))
+  try:
+    p.start()
+    def sig_int(signal_num, frame):
+      p.kill()
+    print('minas will run')
+    signal.signal(signal.SIGINT, sig_int)
+    resultModel = basicModel.online(queue)
+    print('minas done')
+  except Exception as excep:
+    print('Exception on Minas\t{e}\n'.format(e=excep))
+    raise
+  finally:
+    p.join()
+    print('Join', p)
   return resultModel
+
+def producer(testSet, queue):
+  print('init Producer')
+  for ex in testSet:
+    queue.put(ex.item)
+  queue.put(None)
+  print('end Producer')
 
 def plotExamples2D(directory, name='plotExamples2D', examples=[], clusters=[]):
   fig, ax = mkPlot(examples=examples, clusters=clusters)
@@ -178,8 +207,10 @@ class Logger(object):
     self.fileName = fileName
   def __enter__(self):
     self.log = open(self.fileName, "a")
+    sys.stdout = self
     return self
   def __exit__(self, exc_type, exc_value, traceback):
+    sys.stdout = self.terminal
     pass
   def write(self, message):
     self.terminal.write(message)
@@ -192,4 +223,4 @@ class Logger(object):
     pass
 
 if __name__ == "__main__":
-  asyncio.run(selfTest(minas.Minas))
+  selfTest(minas.Minas)
