@@ -13,9 +13,9 @@ handlers:
   file:
     class : logging.handlers.RotatingFileHandler
     formatter: complete
-    filename: minas.log
+    filename: ./run/minas.log
     maxBytes: 1024
     backupCount: 3
 root:
   level: DEBUG
-  handlers: [console]
+  handlers: [console, file]

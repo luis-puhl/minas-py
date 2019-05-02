@@ -10,6 +10,7 @@ from dask.distributed import Client
 
 import minas as minas
 from timeout import timeout
+from timed import timed
 
 def setupFakeExamples(seed):
   np.random.seed(seed)
@@ -48,7 +49,11 @@ def runMinas(Minas, examples, dirr):
   for ex in testSet:
     que.put(ex.item)
   que.put(None)
-  resultModel = basicModel.online(que)
+  def streamGen(que: queue.Queue()):
+    while not que.empty:
+      yield que.next()
+  stream = streamGen(que)
+  resultModel = basicModel.online([i.item for i in testSet])
   return resultModel
   # ------------------------------------------------------------------------------------------------
   # ctx = mp.get_context('spawn')
@@ -87,6 +92,7 @@ def plotExamples2D(directory, name='plotExamples2D', examples=[], clusters=[]):
   plt.savefig(directory + name + '.png')
   plt.close(fig)
 
+@timed
 def mkPlot(examples=[], clusters=[]):
   labels = [ex.label for ex in examples]
   labels.extend([ex.label for ex in clusters])
@@ -128,7 +134,7 @@ def mkPlot(examples=[], clusters=[]):
 
 async def testRun(Minas, seed):
   # dirr = input()
-  dirr = 'run/seed_' + str(seed) + '/'
+  dirr = 'run/seeds/' + str(seed) + '/'
   if not os.path.exists(dirr):
     os.makedirs(dirr)
   rootLogger = logging.getLogger()
@@ -198,10 +204,9 @@ def selfTest(Minas):
   # ------------------------------------------------------------------------------------------------
   seed = 200
   stdout_ = sys.stdout #Keep track of the previous value.
-  if os.path.exists('run'):
-    shutil.rmtree('run')
+  if os.path.exists('run/seeds'):
+    shutil.rmtree('run/seeds')
   testInit = time.time()
-  # run for 15 seconds
   # client = Client('tcp://localhost:8786')
   exception = None
   while not exception and (time.time() - testInit < 30):
@@ -212,3 +217,15 @@ def selfTest(Minas):
   if exception:
     raise RuntimeError('SelfTest Fail') from exception
   logging.info('Done self test')
+  # 
+  import matplotlib, numpy
+  matplotlib.use('Agg')
+  import matplotlib.pyplot as plt
+  
+  from timed import mkTimedResumePlot, timedResume, statisticSummary
+  df = statisticSummary()
+  logging.info(f'=========== Timed Functions Summary ===========\n{df}')
+  fig, ax = mkTimedResumePlot(df)
+  plt.tight_layout(.5)
+  plt.savefig('./run/seeds/timed-run.png')
+  plt.close(fig)

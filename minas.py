@@ -12,6 +12,7 @@ import dask
 from dask import delayed
 
 import self_test as self_test
+from timed import timed
 
 class Example:
   """Holds an example
@@ -99,8 +100,13 @@ class Cluster:
     return {k: getattr(self, k) for k in self.__slots__}
   def radius(self):
     return self.maxDistance
+  
   def dist(self, vec: List[float] = []):
+    # assert type(vec) is list, 'dist takes only lists'
+    assert len(vec) == len(self.center), 'dist can only compare same-dimetion vectors'
     return scipy.spatial.distance.euclidean(self.center, vec)
+  
+  @timed
   def addExample(self, example, distance=None):
     self.n += 1
     if example.timestamp > self.lastExapleTMS:
@@ -112,6 +118,7 @@ class Cluster:
       self.maxDistance = distance
 
 @delayed(pure=True)
+@timed
 def closestClusterDelayedPure(vec: List[float], clusters = List[Cluster]) -> (Cluster, float):
   """Returns the nearest cluster and its distance (nearCl, dist)"""
   dist = float("inf")
@@ -129,8 +136,13 @@ class Minas:
   __slots__ = [
     'k', 'radiusFactor', 'noveltyThr', 'windowTimeSize', 'ndProcedureThr', 'representationThr', 'globalCount',
     'lastExapleTMS', 'lastCleaningCycle', 'clusters', 'sleepClusters', 'counter', 'unknownBuffer', 'noveltyIndex',
+    'daskEnable',
   ]
   def __init__(self):
+    self.daskEnable = {
+      'kmeans': False,
+      'dist': False,
+    }
     self.k = 100
     self.radiusFactor = 1.1
     self.noveltyThr = 100
@@ -180,6 +192,8 @@ class Minas:
       clusters=len(self.clusters), sleepers=len(self.sleepClusters),
       known=self.counter, u=len(self.unknownBuffer), diff=self.globalCount-self.counter, globalCount=self.globalCount
     )
+  
+  @timed
   def clustering(self, examples):
     """
     After the execution of the clustering algorithm, each micro-cluster is represented
@@ -190,20 +204,14 @@ class Minas:
     
     n_samples = len(examples)
     n_clusters = min(self.k, int(n_samples / (3 * self.representationThr)))
-    # by 2, so at least 2 examples per cluster
-    # if n_samples < n_clusters / 2:
-    #   n_clusters = int(n_samples / 10)
     assert n_samples >= n_clusters
     df = pd.DataFrame(data=[ex.item for ex in examples])
     kmeans = KMeans(n_clusters=n_clusters)
-    try:
-      # with joblib.parallel_backend('dask'):
+    if self.daskEnable['kmeans']:
+      with joblib.parallel_backend('dask'):
+        kmeans.fit(df)
+    else:
       kmeans.fit(df)
-    except Exception as exc:
-      logging.info('\n------------------------ Exception ------------------------')
-      logging.info(exc)
-      logging.info(df)
-      raise RuntimeError('Minas Clustering Error') from exc
 
     clusters = []
     for centroid in kmeans.cluster_centers_:
@@ -222,12 +230,14 @@ class Minas:
       if nearCl:
         nearCl.addExample(ex)
     return clusters
-  #
+
+  @timed
   def closestCluster(self, vec: List[float], clusters = None) -> (Cluster, float):
     """Returns the nearest cluster and its distance (nearCl, dist)"""
     if clusters == None:
       clusters = self.clusters
-    # return closestClusterDelayedPure(vec, clusters).compute()
+    if self.daskEnable['dist']:
+      return closestClusterDelayedPure(vec, clusters).compute()
     dist = float("inf")
     nearCl = None
     for cl in clusters:
@@ -236,7 +246,8 @@ class Minas:
         dist = d
         nearCl = cl
     return nearCl, dist
-  # 
+
+  @timed
   def validationCriterion(self, cluster: Cluster, unknownBuffer):
     isRepresentative = cluster.n > self.representationThr
     # 
@@ -254,13 +265,15 @@ class Minas:
     # 
     isCohesive = silhouette(dist, stdDevDistance) > 0
     return isRepresentative and isCohesive
-  #
+  
+  @timed
   def classify(self, example: Example):
     cluster, dist = self.closestCluster(example.item)
     return (dist <= (self.radiusFactor * cluster.radius()), cluster, dist)
   
   # ----------------------------------------------------------------------------------------------------------------
   
+  @timed
   def offline(self, training_set=[]):
     """
       Require:
@@ -296,17 +309,16 @@ class Minas:
     # store self to a file
     return self
   
-  # should be async
+  @timed
   def online(self, stream):
-    while True:
-      example = stream.get()
+    for example in stream:
       if example is None:
         break
       self.onlineProcessExample(example)
-      # stream.task_done()
     return self
   
-  def onlineProcessExample(self, example):
+  @timed
+  def onlineProcessExample(self, ex):
     """
       Require:
         Model: decision model from initial training phase,
@@ -341,7 +353,7 @@ class Minas:
     # example = Example(item=await stream.read())
     # for ex in stream:
     self.globalCount += 1
-    example = Example(item=example)
+    example = Example(item=ex)
     self.lastExapleTMS = example.timestamp
     cluster, dist = self.closestCluster(example.item)
     example.tries += 1
@@ -357,6 +369,7 @@ class Minas:
       self.bufferFull()
     return self
 
+  @timed
   def bufferFull(self):
     logging.info('bufferFull, {}'.format(self))
     for sleepExample in self.unknownBuffer:
@@ -399,7 +412,7 @@ class Minas:
     logging.info('[after Unkown Clean] {}'.format(self))
     return self
 
-  #
+  @timed
   def noveltyDetection(self):
     """noveltyDetection
       Require:
@@ -430,15 +443,13 @@ class Minas:
     """
     logging.info('[noveltyDetection]\t unknownBuffer: {u}, sleepClusters: {s}'.format(u=len(self.unknownBuffer), s=len(self.sleepClusters)))
     for cluster in self.clustering(self.unknownBuffer):
-      T = self.noveltyThr
-      # T = self.noveltyThrFn(cluster)
       if self.validationCriterion(cluster, self.unknownBuffer):
         near, dist = self.closestCluster(cluster.center)
-        if dist <= T:
+        if dist <= self.noveltyThr:
           cluster.label = near.label
         else:
           near, dist = self.closestCluster(cluster.center, self.sleepClusters)
-          if dist <= T:
+          if dist <= self.noveltyThr:
             cluster.label = near.label
             # wakeup
             logging.info('wakeup')

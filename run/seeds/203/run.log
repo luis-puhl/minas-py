@@ -1,8 +1,8 @@
-2019-05-02 00:39:29,937 INFO ./minas.py:188 clustering clustering 54, Example(Class #0, ) # ${'len': 7, 'timestamp': 1556768369.5586617, 'tries': 0}
-2019-05-02 00:39:29,990 INFO ./minas.py:188 clustering clustering 83, Example(Class #1, ) # ${'len': 7, 'timestamp': 1556768369.579667, 'tries': 0}
-2019-05-02 00:39:30,063 INFO ./minas.py:295 offline [offline end]
-2019-05-02 00:39:30,063 INFO C:\dev\minas-py\self_test.py:40 runMinas <Model Status clusters: 15, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 15, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
-Model({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 137, 'representationThr': 3, 'globalCount': 0, 'lastExapleTMS': -inf, 'lastCleaningCycle': -inf, 'counter': 0, 'noveltyIndex': 0, 'clusters': 15, 'sleepers': 0, 'unknownBuffer': 0, 'diff': 0, 'known': 0}
+2019-05-02 18:44:18,900 INFO ./minas.py:202 clustering clustering 54, Example(Class #0, ) # ${'len': 7, 'timestamp': 1556833458.5441508, 'tries': 0}
+2019-05-02 18:44:18,947 INFO ./minas.py:202 clustering clustering 83, Example(Class #1, ) # ${'len': 7, 'timestamp': 1556833458.565151, 'tries': 0}
+2019-05-02 18:44:19,023 INFO ./minas.py:308 offline [offline end]
+2019-05-02 18:44:19,024 INFO C:\dev\minas-py\self_test.py:41 runMinas <Model Status clusters: 15, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 15, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
+Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 137, 'representationThr': 3, 'globalCount': 0, 'lastExapleTMS': -inf, 'lastCleaningCycle': -inf, 'counter': 0, 'noveltyIndex': 0, 'clusters': 15, 'sleepers': 0, 'unknownBuffer': 0, 'diff': 0, 'known': 0}
 	Cluster(label=Class #0,	n=8,	sum=5.51,	max=0.98,	center=[7.55, 6.79, 6.80, 6.85, 7.01, 7.42, 7.28])
 	Cluster(label=Class #0,	n=8,	sum=5.94,	max=1.10,	center=[7.40, 7.22, 7.51, 7.63, 7.40, 7.51, 6.91])
 	Cluster(label=Class #0,	n=10,	sum=6.81,	max=0.98,	center=[6.92, 7.08, 6.86, 7.28, 6.84, 7.35, 7.04])
@@ -19,12 +19,12 @@ Model({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 
 	Cluster(label=Class #1,	n=12,	sum=19.89,	max=2.57,	center=[9.62, 9.71, 9.76, 8.82, 9.22, 9.33, 9.30])
 	Cluster(label=Class #1,	n=14,	sum=23.81,	max=2.27,	center=[9.67, 8.69, 9.95, 9.89, 9.60, 9.22, 10.63])
 )
-2019-05-02 00:39:31,246 INFO C:\dev\minas-py\self_test.py:149 testRun aggregatin resutls
-2019-05-02 00:39:31,969 INFO C:\dev\minas-py\self_test.py:185 testRun 
+2019-05-02 18:44:20,294 INFO C:\dev\minas-py\self_test.py:155 testRun aggregatin resutls
+2019-05-02 18:44:21,057 INFO C:\dev\minas-py\self_test.py:191 testRun 
 
 	=== Final Results ===
 # <Model Status clusters: 15, sleepers: 0, known: 1122, unkown: 116 (116), total: 1238>
-Model({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 137, 'representationThr': 3, 'globalCount': 1238, 'lastExapleTMS': 1556768371.2466455, 'lastCleaningCycle': -inf, 'counter': 1122, 'noveltyIndex': 0, 'clusters': 15, 'sleepers': 0, 'unknownBuffer': 116, 'diff': 116, 'known': 1122}
+Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 137, 'representationThr': 3, 'globalCount': 1238, 'lastExapleTMS': 1556833460.2941308, 'lastCleaningCycle': -inf, 'counter': 1122, 'noveltyIndex': 0, 'clusters': 15, 'sleepers': 0, 'unknownBuffer': 116, 'diff': 116, 'known': 1122}
 	Cluster(label=Class #0,	n=57,	sum=48.04,	max=1.31,	center=[7.55, 6.79, 6.80, 6.85, 7.01, 7.42, 7.28])
 	Cluster(label=Class #0,	n=74,	sum=60.86,	max=1.26,	center=[7.40, 7.22, 7.51, 7.63, 7.40, 7.51, 6.91])
 	Cluster(label=Class #0,	n=115,	sum=101.85,	max=1.48,	center=[6.92, 7.08, 6.86, 7.28, 6.84, 7.35, 7.04])
