@@ -14,6 +14,7 @@ class Alarm(threading.Thread):
     self.setDaemon(True)
   def run (self):
     time.sleep(self.timeout)
+    print('Alarm Timeout')
     os._exit(1)
 
 class TimeoutError(Exception):

@@ -1,4 +1,4 @@
-import os, queue, asyncio, signal, time, sys, shutil, traceback
+import os, queue, asyncio, signal, time, sys, shutil, traceback, logging, logging.config, yaml
 import multiprocessing as mp
 from copy import deepcopy
 
@@ -8,90 +8,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from dask.distributed import Client
 
-from timeout import timeout
 import minas as minas
-
-@timeout(30)
-def selfTest(Minas):
-  print('Running self tests')
-  # ------------------------------------------------------------------------------------------------
-  seed = 200
-  stdout_ = sys.stdout #Keep track of the previous value.
-  if os.path.exists('run'):
-    shutil.rmtree('run')
-  testInit = time.time()
-  # run for 15 seconds
-  client = Client('tcp://localhost:8786')
-  exception = None
-  while not exception:
-    print('Next seed: ', seed)
-    # dirr = input()
-    dirr = 'run/seed_' + str(seed) + '/'
-    if not os.path.exists(dirr):
-      os.makedirs(dirr)
-    with Logger(dirr + 'run.log') as log:
-      # ------------------------------------------------------------------------------------------------
-      examples = setupFakeExamples(seed)
-      plotExamples2D(dirr, '0-fake_base', examples)
-      # ------------------------------------------------------------------------------------------------
-      resultMinas = None
-      try:
-        resultMinas = runMinas(Minas, examples, dirr)
-      except Exception as exc:
-        traceback.print_stack()
-        print('Exception on Minas\t{e}\n'.format(e=exc))
-        print(exc)
-        exception = exc
-      # ------------------------------------------------------------------------------------------------
-      print('aggregatin resutls')
-      results = []
-      positiveCount = 0
-      negativeCount = 0
-      unknownCount = 0
-      totalExamples = len(examples)
-      with open(dirr + 'examples.csv', 'w') as examplesCsv:
-        for ex in examples:
-          ex = deepcopy(ex)
-          hasLabel, cluster, d = None, None, None
-          if resultMinas:
-            hasLabel, cluster, d = resultMinas.classify(ex)
-          examplesCsv.write(
-            ','.join([str(i) for i in ex.item]) + ',' +
-            ex.label + ',' +
-            (cluster.label if cluster and hasLabel else 'Unknown') + ',' +
-            ('Positive' if cluster and cluster.label == ex.label else 'Negative') +
-            '\n'
-          )
-          if hasLabel:
-            if cluster.label == ex.label:
-              ex.label = 'Positive'
-              positiveCount += 1
-            else:
-              ex.label = 'Negative'
-              negativeCount += 1
-          else:
-            ex.label = 'Unknown'
-            unknownCount += 1
-          results.append(ex)
-          # end results map
-      if resultMinas:
-        print(resultMinas)
-      print('\n=== Final Results ===\n{model}\n\n{results}'.format(
-        model=str(resultMinas if resultMinas else ''),
-        results='[seed {seed}] positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%}), '.format(
-          seed=seed,
-          p=positiveCount, pp=positiveCount/totalExamples,
-          n=negativeCount, nn=negativeCount/totalExamples,
-          u=unknownCount, uu=unknownCount/totalExamples,
-        )
-      ))
-      plotExamples2D(dirr, '5-online_clusters', [], resultMinas.clusters if resultMinas else [])
-      plotExamples2D(dirr, '6-online_resutls', results, resultMinas.clusters if resultMinas else [])
-    del resultMinas
-    # ------------------------------------------------------------------------------------------------
-    seed += 1
-  if exception:
-    raise RuntimeError('SelfTest Fail') from exception
+from timeout import timeout
 
 def setupFakeExamples(seed):
   np.random.seed(seed)
@@ -119,38 +37,46 @@ def runMinas(Minas, examples, dirr):
       training_set_csv.write(','.join([str(i) for i in ex.item]) + ',' + ex.label + '\n')
   plotExamples2D(dirr, '1-training_set', training_set)
   basicModel = basicModel.offline(training_set)
-  print(str(basicModel))
+  logging.info(str(basicModel) + str(repr(basicModel)))
   plotExamples2D(dirr, '2-offline_clusters', [], basicModel.clusters)
   plotExamples2D(dirr, '3-offline_training', training_set, basicModel.clusters)
   plotExamples2D(dirr, '4-offline_all_data', examples, basicModel.clusters)
   # ------------------------------------------------------------------------------------------------
   testSet = examples[int(len(examples) * .1):]
   # 
-  ctx = mp.get_context('spawn')
-  queue = ctx.Queue()
-  p = ctx.Process(target=producer, args=(testSet, queue,))
-  try:
-    p.start()
-    def sig_int(signal_num, frame):
-      p.kill()
-    print('minas will run')
-    signal.signal(signal.SIGINT, sig_int)
-    resultModel = basicModel.online(queue)
-    print('minas done')
-  except Exception as excep:
-    print('Exception on Minas\t{e}\n'.format(e=excep))
-    raise
-  finally:
-    p.join()
-    print('Join', p)
+  que = queue.Queue()
+  for ex in testSet:
+    que.put(ex.item)
+  que.put(None)
+  resultModel = basicModel.online(que)
   return resultModel
+  # ------------------------------------------------------------------------------------------------
+  # ctx = mp.get_context('spawn')
+  # queue = ctx.Queue()
+  # p = ctx.Process(target=producer, args=(testSet, queue,))
+  # p.start()
+  # try:
+  #   resultModel = basicModel.online(queue)
+  #   logging.info('minas will run')
+  #   logging.info('minas done')
+  # except Exception as excep:
+  #   logging.info('Exception on Minas')
+  #   logging.info(excep, excep.__traceback__)
+  #   p.kill()
+  #   raise
+  # finally:
+  #   logging.info('Join', p)
+  #   p.join()
+  #   p.terminate()
+  #   p.close()
+  # return resultModel
 
 def producer(testSet, queue):
-  print('init Producer')
+  logging.info('init Producer')
   for ex in testSet:
     queue.put(ex.item)
   queue.put(None)
-  print('end Producer')
+  logging.info('end Producer')
 
 def plotExamples2D(directory, name='plotExamples2D', examples=[], clusters=[]):
   fig, ax = mkPlot(examples=examples, clusters=clusters)
@@ -200,27 +126,89 @@ def mkPlot(examples=[], clusters=[]):
   ax.grid(True)
   return fig, ax
 
-class Logger(object):
-  __slots__ = ['fileName', 'terminal', 'log']
-  def __init__(self, fileName):
-    self.terminal = sys.stdout
-    self.fileName = fileName
-  def __enter__(self):
-    self.log = open(self.fileName, "a")
-    sys.stdout = self
-    return self
-  def __exit__(self, exc_type, exc_value, traceback):
-    sys.stdout = self.terminal
-    pass
-  def write(self, message):
-    self.terminal.write(message)
-    self.log.write(message)
+async def testRun(Minas, seed):
+  # dirr = input()
+  dirr = 'run/seed_' + str(seed) + '/'
+  if not os.path.exists(dirr):
+    os.makedirs(dirr)
+  rootLogger = logging.getLogger()
+  logHandler = logging.FileHandler(dirr + 'run.log')
+  logHandler.formatter = rootLogger.handlers[0].formatter
+  rootLogger.addHandler(logHandler)
+  # ------------------------------------------------------------------------------------------------
+  examples = setupFakeExamples(seed)
+  plotExamples2D(dirr, '0-fake_base', examples)
+  # ------------------------------------------------------------------------------------------------
+  resultMinas = None
+  try:
+    resultMinas = runMinas(Minas, examples, dirr)
+  except Exception as exc:
+    logging.info(exc)
+    raise exc
+  # ------------------------------------------------------------------------------------------------
+  logging.info('aggregatin resutls')
+  results = []
+  positiveCount = 0
+  negativeCount = 0
+  unknownCount = 0
+  totalExamples = len(examples)
+  with open(dirr + 'examples.csv', 'w') as examplesCsv:
+    for ex in examples:
+      ex = deepcopy(ex)
+      hasLabel, cluster, d = None, None, None
+      if resultMinas:
+        hasLabel, cluster, d = resultMinas.classify(ex)
+      examplesCsv.write(
+        ','.join([str(i) for i in ex.item]) + ',' +
+        ex.label + ',' +
+        (cluster.label if cluster and hasLabel else 'Unknown') + ',' +
+        ('Positive' if cluster and cluster.label == ex.label else 'Negative') +
+        '\n'
+      )
+      if hasLabel:
+        if cluster.label == ex.label:
+          ex.label = 'Positive'
+          positiveCount += 1
+        else:
+          ex.label = 'Negative'
+          negativeCount += 1
+      else:
+        ex.label = 'Unknown'
+        unknownCount += 1
+      results.append(ex)
+      # end results map
+  logging.info('\n\n\t=== Final Results ===\n{model}\n[seed {seed}] positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%})\n'.format(
+    model=repr(resultMinas),
+    seed=seed,
+    p=positiveCount, pp=positiveCount/totalExamples,
+    n=negativeCount, nn=negativeCount/totalExamples,
+    u=unknownCount, uu=unknownCount/totalExamples,
+  ))
+  plotExamples2D(dirr, '5-online_clusters', [], resultMinas.clusters if resultMinas else [])
+  plotExamples2D(dirr, '6-online_resutls', results, resultMinas.clusters if resultMinas else [])
+  del resultMinas
+  rootLogger.removeHandler(logHandler)
 
-  def flush(self):
-    #this flush method is needed for python 3 compatibility.
-    #this handles the flush command by doing nothing.
-    #you might want to specify some extra behavior here.
-    pass
-
-if __name__ == "__main__":
-  selfTest(minas.Minas)
+@timeout(40)
+def selfTest(Minas):
+  with open('logging.conf.yaml', 'r') as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
+  logging.config.dictConfig(config)
+  logging.info('Running self test')
+  # ------------------------------------------------------------------------------------------------
+  seed = 200
+  stdout_ = sys.stdout #Keep track of the previous value.
+  if os.path.exists('run'):
+    shutil.rmtree('run')
+  testInit = time.time()
+  # run for 15 seconds
+  # client = Client('tcp://localhost:8786')
+  exception = None
+  while not exception and (time.time() - testInit < 30):
+    logging.info('Next seed: {}'.format(seed))
+    asyncio.run(testRun(Minas, seed))
+    # ------------------------------------------------------------------------------------------------
+    seed += 1
+  if exception:
+    raise RuntimeError('SelfTest Fail') from exception
+  logging.info('Done self test')

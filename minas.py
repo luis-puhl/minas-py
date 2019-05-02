@@ -1,5 +1,4 @@
-import itertools as intertools
-import time, sys, traceback
+import itertools, time, sys, traceback, asyncio, logging
 from typing import List
 
 import pandas as pd
@@ -9,37 +8,31 @@ import sklearn as sk
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
 
+import dask
+from dask import delayed
+
 import self_test as self_test
 
-from inspect import currentframe
-
-def get_linenumber():
-  cf = currentframe()
-  return cf.f_back.f_lineno
-def print_log(*args, **kwargs):
-  line = currentframe().f_back.f_lineno
-  args = ('{file}:{line}'.format(file=__file__, line=line), ) + args
-  print(*args, **kwargs)
-
 class Example:
-  __slots__ = ['label', 'item', 'timestamp', 'classificationTries']
+  """Holds an example
+  label:      if already classified (or for training)
+  item:       the precise example itself, a float list
+  timestamp:  created time (used for garbage colletion)
+  tries:      in how many classification tries it was used (used for garbage colletion)
+  """
+  __slots__ = ['label', 'item', 'timestamp', 'tries']
   def __init__(self, label=None, item: List[float]=[]):
     self.label = label
     self.item = item
     self.timestamp = time.time()
-    self.classificationTries = 0
-  def asDict(self):
-    return {
-      'label': self.label,
-      'len': len(self.item),
-      # 'item': self.item,
-      'timestamp': self.timestamp,
-      'classificationTries': self.classificationTries,
-    }
-  def __str__(self):
-    return '[Ex]' + '\t'.join('{k}: {v}'.format(k=k, v=v) for k, v in self.asDict().items())
+    self.tries = 0
   def __repr__(self):
-    return self.__str__()
+    dic = {
+      'len': len(self.item),
+      'timestamp': self.timestamp,
+      'tries': self.tries,
+    }
+    return 'Example({l}, ) # ${dic!r}'.format(l=self.label, i=self.item, len=len(self.item), dic=dic)
   def __len__(self):
     return len(self.item)
 
@@ -81,31 +74,27 @@ class Cluster:
   """
   # ------------------------------------------------------------------------------------------------
   # N number of examples,
-  label = ''
-  center = np.array([])
-  counter = 0
-  lastExapleTMS = -float("inf")
-  # statistic summary
-  sumDistance = 0.0
-  meanDistance = 0.0
-  maxDistance = 0.0
-  def __init(self):
-    self.label = ''
-    self.center = np.array([])
-    self.counter = 0
+  __slots__ = [ 'label', 'center', 'n', 'lastExapleTMS', 'sumDistance', 'maxDistance', ]
+  def __init__(self, label='', center=[], n=0, sumDistance=0.0, maxDistance=0.0):
+    self.label = label
+    self.center = center
+    self.n = n
+    self.sumDistance = sumDistance
+    self.maxDistance = maxDistance
     self.lastExapleTMS = -float("inf")
-    self.sumDistance = 0.0
-    self.meanDistance = 0.0
-    self.maxDistance = 0.0
   def __str__(self):
     return '[{label}]\tn={count}\tc={c},\tr={r:2.2f}'.format(
       label=self.label,
-      count=self.counter,
+      count=self.n,
       c=', '.join(['{:2.2f}'.format(c) for c in self.center]),
       r=self.radius()
     )
   def __repr__(self):
-    return self.__str__()
+    return 'Cluster(label={l},\tn={co},\tsum={sum:2.2f},\tmax={max:2.2f},\tcenter=[{ce}])'.format(
+      l=self.label, ce=', '.join(['{:2.2f}'.format(c) for c in self.center]), co=self.n, sum=self.sumDistance, max=self.maxDistance,
+    )
+  def meanDistance(self):
+    return self.sumDistance /self.n if self.n > 0 else 0
   def asDic(self):
     return {k: getattr(self, k) for k in self.__slots__}
   def radius(self):
@@ -113,32 +102,34 @@ class Cluster:
   def dist(self, vec: List[float] = []):
     return scipy.spatial.distance.euclidean(self.center, vec)
   def addExample(self, example, distance=None):
-    self.counter += 1
+    self.n += 1
     if example.timestamp > self.lastExapleTMS:
       self.lastExapleTMS = example.timestamp
     if distance == None:
       distance = self.dist(example.item)
     self.sumDistance += distance
-    self.meanDistance = self.sumDistance / self.counter
     if distance > self.maxDistance:
       self.maxDistance = distance
 
+@delayed(pure=True)
+def closestClusterDelayedPure(vec: List[float], clusters = List[Cluster]) -> (Cluster, float):
+  """Returns the nearest cluster and its distance (nearCl, dist)"""
+  dist = float("inf")
+  nearCl = None
+  for cl in clusters:
+    d = scipy.spatial.distance.euclidean(cl.center, vec)
+    if d < dist:
+      dist = d
+      nearCl = cl
+  return nearCl, dist
+  # 
+
 class Minas:
   # CONSTS
-  k = 100
-  radiusFactor = 1.1
-  noveltyThr = 100
-  windowTimeSize = 100
-  ndProcedureThr = 2000
-  representationThr = 3
-  globalCount = 0
-  lastExapleTMS = -float("inf")
-  lastCleaningCycle = -float("inf")
-  clusters: List[Cluster] = []
-  sleepClusters: List[Cluster] = []
-  counter = 0
-  unknownBuffer: List[Example] = []
-  noveltyIndex = 0
+  __slots__ = [
+    'k', 'radiusFactor', 'noveltyThr', 'windowTimeSize', 'ndProcedureThr', 'representationThr', 'globalCount',
+    'lastExapleTMS', 'lastCleaningCycle', 'clusters', 'sleepClusters', 'counter', 'unknownBuffer', 'noveltyIndex',
+  ]
   def __init__(self):
     self.k = 100
     self.radiusFactor = 1.1
@@ -154,7 +145,6 @@ class Minas:
     self.counter = 0
     self.unknownBuffer = []
     self.noveltyIndex = 0
-    print_log('Model.__init__', self)
   # ------------------------------------------------------------------------------------------------
   def asDict(self):
     return {
@@ -167,29 +157,26 @@ class Minas:
       'globalCount': self.globalCount,
       'lastExapleTMS': self.lastExapleTMS,
       'lastCleaningCycle': self.lastCleaningCycle,
-      'clusters': self.clusters,
-      'sleepClusters': self.sleepClusters,
       'counter': self.counter,
-      'unknownBuffer': self.unknownBuffer,
       'noveltyIndex': self.noveltyIndex,
+      # 'clusters': '\n\t'.join([repr(c) for c in self.clusters]),
+      # 'sleepClusters': self.sleepClusters,
+      # 'unknownBuffer': self.unknownBuffer,
       'clusters': len(self.clusters),
       'sleepers': len(self.sleepClusters),
-      'u': len(self.unknownBuffer),
+      'unknownBuffer': len(self.unknownBuffer),
       'diff': self.globalCount-self.counter,
       'known': self.counter,
     }
-  def __str__(self):
-    constants = ', '.join([str(k) + ': ' + str(v) for k, v in self.asDict().items()])
-    return 'Model({constants} => {model})({cls}\n)'.format(
-      constants=constants,
-      model=self.statusStr(),
-      ncls=len(self.clusters),
-      cls=''.join(['\n\t' + str(c) for c in self.clusters])
-    )
   def __repr__(self):
-    return self.__str__()
-  def statusStr(self):
-    return 'clusters: {clusters}, sleepers: {sleepers}, known: {known}, unkown: {u} ({diff}), total={globalCount}'.format(
+    return '# {status}\nMinas({cls!r}\n{clusters}\n)'.format(
+      status=str(self),
+      cls=self.asDict(),
+      clusters='\t'+'\n\t'.join([repr(c) for c in self.clusters])
+    )
+    
+  def __str__(self):
+    return '<Model Status clusters: {clusters}, sleepers: {sleepers}, known: {known}, unkown: {u} ({diff}), total: {globalCount}>'.format(
       clusters=len(self.clusters), sleepers=len(self.sleepClusters),
       known=self.counter, u=len(self.unknownBuffer), diff=self.globalCount-self.counter, globalCount=self.globalCount
     )
@@ -198,7 +185,7 @@ class Minas:
     After the execution of the clustering algorithm, each micro-cluster is represented
     by four components (N, LS, SS and T).
     """
-    print_log('clustering', len(examples), examples[0])
+    logging.info('clustering {}, {}'.format(len(examples), examples[0]))
     assert len(examples) > 0
     
     n_samples = len(examples)
@@ -210,12 +197,12 @@ class Minas:
     df = pd.DataFrame(data=[ex.item for ex in examples])
     kmeans = KMeans(n_clusters=n_clusters)
     try:
-      with joblib.parallel_backend('dask'):
-        kmeans.fit(df)
+      # with joblib.parallel_backend('dask'):
+      kmeans.fit(df)
     except Exception as exc:
-      print_log('\n------------------------ Exception ------------------------')
-      print_log(exc)
-      print_log(df)
+      logging.info('\n------------------------ Exception ------------------------')
+      logging.info(exc)
+      logging.info(df)
       raise RuntimeError('Minas Clustering Error') from exc
 
     clusters = []
@@ -236,8 +223,22 @@ class Minas:
         nearCl.addExample(ex)
     return clusters
   #
+  def closestCluster(self, vec: List[float], clusters = None) -> (Cluster, float):
+    """Returns the nearest cluster and its distance (nearCl, dist)"""
+    if clusters == None:
+      clusters = self.clusters
+    # return closestClusterDelayedPure(vec, clusters).compute()
+    dist = float("inf")
+    nearCl = None
+    for cl in clusters:
+      d = cl.dist(vec)
+      if d < dist:
+        dist = d
+        nearCl = cl
+    return nearCl, dist
+  # 
   def validationCriterion(self, cluster: Cluster, unknownBuffer):
-    isRepresentative = cluster.counter > self.representationThr
+    isRepresentative = cluster.n > self.representationThr
     # 
     near, dist = self.closestCluster(cluster.center)
     silhouette = lambda a, b: (b - a) / max([a, b])
@@ -254,19 +255,6 @@ class Minas:
     isCohesive = silhouette(dist, stdDevDistance) > 0
     return isRepresentative and isCohesive
   #
-  def closestCluster(self, vec: List[float], clusters = None) -> (Cluster, float):
-    """Returns the nearest cluster and its distance (nearCl, dist)"""
-    dist = float("inf")
-    nearCl = None
-    if clusters == None:
-      clusters = self.clusters
-    for cl in clusters:
-      d = cl.dist(vec)
-      if d < dist:
-        dist = d
-        nearCl = cl
-    return nearCl, dist
-  # 
   def classify(self, example: Example):
     cluster, dist = self.closestCluster(example.item)
     return (dist <= (self.radiusFactor * cluster.radius()), cluster, dist)
@@ -295,16 +283,16 @@ class Minas:
     keyfunc = lambda x: x.label
     self.clusters = []
     training_set = sorted(training_set, key=keyfunc)
-    for label, examples in intertools.groupby(training_set, keyfunc):
+    for label, examples in itertools.groupby(training_set, keyfunc):
       clusters = self.clustering(list(examples))
       # add labels
       for cluster in clusters:
-        isRepresentative = cluster.counter > self.representationThr
+        isRepresentative = cluster.n > self.representationThr
         if isRepresentative:
           cluster.label = label
           self.clusters.append(cluster)
     self.ndProcedureThr = len(training_set)
-    print_log('[offline end]')
+    logging.info('[offline end]')
     # store self to a file
     return self
   
@@ -314,7 +302,6 @@ class Minas:
       example = stream.get()
       if example is None:
         break
-      # print_log('Online', example)
       self.onlineProcessExample(example)
       # stream.task_done()
     return self
@@ -357,7 +344,7 @@ class Minas:
     example = Example(item=example)
     self.lastExapleTMS = example.timestamp
     cluster, dist = self.closestCluster(example.item)
-    example.classificationTries += 1
+    example.tries += 1
     if dist <= (self.radiusFactor * cluster.radius()):
       example.label = cluster.label
       cluster.addExample(example)
@@ -371,23 +358,23 @@ class Minas:
     return self
 
   def bufferFull(self):
-    print_log('bufferFull', self.statusStr())
+    logging.info('bufferFull, {}'.format(self))
     for sleepExample in self.unknownBuffer:
       cluster, dist = self.closestCluster(sleepExample.item, self.sleepClusters)
-      sleepExample.classificationTries += 1
+      sleepExample.tries += 1
       if cluster and dist <= (self.radiusFactor * cluster.radius()):
         sleepExample.label = cluster.label
         cluster.addExample(sleepExample)
         self.unknownBuffer.remove(sleepExample)
         # wakeup
-        print_log('wakeup')
+        logging.info('wakeup')
         self.clusters.append(cluster)
         self.sleepClusters.remove(cluster)
         self.counter += 1
-    print_log('[after sleep check]', self.statusStr())
+    logging.info('[after sleep check]' + str(self))
     # 
     self = self.noveltyDetection()
-    print_log('[after novelty Detection]', self.statusStr())
+    logging.info('[after novelty Detection]' + str(self))
     # Model ← move-sleepMem(Model, SleepMem, CurrentTime, windowSize)
     newSleepClusters = []
     newClusters = []
@@ -397,19 +384,19 @@ class Minas:
       if cl.lastExapleTMS >= self.lastCleaningCycle:
         newClusters.append(cl)
     #
-    print_log('Sleep', len(newSleepClusters))
+    logging.info('Sleep {}'.format(len(newSleepClusters)))
     self.sleepClusters.extend(newSleepClusters)
     self.clusters = newClusters
     self.lastCleaningCycle = time.time()
-    print_log('[after Sleep Clean]', self.statusStr())
+    logging.info('[after Sleep Clean] {}'.format(self))
     # ShortMem ← remove-oldExamples(ShortMem, windowsize)
     ogLen = len(self.unknownBuffer)
     self.unknownBuffer = []
     for ex in self.unknownBuffer:
-      if ex.classificationTries >= 3:
+      if ex.tries >= 3:
         self.unknownBuffer.append(ex)
-    print_log('[Cleaning Cycle]\tDiscarting {n} examples'.format(n=ogLen - len(self.unknownBuffer)))
-    print_log('[after Unkown Clean]', self.statusStr())
+    logging.info('[Cleaning Cycle]\tDiscarting {n} examples'.format(n=ogLen - len(self.unknownBuffer)))
+    logging.info('[after Unkown Clean] {}'.format(self))
     return self
 
   #
@@ -441,7 +428,7 @@ class Minas:
       end for
       return Model
     """
-    print_log('[noveltyDetection]\t', 'unknownBuffer:', len(self.unknownBuffer), 'sleepClusters:', len(self.sleepClusters))
+    logging.info('[noveltyDetection]\t unknownBuffer: {u}, sleepClusters: {s}'.format(u=len(self.unknownBuffer), s=len(self.sleepClusters)))
     for cluster in self.clustering(self.unknownBuffer):
       T = self.noveltyThr
       # T = self.noveltyThrFn(cluster)
@@ -454,13 +441,13 @@ class Minas:
           if dist <= T:
             cluster.label = near.label
             # wakeup
-            print_log('wakeup')
+            logging.info('wakeup')
             self.clusters.append(near)
             self.sleepClusters.remove(near)
           else:
             self.noveltyIndex += 1
             cluster.label = 'Novelty ' + str(self.noveltyIndex)
-            print_log(cluster.label)
+            logging.info(cluster.label)
             self.clusters.append(cluster)
     return self
 

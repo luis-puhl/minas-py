@@ -1,0 +1,45 @@
+2019-05-02 00:39:35,733 INFO ./minas.py:188 clustering clustering 54, Example(Class #0, ) # ${'len': 4, 'timestamp': 1556768375.413583, 'tries': 0}
+2019-05-02 00:39:35,781 INFO ./minas.py:188 clustering clustering 84, Example(Class #1, ) # ${'len': 4, 'timestamp': 1556768375.4245832, 'tries': 0}
+2019-05-02 00:39:35,851 INFO ./minas.py:295 offline [offline end]
+2019-05-02 00:39:35,852 INFO C:\dev\minas-py\self_test.py:40 runMinas <Model Status clusters: 15, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 15, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
+Model({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 138, 'representationThr': 3, 'globalCount': 0, 'lastExapleTMS': -inf, 'lastCleaningCycle': -inf, 'counter': 0, 'noveltyIndex': 0, 'clusters': 15, 'sleepers': 0, 'unknownBuffer': 0, 'diff': 0, 'known': 0}
+	Cluster(label=Class #0,	n=6,	sum=40.82,	max=9.71,	center=[5.62, 10.01, 8.22, -0.42])
+	Cluster(label=Class #0,	n=9,	sum=53.15,	max=14.68,	center=[7.93, 6.62, 4.90, 13.30])
+	Cluster(label=Class #0,	n=15,	sum=84.94,	max=8.28,	center=[2.84, 5.98, 1.50, 5.22])
+	Cluster(label=Class #0,	n=5,	sum=33.09,	max=10.37,	center=[4.25, -2.63, 6.09, -0.50])
+	Cluster(label=Class #0,	n=4,	sum=29.28,	max=8.43,	center=[-7.04, 4.43, 1.73, 1.46])
+	Cluster(label=Class #0,	n=15,	sum=93.23,	max=10.34,	center=[3.29, 2.37, 9.37, 10.09])
+	Cluster(label=Class #1,	n=17,	sum=76.25,	max=7.21,	center=[0.68, 5.54, 3.86, 0.87])
+	Cluster(label=Class #1,	n=6,	sum=21.79,	max=5.46,	center=[0.65, -1.37, 9.71, 4.81])
+	Cluster(label=Class #1,	n=8,	sum=42.40,	max=8.80,	center=[-1.01, -7.16, 1.70, 2.85])
+	Cluster(label=Class #1,	n=7,	sum=32.59,	max=6.01,	center=[1.35, 0.05, -3.29, -5.26])
+	Cluster(label=Class #1,	n=11,	sum=52.32,	max=7.28,	center=[6.29, 0.62, 7.35, -1.72])
+	Cluster(label=Class #1,	n=12,	sum=54.24,	max=6.63,	center=[5.79, 0.72, -0.82, -0.62])
+	Cluster(label=Class #1,	n=7,	sum=33.24,	max=5.59,	center=[2.02, 2.04, 4.21, 8.72])
+	Cluster(label=Class #1,	n=9,	sum=46.93,	max=9.06,	center=[-3.07, 4.87, -0.87, 2.60])
+	Cluster(label=Class #1,	n=7,	sum=37.24,	max=7.89,	center=[-4.52, -0.66, 6.98, 0.73])
+)
+2019-05-02 00:39:36,984 INFO C:\dev\minas-py\self_test.py:149 testRun aggregatin resutls
+2019-05-02 00:39:37,695 INFO C:\dev\minas-py\self_test.py:185 testRun 
+
+	=== Final Results ===
+# <Model Status clusters: 15, sleepers: 0, known: 1144, unkown: 102 (102), total: 1246>
+Model({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 138, 'representationThr': 3, 'globalCount': 1246, 'lastExapleTMS': 1556768376.9845605, 'lastCleaningCycle': -inf, 'counter': 1144, 'noveltyIndex': 0, 'clusters': 15, 'sleepers': 0, 'unknownBuffer': 102, 'diff': 102, 'known': 1144}
+	Cluster(label=Class #0,	n=116,	sum=743.21,	max=10.28,	center=[5.62, 10.01, 8.22, -0.42])
+	Cluster(label=Class #0,	n=113,	sum=862.71,	max=14.68,	center=[7.93, 6.62, 4.90, 13.30])
+	Cluster(label=Class #0,	n=157,	sum=913.20,	max=9.71,	center=[2.84, 5.98, 1.50, 5.22])
+	Cluster(label=Class #0,	n=65,	sum=319.51,	max=10.37,	center=[4.25, -2.63, 6.09, -0.50])
+	Cluster(label=Class #0,	n=41,	sum=222.29,	max=8.75,	center=[-7.04, 4.43, 1.73, 1.46])
+	Cluster(label=Class #0,	n=97,	sum=603.37,	max=10.34,	center=[3.29, 2.37, 9.37, 10.09])
+	Cluster(label=Class #1,	n=122,	sum=548.60,	max=7.23,	center=[0.68, 5.54, 3.86, 0.87])
+	Cluster(label=Class #1,	n=35,	sum=145.87,	max=5.59,	center=[0.65, -1.37, 9.71, 4.81])
+	Cluster(label=Class #1,	n=68,	sum=390.40,	max=8.80,	center=[-1.01, -7.16, 1.70, 2.85])
+	Cluster(label=Class #1,	n=50,	sum=256.27,	max=7.24,	center=[1.35, 0.05, -3.29, -5.26])
+	Cluster(label=Class #1,	n=58,	sum=299.98,	max=7.85,	center=[6.29, 0.62, 7.35, -1.72])
+	Cluster(label=Class #1,	n=138,	sum=716.93,	max=9.59,	center=[5.79, 0.72, -0.82, -0.62])
+	Cluster(label=Class #1,	n=91,	sum=445.52,	max=9.05,	center=[2.02, 2.04, 4.21, 8.72])
+	Cluster(label=Class #1,	n=86,	sum=421.14,	max=9.54,	center=[-3.07, 4.87, -0.87, 2.60])
+	Cluster(label=Class #1,	n=45,	sum=224.62,	max=8.37,	center=[-4.52, -0.66, 6.98, 0.73])
+)
+[seed 205] positive: 933(67.41%), negative: 378(27.31%), unknown: 73(5.27%)
+
