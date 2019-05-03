@@ -1,8 +1,8 @@
-2019-05-02 18:44:08,698 INFO ./minas.py:202 clustering clustering 25, Example(Class #0, ) # ${'len': 28, 'timestamp': 1556833448.0089252, 'tries': 0}
-2019-05-02 18:44:08,719 INFO ./minas.py:202 clustering clustering 62, Example(Class #1, ) # ${'len': 28, 'timestamp': 1556833448.072925, 'tries': 0}
-2019-05-02 18:44:08,773 INFO ./minas.py:202 clustering clustering 101, Example(Class #2, ) # ${'len': 28, 'timestamp': 1556833448.177922, 'tries': 0}
-2019-05-02 18:44:08,870 INFO ./minas.py:308 offline [offline end]
-2019-05-02 18:44:08,872 INFO C:\dev\minas-py\self_test.py:41 runMinas <Model Status clusters: 18, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 18, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
+2019-05-03 14:40:39,872 INFO ./minas.py:203 clustering clustering 25, Example(Class #0, ) # ${'len': 28, 'timestamp': 1556905239.180477, 'tries': 0}
+2019-05-03 14:40:39,893 INFO ./minas.py:203 clustering clustering 62, Example(Class #1, ) # ${'len': 28, 'timestamp': 1556905239.256479, 'tries': 0}
+2019-05-03 14:40:39,942 INFO ./minas.py:203 clustering clustering 101, Example(Class #2, ) # ${'len': 28, 'timestamp': 1556905239.3844738, 'tries': 0}
+2019-05-03 14:40:40,038 INFO ./minas.py:310 offline [offline end]
+2019-05-03 14:40:40,040 INFO C:\dev\minas-py\self_test.py:105 testRun <Model Status clusters: 18, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 18, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
 Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 188, 'representationThr': 3, 'globalCount': 0, 'lastExapleTMS': -inf, 'lastCleaningCycle': -inf, 'counter': 0, 'noveltyIndex': 0, 'clusters': 18, 'sleepers': 0, 'unknownBuffer': 0, 'diff': 0, 'known': 0}
 	Cluster(label=Class #0,	n=18,	sum=257.71,	max=18.19,	center=[1.95, 2.40, 1.14, 2.22, 0.24, 1.60, 2.70, 1.79, 1.48, 2.37, 2.01, 1.86, 1.55, 0.88, 2.19, 2.21, 2.34, 2.49, 2.33, 2.19, 1.37, 1.59, 3.51, 2.95, 1.64, 3.79, 2.47, 2.09])
 	Cluster(label=Class #0,	n=7,	sum=92.31,	max=14.71,	center=[3.79, 1.46, 5.91, 1.08, 2.33, 0.89, 1.72, 4.56, 3.15, 2.72, 3.69, 2.84, 3.16, 7.03, 2.61, 3.04, 2.57, 2.25, 0.53, 1.70, 4.03, 1.09, 0.43, 1.18, 2.90, 2.62, 2.43, 3.50])
@@ -23,12 +23,12 @@ Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 
 	Cluster(label=Class #2,	n=6,	sum=7.72,	max=1.54,	center=[7.79, 7.59, 7.56, 8.04, 7.81, 7.48, 7.59, 7.79, 7.37, 7.35, 7.79, 7.90, 7.58, 7.87, 7.87, 7.86, 8.06, 7.67, 7.50, 7.29, 7.54, 7.81, 8.03, 7.78, 7.79, 7.50, 8.03, 7.89])
 	Cluster(label=Class #2,	n=10,	sum=15.24,	max=1.86,	center=[7.47, 7.88, 8.03, 7.76, 7.66, 7.55, 7.68, 7.59, 7.76, 7.68, 7.25, 7.67, 7.77, 7.76, 7.48, 7.51, 7.79, 7.35, 7.62, 7.58, 7.78, 7.40, 7.45, 7.90, 7.71, 7.67, 7.57, 7.76])
 )
-2019-05-02 18:44:10,644 INFO C:\dev\minas-py\self_test.py:155 testRun aggregatin resutls
-2019-05-02 18:44:12,080 INFO C:\dev\minas-py\self_test.py:191 testRun 
+2019-05-03 14:40:41,896 INFO C:\dev\minas-py\self_test.py:117 testRun aggregatin resutls
+2019-05-03 14:40:43,409 INFO C:\dev\minas-py\self_test.py:153 testRun 
 
 	=== Final Results ===
 # <Model Status clusters: 18, sleepers: 0, known: 1657, unkown: 38 (38), total: 1695>
-Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 188, 'representationThr': 3, 'globalCount': 1695, 'lastExapleTMS': 1556833450.6431942, 'lastCleaningCycle': -inf, 'counter': 1657, 'noveltyIndex': 0, 'clusters': 18, 'sleepers': 0, 'unknownBuffer': 38, 'diff': 38, 'known': 1657}
+Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 188, 'representationThr': 3, 'globalCount': 1695, 'lastExapleTMS': 1556905241.8954422, 'lastCleaningCycle': -inf, 'counter': 1657, 'noveltyIndex': 0, 'clusters': 18, 'sleepers': 0, 'unknownBuffer': 38, 'diff': 38, 'known': 1657}
 	Cluster(label=Class #0,	n=291,	sum=4467.98,	max=20.57,	center=[1.95, 2.40, 1.14, 2.22, 0.24, 1.60, 2.70, 1.79, 1.48, 2.37, 2.01, 1.86, 1.55, 0.88, 2.19, 2.21, 2.34, 2.49, 2.33, 2.19, 1.37, 1.59, 3.51, 2.95, 1.64, 3.79, 2.47, 2.09])
 	Cluster(label=Class #0,	n=79,	sum=1182.85,	max=19.68,	center=[3.79, 1.46, 5.91, 1.08, 2.33, 0.89, 1.72, 4.56, 3.15, 2.72, 3.69, 2.84, 3.16, 7.03, 2.61, 3.04, 2.57, 2.25, 0.53, 1.70, 4.03, 1.09, 0.43, 1.18, 2.90, 2.62, 2.43, 3.50])
 	Cluster(label=Class #1,	n=177,	sum=2666.73,	max=20.74,	center=[1.90, 3.48, 2.88, 4.83, 2.83, 2.96, 3.39, 4.08, 1.42, 1.43, 2.81, 2.16, 0.53, 2.83, 4.12, 2.44, 2.74, 2.39, 1.26, 3.06, 2.53, 3.91, 3.22, 4.53, 3.23, 2.19, 1.43, 2.63])
