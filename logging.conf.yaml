@@ -12,10 +12,12 @@ handlers:
     stream: ext://sys.stdout
   file:
     class : logging.handlers.RotatingFileHandler
+    level: DEBUG
     formatter: complete
     filename: ./run/minas.log
-    maxBytes: 1024
-    backupCount: 3
+    # 1MB
+    maxBytes: 1048576
+    backupCount: 10
 root:
   level: DEBUG
   handlers: [console, file]

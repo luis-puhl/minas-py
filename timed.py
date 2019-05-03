@@ -61,7 +61,6 @@ def mkTimedResumePlot(df):
 
   ax.grid(True)
   ax.legend()
-  timedResume = {}
   return fig, ax
 
 if __name__ == "__main__":
