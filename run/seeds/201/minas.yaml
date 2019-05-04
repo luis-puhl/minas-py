@@ -1,0 +1,144 @@
+clusters:
+- center:
+  - 5.935359021431076
+  - 8.06157615939953
+  label: 'Class #0'
+  lastExapleTMS: 1556928559003608800
+  maxDistance: 1.5183782549235862
+  n: 10
+  sumDistance: 10.290892557897639
+- center:
+  - 2.981549685538557
+  - 9.221838072580168
+  label: 'Class #0'
+  lastExapleTMS: 1556928559003608800
+  maxDistance: 3.6765600630444326
+  n: 12
+  sumDistance: 16.975599084806067
+- center:
+  - 7.80207410332637
+  - 12.723603631604046
+  label: 'Class #0'
+  lastExapleTMS: 1556928559004609100
+  maxDistance: 2.7231772383438857
+  n: 8
+  sumDistance: 11.945339098080668
+- center:
+  - 3.6999909478493986
+  - 4.39674961921186
+  label: 'Class #0'
+  lastExapleTMS: 1556928559004609100
+  maxDistance: 2.318349452053199
+  n: 8
+  sumDistance: 11.47872510774157
+- center:
+  - 10.720319969008619
+  - 7.08879508130634
+  label: 'Class #0'
+  lastExapleTMS: 1556928559003608800
+  maxDistance: 2.430208501918772
+  n: 11
+  sumDistance: 14.988980658238486
+- center:
+  - 7.863052244684834
+  - 4.942371969269326
+  label: 'Class #0'
+  lastExapleTMS: 1556928559003608800
+  maxDistance: 2.301612884307205
+  n: 14
+  sumDistance: 18.038626422302848
+- center:
+  - 7.978030690732006
+  - 9.008510491176251
+  label: 'Class #0'
+  lastExapleTMS: 1556928559003608800
+  maxDistance: 1.0973114342071375
+  n: 12
+  sumDistance: 8.859761719559238
+- center:
+  - 11.079275947648995
+  - 10.56693987679477
+  label: 'Class #0'
+  lastExapleTMS: 1556928559001607200
+  maxDistance: 2.87045059361428
+  n: 6
+  sumDistance: 7.95765863828214
+- center:
+  - 6.390421780510809
+  - 6.445843858823454
+  label: 'Class #1'
+  lastExapleTMS: 1556928559010609000
+  maxDistance: 0.10579105484284523
+  n: 13
+  sumDistance: 0.7882710173519859
+- center:
+  - 6.655585656568972
+  - 6.626998807215273
+  label: 'Class #1'
+  lastExapleTMS: 1556928559010609000
+  maxDistance: 0.10339259020703769
+  n: 5
+  sumDistance: 0.40243045669904437
+- center:
+  - 6.311845647128354
+  - 6.276575728135812
+  label: 'Class #1'
+  lastExapleTMS: 1556928559011614700
+  maxDistance: 0.21528991556736593
+  n: 8
+  sumDistance: 0.6944313988034938
+- center:
+  - 6.394193838891408
+  - 6.625306378311663
+  label: 'Class #1'
+  lastExapleTMS: 1556928559011614700
+  maxDistance: 0.27017560549189584
+  n: 11
+  sumDistance: 1.0680675030059272
+- center:
+  - 6.593215018487764
+  - 6.419700561161118
+  label: 'Class #1'
+  lastExapleTMS: 1556928559010609000
+  maxDistance: 0.17114482895423003
+  n: 11
+  sumDistance: 1.0040603594361328
+- center:
+  - 0.70386430129357
+  - 0.0481150947953495
+  label: 'Class #2'
+  lastExapleTMS: 1556928559015608600
+  maxDistance: 1.1264367688310792
+  n: 11
+  sumDistance: 4.731369850764658
+- center:
+  - -0.29012286232423046
+  - 0.29920918290612913
+  label: 'Class #2'
+  lastExapleTMS: 1556928559015608600
+  maxDistance: 0.8274929282419483
+  n: 15
+  sumDistance: 5.641847427780181
+- center:
+  - 0.13958505775783367
+  - -0.9458148456327025
+  label: 'Class #2'
+  lastExapleTMS: 1556928559014608000
+  maxDistance: 0.8610268730557888
+  n: 7
+  sumDistance: 3.8124699871272187
+counter: 0
+diff: 0
+globalCount: 0
+k: 100
+known: 0
+lastCleaningCycle: -1
+lastExapleTMS: -1
+ndProcedureThr: 165
+noveltyIndex: 0
+noveltyThr: 100
+radiusFactor: 1.1
+representationThr: 3
+sleepClusters: []
+unknownBuffer: []
+windowTimeSize: 100

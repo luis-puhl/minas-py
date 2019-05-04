@@ -3,6 +3,7 @@ import time
 timedResume = {}
 
 def timed(func):
+  global timedResume
   functionName = func.__name__
   if timedResume and timedResume.get(functionName, False):
     functionName += '_' + str(len(timedResume))
@@ -19,18 +20,22 @@ def timed(func):
     return rv
   return f
 
+def clearTimes():
+  global timedResume
+  timedResume = dict([ (k, []) for k in timedResume.keys() ])
+
 def statisticSummary():
   import matplotlib, numpy, logging, pandas
+  global timedResume
   means = []
   stds = []
-  labels = []
-  df = pandas.DataFrame(columns=[ 'label', 'minVal', 'maxVal', 'mean', 'std', ])
-  for label in timedResume.keys():
-    times = numpy.array(timedResume[label])
+  df = pandas.DataFrame(columns=[ 'functionName', 'minVal', 'maxVal', 'mean', 'std', ])
+  for functionName in timedResume.keys():
+    times = numpy.array(timedResume[functionName])
     if len(times) == 0:
       continue
     df = df.append({
-      'label': label,
+      'functionName': functionName,
       'minVal': numpy.min(times),
       'maxVal': numpy.max(times),
       'mean': numpy.mean(times),
@@ -41,23 +46,19 @@ def statisticSummary():
   return df
 
 def mkTimedResumePlot(df):
-  global timedResume
   import matplotlib, numpy, logging, pandas
   import matplotlib.pyplot as plt
 
   fig, ax = plt.subplots()
   width = 0.35  # the width of the bars
 
-  labels = []
   for index, row in df.iterrows():
-    labels.append(row['label'])
-    ax.bar(index, row['mean'], width, yerr=row['std'], label=row['label'])
+    ax.bar(index, row['mean'], width, yerr=row['std'], label=row['functionName'])
 
   # Add some text for labels, title and custom x-axis tick labels, etc.
   ax.set_ylabel('time (ns)')
   # ax.set_xticks(ind)
   ax.set_yscale('log')
-  ax.set_xticklabels(labels)
 
   ax.grid(True)
   ax.legend()

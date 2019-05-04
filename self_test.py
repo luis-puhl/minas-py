@@ -9,7 +9,7 @@ from dask.distributed import Client
 
 import minas
 from timeout import timeout
-from timed import timed, mkTimedResumePlot, timedResume, statisticSummary
+import timed
 
 def setupFakeExamples(seed):
   numpy.random.seed(seed)
@@ -38,7 +38,7 @@ def plotExamples2D(directory, name='plotExamples2D', examples: List[minas.Exampl
   plt.savefig(directory + name + '.png')
   plt.close(fig)
 
-@timed
+@timed.timed
 def mkPlot(examples=[], clusters=[]):
   labels = [ex.label for ex in examples]
   labels.extend([ex.label for ex in clusters])
@@ -78,7 +78,7 @@ def mkPlot(examples=[], clusters=[]):
   ax.grid(True)
   return fig, ax
 
-async def testRun(Minas, seed):
+async def testRun(basicModel: minas.Minas, seed):
   # dirr = input()
   dirr = 'run/seeds/' + str(seed) + '/'
   if not os.path.exists(dirr):
@@ -93,13 +93,14 @@ async def testRun(Minas, seed):
   # ------------------------------------------------------------------------------------------------
   resultMinas = None
   try:
-    basicModel = Minas()
     training_set = examples[:int(len(examples) * .1)]
     with open(dirr + 'training_set.csv', 'w') as training_set_csv:
       for ex in training_set:
         training_set_csv.write(','.join([str(i) for i in ex.item]) + ',' + ex.label + '\n')
     plotExamples2D(dirr, '1-training_set', training_set)
     basicModel = basicModel.offline(training_set)
+    basicModel.storeToFile(dirr + 'minas.yaml')
+    basicModel.restoreFromFile(dirr + 'minas.yaml')
     logging.info(str(basicModel) + str(repr(basicModel)))
     plotExamples2D(dirr, '2-offline_clusters', [], basicModel.clusters)
     plotExamples2D(dirr, '3-offline_training', training_set, basicModel.clusters)
@@ -166,59 +167,89 @@ def testForestCover(runName, minasInstance: minas.Minas, directory = 'run/forest
     # Soil_Type19,Soil_Type20,Soil_Type21,Soil_Type22,Soil_Type23,Soil_Type24,Soil_Type25,Soil_Type26,Soil_Type27,Soil_Type28,
     # Soil_Type29,Soil_Type30,Soil_Type31,Soil_Type32,Soil_Type33,Soil_Type34,Soil_Type35,Soil_Type36,Soil_Type37,Soil_Type38,
     # Soil_Type39,Soil_Type40,Cover_Type
+    i = 0
     header = next(reader)
 
-    trainingSet = []
-    trainingSetPlot = []
-    i = 0
-    trainingSetCsvFileName = directory + 'covtype_training_set.csv'
-    trainingSetCsvFile = io.StringIO()
-    if not os.path.exists(trainingSetCsvFileName):
-      trainingSetCsvFile = open(directory + 'covtype_training_set.csv', 'w')
-    with trainingSetCsvFile as trainingSetCsv:
-      trainingSetCsv.write(','.join(header) + '\n')
-      for row in reader:
-        sys.stdout.write('.')
-        item = row[:-1]
-        label = row[-1]
-        trainingSetPlot.append(minas.Example(item=item[:2], label=label))
-        trainingSet.append(minas.Example(label=label, item=item))
-        trainingSetCsv.write(','.join(row) + '\n')
-        i += 1
-        if i >= total * .1:
-          break
-    basicModel = minasInstance.offline(trainingSet)
-    basicModel.storeToFile(directory + runName + '.minas.yaml')
-    del trainingSet
-    logging.info(str(basicModel) + str(repr(basicModel)))
-    plotExamples2D(directory + runName, '1-training_set', trainingSetPlot, [])
-    plotExamples2D(directory + runName, '2-offline_clusters', [], basicModel.clusters)
-    plotExamples2D(directory + runName, '3-offline_training', trainingSetPlot, basicModel.clusters)
-    del trainingSetPlot
+    modelFileName = directory + runName + '/minas.yaml'
+    if not os.path.exists(modelFileName):
+      logging.info('Training model')
+      trainingSet = []
+      trainingSetPlot = []
+      trainingSetCsvFileName = directory + 'covtype_training_set.csv'
+      trainingSetCsvFile = io.StringIO()
+      if not os.path.exists(trainingSetCsvFileName):
+        trainingSetCsvFile = open(directory + 'covtype_training_set.csv', 'w')
+      with trainingSetCsvFile as trainingSetCsv:
+        trainingSetCsv.write(','.join(header) + '\n')
+        for row in reader:
+          item = row[:-1]
+          label = row[-1]
+          trainingSetPlot.append(minas.Example(item=item[:2], label=label))
+          trainingSet.append(minas.Example(label=label, item=item))
+          trainingSetCsv.write(','.join(row) + '\n')
+          i += 1
+          sys.stdout.write(f'\ni={i}\n' if i % 10000 == 0 else ('.' if i % 100 == 0 else ''))
+          if i >= total * .1:
+            break
+      sys.stdout.write('\n')
+      minasInstance.offline(trainingSet)
+      minasInstance.storeToFile(modelFileName)
+      del trainingSet
+      plotExamples2D(directory + runName + '/', '1-training_set', trainingSetPlot, [])
+      plotExamples2D(directory + runName + '/', '2-offline_clusters', [], minasInstance.clusters)
+      # meaningless (can't see nothing, too many points)
+      # plotExamples2D(directory + runName + '/', '3-offline_training', trainingSetPlot, minasInstance.clusters)
+      del trainingSetPlot
+    else:
+      i = total * .1
+      csvfile.seek(i * 126)
+      next(reader)
+    logging.info('Loading model')
+    minasInstance = minasInstance.restoreFromFile(modelFileName)
+    logging.info(str(minasInstance))
+
     # ------------------------------------------------------------------------------------------------
+    logging.info('Testing model')
     testSet = []
-    resultModel = basicModel
-    with open(directory + 'covtype_test_set.csv', 'w') as test_set_csv:
-      for row in reader:
-        sys.stdout.write('.')
-        item = row[:-1]
-        label = row[-1]
-        test_set_csv.write(','.join(row) + '\n')
-        resultModel = basicModel.onlineProcessExample(item)
-        i += 1
+    testSetCsvFileName = directory + 'covtype_test_set.csv'
+    # testSetCsvFile = io.StringIO()
+    # skipWrite = not os.path.exists(testSetCsvFileName)
+    # if skipWrite:
+    #   testSetCsvFile = open(testSetCsvFileName, 'w')
+    # with testSetCsvFile as testSetCsv:
+    with open(testSetCsvFileName, 'w') as testSetCsv:
+      try:
+        for row in reader:
+          item = row[:-1]
+          label = row[-1]
+          testSetCsv.write(','.join(row) + '\n')
+          minasInstance.onlineProcessExample(item)
+          i += 1
+          if i >= total * .11:
+            break
+          sys.stdout.write(f'\ni={i} ({i/total})\n' if i % 1000 == 0 else ('.' if i % 10 == 0 else ''))
+        sys.stdout.write('\n')
+      except KeyboardInterrupt as interupt:
+        sys.stdout.write('\nKeyboardInterrupt on forest test set\n')
+  modelFileName = directory + runName + '/minas_online.yaml'
+  minasInstance.storeToFile(modelFileName)
   # ------------------------------------------------------------------------------------------------
   logging.info('aggregatin resutls')
   results = []
   positiveCount = 0
   negativeCount = 0
   unknownCount = 0
-  with open(directory + 'covtype_test_set.csv', 'r') as test_set_csv:
-    with open(directory + 'covtype_test_results.csv', 'w') as testResultsCsv:
-      for row in test_set_csv:
+  with open(directory + 'covtype_test_set.csv', 'r') as testSetCsv, open(directory + runName + '/covtype_test_results.csv', 'w') as testResultsCsv:
+    try:
+      reader = csv.reader(testSetCsv)
+      # next(reader)
+      for row in reader:
+        break
+      for row in reader:
         item = row[:-1]
         label = row[-1]
         testExample = minas.Example(item=item)
-        hasLabel, cluster, dist = resultModel.classify(testExample)
+        hasLabel, cluster, dist = minasInstance.classify(testExample)
         if hasLabel:
           if cluster.label == label:
             testExample.label = 'Positive'
@@ -232,34 +263,36 @@ def testForestCover(runName, minasInstance: minas.Minas, directory = 'run/forest
         if len(results) < 1000:
           results.append(testExample)
         testResultsCsv.write(','.join(row + [testExample.label])+ '\n')
+    except KeyboardInterrupt as interupt:
+      sys.stdout.write('\nKeyboardInterrupt on forest aggregation\n')
   logging.info(
-    '\n\n\t=== Final Results ===\n{resultModel}\n[forest-cover-type-dataset] positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%})\n'.format(
-      model=repr(resultModel),
+    '\n\n\t=== Final Results ===\n{model}\n[forest-cover-type-dataset] positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%})\n'.format(
+      model=repr(minasInstance),
       p=positiveCount, pp=positiveCount/total,
       n=negativeCount, nn=negativeCount/total,
       u=unknownCount, uu=unknownCount/total,
     )
   )
-  plotExamples2D(directory + runName, '5-online_clusters', [], resultModel.clusters)
-  plotExamples2D(directory + runName, '6-online_resutls', results, resultModel.clusters)
-  del resultModel
+  plotExamples2D(directory + runName + '/', '5-online_clusters', [], minasInstance.clusters)
+  plotExamples2D(directory + runName + '/', '6-online_resutls', results, minasInstance.clusters)
 
   # ------------------------------------------------------------------------------------------------
-  df = statisticSummary()
+  df = timed.statisticSummary()
   logging.info(f'=========== Timed Functions Summary ===========\n{df}')
-  fig, ax = mkTimedResumePlot(df)
-  plt.tight_layout(.5)
-  plt.savefig('./run/testForestCover_timed_run.png')
+  fig, ax = timed.mkTimedResumePlot(df)
+  plt.savefig(directory + runName + '/timed_run.png')
   plt.close(fig)
-  timedResume = dict([ (k, []) for k in timedResume.keys() ])
+  timed.clearTimes()
 
   return (positiveCount, negativeCount, unknownCount)
 
-# @timeout(60*10)
-def selfTest(Minas):
+def setupLog():
   with open('logging.conf.yaml', 'r') as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
   logging.config.dictConfig(config)
+
+# @timeout(60*10)
+def selfTest(Minas):
   logging.info('Running self test')
   # ------------------------------------------------------------------------------------------------
   seed = 200
@@ -267,35 +300,27 @@ def selfTest(Minas):
   if os.path.exists('run/seeds'):
     shutil.rmtree('run/seeds')
   testInit = time.time_ns()
-  exception = None
-  while not exception and (time.time_ns() - testInit < 10):
+  while time.time_ns() - testInit < 10 * 1000000000:
     logging.info('Next seed: {}'.format(seed))
-    asyncio.run(testRun(Minas, seed))
+    basicModel = Minas()
+    asyncio.run(testRun(basicModel, seed))
     # ------------------------------------------------------------------------------------------------
     seed += 1
-  if exception:
-    raise RuntimeError('SelfTest Fail') from exception
   logging.info('Done self test')
  
   # ------------------------------------------------------------------------------------------------
-  import matplotlib, numpy
-  matplotlib.use('Agg')
-  import matplotlib.pyplot as plt
-  from timed import mkTimedResumePlot, timedResume, statisticSummary
-
-  df = statisticSummary()
+  df = timed.statisticSummary()
   logging.info(f'=========== Timed Functions Summary ===========\n{df}')
-  fig, ax = mkTimedResumePlot(df)
+  fig, ax = timed.mkTimedResumePlot(df)
   plt.tight_layout(.5)
   plt.savefig('./run/seeds/timed-run.png')
   plt.close(fig)
-  timedResume = dict([ (k, []) for k in timedResume.keys() ])
+  timed.clearTimes()
 
-  # ------------------------------------------------------------------------------------------------
-  logging.info('Test Forest Cover')
-  minasInstance = Minas()
-  testForestCover('basic', minasInstance)
-  
-  client = Client('tcp://localhost:8786')
-  minasInstance = Minas(daskEnableKmeans=True, daskEnableDist=False)
+def testForest():
+  logging.info('=========== Test Forest Cover ===========\n')
+  # minasInstance = minas.Minas()
+  # testForestCover('basic', minasInstance)
+
+  minasInstance = minas.Minas(daskEnableKmeans=True)
   testForestCover('daskEnableKmeans', minasInstance)

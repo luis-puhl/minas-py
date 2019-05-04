@@ -1,17 +1,13 @@
-import itertools, time, sys, traceback, asyncio, logging, yaml
+import itertools, time, sys, traceback, asyncio, logging, os
 from typing import List
 
-import pandas as pd
-import numpy as np
-import scipy as scipy
-import sklearn as sk
+import pandas, scipy, sklearn, yaml
 from sklearn.cluster import KMeans
 from sklearn.externals import joblib
-
 import dask
 from dask import delayed
+import dask.distributed as dask_distributed
 
-import self_test
 from timed import timed
 
 class Example:
@@ -25,15 +21,17 @@ class Example:
   def __init__(self, label=None, item: List[float]=[]):
     self.label = label
     self.item = [float(i) for i in item]
-    self.timestamp = time.time()
+    self.timestamp = time.time_ns()
     self.tries = 0
-  def __repr__(self):
-    dic = {
-      'len': len(self.item),
+  def toDic(self):
+    return {
+      'label': self.label,
+      'item': self.item,
       'timestamp': self.timestamp,
       'tries': self.tries,
     }
-    return 'Example({l}, ) # ${dic!r}'.format(l=self.label, i=self.item, len=len(self.item), dic=dic)
+  def __repr__(self):
+    return 'Example({l}, ) # len: {len} {dic!r}'.format(l=self.label, i=self.item, len=len(self.item), dic=self.toDic())
   def __len__(self):
     return len(self.item)
 
@@ -76,13 +74,13 @@ class Cluster:
   # ------------------------------------------------------------------------------------------------
   # N number of examples,
   __slots__ = [ 'label', 'center', 'n', 'lastExapleTMS', 'sumDistance', 'maxDistance', ]
-  def __init__(self, label='', center=[], n=0, sumDistance=0.0, maxDistance=0.0):
+  def __init__(self, label='', center=[], n=0, sumDistance=0.0, maxDistance=0.0, lastExapleTMS = -1):
     self.label = label
     self.center = center
     self.n = n
     self.sumDistance = sumDistance
     self.maxDistance = maxDistance
-    self.lastExapleTMS = -float("inf")
+    self.lastExapleTMS = lastExapleTMS
   def __str__(self):
     return '[{label}]\tn={count}\tc={c},\tr={r:2.2f}'.format(
       label=self.label,
@@ -94,6 +92,15 @@ class Cluster:
     return 'Cluster(label={l},\tn={co},\tsum={sum:2.2f},\tmax={max:2.2f},\tcenter=[{ce}])'.format(
       l=self.label, ce=', '.join(['{:2.2f}'.format(c) for c in self.center]), co=self.n, sum=self.sumDistance, max=self.maxDistance,
     )
+  def toDic(self):
+    return {
+      'label': self.label,
+      'center': [float(i) for i in self.center],
+      'n': self.n,
+      'sumDistance': self.sumDistance,
+      'maxDistance': self.maxDistance,
+      'lastExapleTMS': self.lastExapleTMS,
+    }
   def meanDistance(self):
     return self.sumDistance /self.n if self.n > 0 else 0
   def asDic(self):
@@ -120,30 +127,15 @@ class Cluster:
     if distance > self.maxDistance:
       self.maxDistance = distance
 
-@delayed(pure=True)
-@timed
-def closestClusterDelayedPure(vec: List[float], clusters = List[Cluster]) -> (Cluster, float):
-  """Returns the nearest cluster and its distance (nearCl, dist)"""
-  dist = float("inf")
-  nearCl = None
-  for cl in clusters:
-    d = scipy.spatial.distance.euclidean(cl.center, vec)
-    if d < dist:
-      dist = d
-      nearCl = cl
-  return nearCl, dist
-  # 
-
 class Minas:
   # CONSTS
   __slots__ = [
     'k', 'radiusFactor', 'noveltyThr', 'windowTimeSize', 'ndProcedureThr', 'representationThr', 'globalCount',
     'lastExapleTMS', 'lastCleaningCycle', 'clusters', 'sleepClusters', 'counter', 'unknownBuffer', 'noveltyIndex',
-    'daskEnableKmeans', 'daskEnableDist',
+    'daskEnableKmeans',
   ]
-  def __init__(self, daskEnableKmeans=False, daskEnableDist=False):
+  def __init__(self, daskEnableKmeans=False):
     self.daskEnableKmeans = daskEnableKmeans
-    self.daskEnableDist = daskEnableDist
     self.k = 100
     self.radiusFactor = 1.1
     self.noveltyThr = 100
@@ -151,8 +143,8 @@ class Minas:
     self.ndProcedureThr = 2000
     self.representationThr = 3
     self.globalCount = 0
-    self.lastExapleTMS = -float("inf")
-    self.lastCleaningCycle = -float("inf")
+    self.lastExapleTMS = -1
+    self.lastCleaningCycle = -1
     self.clusters = []
     self.sleepClusters = []
     self.counter = 0
@@ -172,25 +164,28 @@ class Minas:
       'lastCleaningCycle': self.lastCleaningCycle,
       'counter': self.counter,
       'noveltyIndex': self.noveltyIndex,
-      'clusters': self.clusters,
-      'sleepClusters': self.sleepClusters,
-      'unknownBuffer': self.unknownBuffer,
+      'clusters': [cl.toDic() for cl in self.clusters],
+      'sleepClusters': [cl.toDic() for cl in self.sleepClusters],
+      'unknownBuffer': [{'item': ex.item} for ex in self.unknownBuffer],
       'diff': self.globalCount-self.counter,
       'known': self.counter,
     }
   def store(self):
     selfDict = self.asDict()
-    # selfDict['clusters'] = len(self.clusters)
-    # selfDict['sleepers'] = len(self.sleepClusters)
-    # selfDict['unknownBuffer'] = len(self.unknownBuffer)
     return selfDict
+  @timed
   def storeToFile(self, filename: str):
+    directory = os.path.dirname(filename)
+    if not os.path.exists(directory):
+      os.makedirs(directory)
     with open(filename, 'w') as f:
       f.write(yaml.dump(self.store()))
+    return self
+  @timed
   def restoreFromFile(self, filename: str):
     with open(filename, 'r') as f:
       config = yaml.load(f, Loader=yaml.SafeLoader)
-      self.restore(config)
+      return self.restore(config)
   def restore(self, dic: dict):
     self.k = dic.get('k', self.k)
     self.radiusFactor = dic.get('radiusFactor', self.radiusFactor)
@@ -201,12 +196,15 @@ class Minas:
     self.globalCount = dic.get('globalCount', self.globalCount)
     self.lastExapleTMS = dic.get('lastExapleTMS', self.lastExapleTMS)
     self.lastCleaningCycle = dic.get('lastCleaningCycle', self.lastCleaningCycle)
-    self.clusters = dic.get('clusters', self.clusters)
-    self.sleepClusters = dic.get('sleepClusters', self.sleepClusters)
     self.counter = dic.get('counter', self.counter)
-    self.unknownBuffer = dic.get('unknownBuffer', self.unknownBuffer)
     self.noveltyIndex = dic.get('noveltyIndex', self.noveltyIndex)
-  
+    if 'clusters' in dic.keys():
+      self.clusters = [Cluster(**cl) for cl in dic['clusters']]
+    if 'sleepClusters' in dic.keys():
+      self.sleepClusters = [Cluster(**cl) for cl in dic['sleepClusters']]
+    if 'unknownBuffer' in dic.keys():
+      self.unknownBuffer = [Example(**ex) for ex in dic['unknownBuffer']]
+    return self
   # 
   def __repr__(self):
     selfDict = self.asDict()
@@ -237,9 +235,10 @@ class Minas:
     n_samples = len(examples)
     n_clusters = min(self.k, int(n_samples / (3 * self.representationThr)))
     assert n_samples >= n_clusters
-    df = pd.DataFrame(data=[ex.item for ex in examples])
+    df = pandas.DataFrame(data=[ex.item for ex in examples])
     kmeans = KMeans(n_clusters=n_clusters)
     if self.daskEnableKmeans:
+      logging.info('clustering with dask kmeans')
       with joblib.parallel_backend('dask'):
         kmeans.fit(df)
     else:
@@ -264,8 +263,6 @@ class Minas:
     """Returns the nearest cluster and its distance (nearCl, dist)"""
     if clusters == None:
       clusters = self.clusters
-    if self.daskEnableDist:
-      return closestClusterDelayedPure(vec, clusters).compute()
     dist = float("inf")
     nearCl = None
     for cl in clusters:
@@ -306,7 +303,7 @@ class Minas:
   # ----------------------------------------------------------------------------------------------------------------
   
   @timed
-  def offline(self, training_set=[]):
+  def offline(self, training_set: List[Example]= []):
     """
       Require:
         k: number of micro-clusters,
@@ -328,6 +325,8 @@ class Minas:
     # training_set = Example[]
     keyfunc = lambda x: x.label
     self.clusters = []
+    # df = pandas.DataFrame(data=[{'item': ex.item, 'label': ex.label} for ex in training_set])
+    # for label, examples in df.groupby('label'):
     training_set = sorted(training_set, key=keyfunc)
     for label, examples in itertools.groupby(training_set, keyfunc):
       clusters = self.clustering(list(examples))
@@ -390,7 +389,8 @@ class Minas:
     self.lastExapleTMS = example.timestamp
     cluster, dist = self.closestCluster(example.item)
     example.tries += 1
-    if dist <= (self.radiusFactor * cluster.radius()):
+    isClassified = dist <= (self.radiusFactor * cluster.radius())
+    if isClassified:
       example.label = cluster.label
       cluster.addExample(example)
       self.counter += 1
@@ -400,7 +400,7 @@ class Minas:
     #
     if len(self.unknownBuffer) > self.ndProcedureThr:
       self.bufferFull()
-    return self
+    return example, isClassified, cluster, dist
 
   @timed
   def bufferFull(self):
@@ -433,7 +433,7 @@ class Minas:
     logging.info('Sleep {}'.format(len(newSleepClusters)))
     self.sleepClusters.extend(newSleepClusters)
     self.clusters = newClusters
-    self.lastCleaningCycle = time.time()
+    self.lastCleaningCycle = time.time_ns()
     logging.info('[after Sleep Clean] {}'.format(self))
     # ShortMem ← remove-oldExamples(ShortMem, windowsize)
     ogLen = len(self.unknownBuffer)
@@ -496,4 +496,12 @@ class Minas:
     return self
 
 if __name__ == "__main__":
-  self_test.selfTest(Minas)
+  try:
+    client = dask_distributed.Client('tcp://localhost:8786')
+    import self_test
+    self_test.setupLog()
+    self_test.selfTest(Minas)
+    self_test.testForest()
+  except KeyboardInterrupt as ex:
+    print('KeyboardInterrupt')
+    exit()

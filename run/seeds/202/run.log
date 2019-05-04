@@ -1,8 +1,8 @@
-2019-05-03 14:40:48,226 INFO ./minas.py:203 clustering clustering 44, Example(Class #0, ) # ${'len': 21, 'timestamp': 1556905247.8263702, 'tries': 0}
-2019-05-03 14:40:48,266 INFO ./minas.py:203 clustering clustering 54, Example(Class #1, ) # ${'len': 21, 'timestamp': 1556905247.86437, 'tries': 0}
-2019-05-03 14:40:48,324 INFO ./minas.py:310 offline [offline end]
-2019-05-03 14:40:48,326 INFO C:\dev\minas-py\self_test.py:105 testRun <Model Status clusters: 10, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 10, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
-Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 98, 'representationThr': 3, 'globalCount': 0, 'lastExapleTMS': -inf, 'lastCleaningCycle': -inf, 'counter': 0, 'noveltyIndex': 0, 'clusters': 10, 'sleepers': 0, 'unknownBuffer': 0, 'diff': 0, 'known': 0}
+2019-05-03 21:09:23,442 INFO ./minas.py:232 clustering clustering 44, Example(Class #0, ) # len: 21 {'label': 'Class #0', 'item': [4.945576520548192, 5.036481230116319, 11.132266005071987, 6.269860529751586, 7.367591530517246, 6.0100536994343114, 6.704930723317602, 5.3854461832005525, 6.514851539662594, 7.530411051835554, 9.613987680632189, 8.92844701381975, 5.39861178025, 8.142206799415044, 5.734510555343533, 5.518554028187008, 9.406107593817223, 8.648200850944884, 2.7309631852190437, 6.682247377066005, 9.697584899726847], 'timestamp': 1556928563044556500, 'tries': 0}
+2019-05-03 21:09:23,475 INFO ./minas.py:232 clustering clustering 54, Example(Class #1, ) # len: 21 {'label': 'Class #1', 'item': [6.398877008640627, 5.968799810934821, 4.560072947461026, 10.055793655855364, 10.860572731562938, 1.2300504499942075, 6.090372606138616, 4.408830941700328, 9.959218234815728, 3.9314597453030515, 10.811064110689532, 6.257901265522521, 7.410331226356031, 11.852605746366857, 8.772449104028171, 11.754877869599268, 14.688136823534881, 8.495898041086543, 6.19528553702478, 10.812724460622889, 11.18691240918899], 'timestamp': 1556928563081560000, 'tries': 0}
+2019-05-03 21:09:23,529 INFO ./minas.py:340 offline [offline end]
+2019-05-03 21:09:23,611 INFO C:\dev\minas-py\self_test.py:104 testRun <Model Status clusters: 10, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 10, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
+Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 98, 'representationThr': 3, 'globalCount': 0, 'lastExapleTMS': -1, 'lastCleaningCycle': -1, 'counter': 0, 'noveltyIndex': 0, 'clusters': 10, 'sleepClusters': [], 'unknownBuffer': 0, 'diff': 0, 'known': 0, 'sleepers': 0}
 	Cluster(label=Class #0,	n=8,	sum=57.79,	max=9.07,	center=[7.21, 6.18, 5.60, 5.83, 7.53, 4.51, 8.33, 6.16, 8.08, 7.58, 6.45, 5.89, 6.63, 4.65, 6.42, 6.30, 8.03, 7.34, 6.28, 7.51, 6.33])
 	Cluster(label=Class #0,	n=22,	sum=165.49,	max=9.90,	center=[7.19, 6.97, 7.95, 6.82, 6.73, 7.11, 5.89, 6.97, 6.04, 7.00, 6.00, 6.98, 7.50, 7.31, 6.92, 7.22, 7.53, 7.52, 6.57, 6.99, 7.77])
 	Cluster(label=Class #0,	n=7,	sum=47.80,	max=7.97,	center=[7.17, 6.50, 5.24, 8.84, 8.73, 7.04, 7.06, 5.86, 6.82, 7.37, 7.33, 7.10, 7.79, 7.75, 6.67, 5.92, 6.61, 4.91, 5.73, 7.27, 6.27])
@@ -14,21 +14,21 @@ Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 
 	Cluster(label=Class #1,	n=15,	sum=246.10,	max=22.05,	center=[11.57, 6.67, 7.08, 10.04, 7.74, 6.66, 7.66, 6.47, 9.65, 9.21, 7.20, 10.77, 9.01, 9.65, 10.03, 11.47, 11.50, 9.06, 10.60, 7.49, 11.36])
 	Cluster(label=Class #1,	n=8,	sum=131.41,	max=19.50,	center=[8.00, 10.89, 10.18, 10.55, 7.25, 11.28, 11.31, 10.15, 9.08, 7.59, 11.93, 6.49, 8.09, 8.86, 12.29, 7.51, 12.04, 7.88, 5.22, 7.49, 12.40])
 )
-2019-05-03 14:40:49,135 INFO ./minas.py:376 bufferFull bufferFull, <Model Status clusters: 10, sleepers: 0, known: 620, unkown: 99 (99), total: 719>
-2019-05-03 14:40:49,147 INFO ./minas.py:389 bufferFull [after sleep check]<Model Status clusters: 10, sleepers: 0, known: 620, unkown: 99 (99), total: 719>
-2019-05-03 14:40:49,158 INFO ./minas.py:446 noveltyDetection [noveltyDetection]	 unknownBuffer: 99, sleepClusters: 0
-2019-05-03 14:40:49,159 INFO ./minas.py:203 clustering clustering 99, Example(None, ) # ${'len': 21, 'timestamp': 1556905248.8533645, 'tries': 2}
-2019-05-03 14:40:49,312 INFO ./minas.py:392 bufferFull [after novelty Detection]<Model Status clusters: 10, sleepers: 0, known: 620, unkown: 99 (99), total: 719>
-2019-05-03 14:40:49,313 INFO ./minas.py:402 bufferFull Sleep 0
-2019-05-03 14:40:49,313 INFO ./minas.py:406 bufferFull [after Sleep Clean] <Model Status clusters: 10, sleepers: 0, known: 620, unkown: 99 (99), total: 719>
-2019-05-03 14:40:49,314 INFO ./minas.py:413 bufferFull [Cleaning Cycle]	Discarting 99 examples
-2019-05-03 14:40:49,323 INFO ./minas.py:414 bufferFull [after Unkown Clean] <Model Status clusters: 10, sleepers: 0, known: 620, unkown: 0 (99), total: 719>
-2019-05-03 14:40:49,415 INFO C:\dev\minas-py\self_test.py:117 testRun aggregatin resutls
-2019-05-03 14:40:49,880 INFO C:\dev\minas-py\self_test.py:153 testRun 
+2019-05-03 21:09:24,410 INFO ./minas.py:407 bufferFull bufferFull, <Model Status clusters: 10, sleepers: 0, known: 620, unkown: 99 (99), total: 719>
+2019-05-03 21:09:24,411 INFO ./minas.py:420 bufferFull [after sleep check]<Model Status clusters: 10, sleepers: 0, known: 620, unkown: 99 (99), total: 719>
+2019-05-03 21:09:24,411 INFO ./minas.py:477 noveltyDetection [noveltyDetection]	 unknownBuffer: 99, sleepClusters: 0
+2019-05-03 21:09:24,412 INFO ./minas.py:232 clustering clustering 99, Example(None, ) # len: 21 {'label': None, 'item': [12.718571645036402, 9.909446952439176, 16.15960134601054, 8.854414364146239, 3.2157839683743914, 2.7266895034699026, 17.969100382778237, 10.655160797835148, 5.850912699233971, 15.012450972180908, 9.255721180427088, 4.770745680922099, 1.3761783633511717, 19.2568055359716, 11.946436114205161, 13.901108963554368, 12.398526431834576, 14.949816815280238, 10.646853526047934, 10.008517235930254, 4.00749757322983], 'timestamp': 1556928564100542900, 'tries': 2}
+2019-05-03 21:09:24,553 INFO ./minas.py:423 bufferFull [after novelty Detection]<Model Status clusters: 10, sleepers: 0, known: 620, unkown: 99 (99), total: 719>
+2019-05-03 21:09:24,554 INFO ./minas.py:433 bufferFull Sleep 0
+2019-05-03 21:09:24,554 INFO ./minas.py:437 bufferFull [after Sleep Clean] <Model Status clusters: 10, sleepers: 0, known: 620, unkown: 99 (99), total: 719>
+2019-05-03 21:09:24,554 INFO ./minas.py:444 bufferFull [Cleaning Cycle]	Discarting 99 examples
+2019-05-03 21:09:24,555 INFO ./minas.py:445 bufferFull [after Unkown Clean] <Model Status clusters: 10, sleepers: 0, known: 620, unkown: 0 (99), total: 719>
+2019-05-03 21:09:24,636 INFO C:\dev\minas-py\self_test.py:116 testRun aggregatin resutls
+2019-05-03 21:09:25,144 INFO C:\dev\minas-py\self_test.py:152 testRun 
 
 	=== Final Results ===
 # <Model Status clusters: 10, sleepers: 0, known: 779, unkown: 13 (112), total: 891>
-Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 98, 'representationThr': 3, 'globalCount': 891, 'lastExapleTMS': 1556905249.4143498, 'lastCleaningCycle': 1556905249.3133538, 'counter': 779, 'noveltyIndex': 0, 'clusters': 10, 'sleepers': 0, 'unknownBuffer': 13, 'diff': 112, 'known': 779}
+Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 98, 'representationThr': 3, 'globalCount': 891, 'lastExapleTMS': 1556928564636538000, 'lastCleaningCycle': 1556928564554540300, 'counter': 779, 'noveltyIndex': 0, 'clusters': 10, 'sleepClusters': [], 'unknownBuffer': 13, 'diff': 112, 'known': 779, 'sleepers': 0}
 	Cluster(label=Class #0,	n=74,	sum=617.36,	max=11.23,	center=[7.21, 6.18, 5.60, 5.83, 7.53, 4.51, 8.33, 6.16, 8.08, 7.58, 6.45, 5.89, 6.63, 4.65, 6.42, 6.30, 8.03, 7.34, 6.28, 7.51, 6.33])
 	Cluster(label=Class #0,	n=247,	sum=1992.44,	max=11.86,	center=[7.19, 6.97, 7.95, 6.82, 6.73, 7.11, 5.89, 6.97, 6.04, 7.00, 6.00, 6.98, 7.50, 7.31, 6.92, 7.22, 7.53, 7.52, 6.57, 6.99, 7.77])
 	Cluster(label=Class #0,	n=68,	sum=547.92,	max=11.01,	center=[7.17, 6.50, 5.24, 8.84, 8.73, 7.04, 7.06, 5.86, 6.82, 7.37, 7.33, 7.10, 7.79, 7.75, 6.67, 5.92, 6.61, 4.91, 5.73, 7.27, 6.27])

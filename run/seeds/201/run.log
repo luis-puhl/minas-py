@@ -1,9 +1,9 @@
-2019-05-03 14:40:44,273 INFO ./minas.py:203 clustering clustering 84, Example(Class #0, ) # ${'len': 2, 'timestamp': 1556905243.8894198, 'tries': 0}
-2019-05-03 14:40:44,363 INFO ./minas.py:203 clustering clustering 48, Example(Class #1, ) # ${'len': 2, 'timestamp': 1556905243.9024217, 'tries': 0}
-2019-05-03 14:40:44,411 INFO ./minas.py:203 clustering clustering 33, Example(Class #2, ) # ${'len': 2, 'timestamp': 1556905243.9094179, 'tries': 0}
-2019-05-03 14:40:44,440 INFO ./minas.py:310 offline [offline end]
-2019-05-03 14:40:44,442 INFO C:\dev\minas-py\self_test.py:105 testRun <Model Status clusters: 16, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 16, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
-Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 165, 'representationThr': 3, 'globalCount': 0, 'lastExapleTMS': -inf, 'lastCleaningCycle': -inf, 'counter': 0, 'noveltyIndex': 0, 'clusters': 16, 'sleepers': 0, 'unknownBuffer': 0, 'diff': 0, 'known': 0}
+2019-05-03 21:09:19,388 INFO ./minas.py:232 clustering clustering 84, Example(Class #0, ) # len: 2 {'label': 'Class #0', 'item': [7.348138576802921, 8.236967187513239], 'timestamp': 1556928558996627500, 'tries': 0}
+2019-05-03 21:09:19,468 INFO ./minas.py:232 clustering clustering 48, Example(Class #1, ) # len: 2 {'label': 'Class #1', 'item': [6.501216809388728, 6.573651352188045], 'timestamp': 1556928559006606900, 'tries': 0}
+2019-05-03 21:09:19,509 INFO ./minas.py:232 clustering clustering 33, Example(Class #2, ) # len: 2 {'label': 'Class #2', 'item': [0.9850207447154946, -0.23671097655392714], 'timestamp': 1556928559011614700, 'tries': 0}
+2019-05-03 21:09:19,538 INFO ./minas.py:340 offline [offline end]
+2019-05-03 21:09:19,599 INFO C:\dev\minas-py\self_test.py:104 testRun <Model Status clusters: 16, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 16, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
+Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 165, 'representationThr': 3, 'globalCount': 0, 'lastExapleTMS': -1, 'lastCleaningCycle': -1, 'counter': 0, 'noveltyIndex': 0, 'clusters': 16, 'sleepClusters': [], 'unknownBuffer': 0, 'diff': 0, 'known': 0, 'sleepers': 0}
 	Cluster(label=Class #0,	n=10,	sum=10.29,	max=1.52,	center=[5.94, 8.06])
 	Cluster(label=Class #0,	n=12,	sum=16.98,	max=3.68,	center=[2.98, 9.22])
 	Cluster(label=Class #0,	n=8,	sum=11.95,	max=2.72,	center=[7.80, 12.72])
@@ -21,21 +21,21 @@ Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 
 	Cluster(label=Class #2,	n=15,	sum=5.64,	max=0.83,	center=[-0.29, 0.30])
 	Cluster(label=Class #2,	n=7,	sum=3.81,	max=0.86,	center=[0.14, -0.95])
 )
-2019-05-03 14:40:45,694 INFO ./minas.py:376 bufferFull bufferFull, <Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
-2019-05-03 14:40:45,704 INFO ./minas.py:389 bufferFull [after sleep check]<Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
-2019-05-03 14:40:45,704 INFO ./minas.py:446 noveltyDetection [noveltyDetection]	 unknownBuffer: 166, sleepClusters: 0
-2019-05-03 14:40:45,705 INFO ./minas.py:203 clustering clustering 166, Example(None, ) # ${'len': 2, 'timestamp': 1556905245.0784643, 'tries': 2}
-2019-05-03 14:40:45,991 INFO ./minas.py:392 bufferFull [after novelty Detection]<Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
-2019-05-03 14:40:45,993 INFO ./minas.py:402 bufferFull Sleep 0
-2019-05-03 14:40:45,993 INFO ./minas.py:406 bufferFull [after Sleep Clean] <Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
-2019-05-03 14:40:45,993 INFO ./minas.py:413 bufferFull [Cleaning Cycle]	Discarting 166 examples
-2019-05-03 14:40:46,002 INFO ./minas.py:414 bufferFull [after Unkown Clean] <Model Status clusters: 16, sleepers: 0, known: 894, unkown: 0 (166), total: 1060>
-2019-05-03 14:40:46,258 INFO C:\dev\minas-py\self_test.py:117 testRun aggregatin resutls
-2019-05-03 14:40:47,279 INFO C:\dev\minas-py\self_test.py:153 testRun 
+2019-05-03 21:09:20,865 INFO ./minas.py:407 bufferFull bufferFull, <Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
+2019-05-03 21:09:20,866 INFO ./minas.py:420 bufferFull [after sleep check]<Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
+2019-05-03 21:09:20,867 INFO ./minas.py:477 noveltyDetection [noveltyDetection]	 unknownBuffer: 166, sleepClusters: 0
+2019-05-03 21:09:20,867 INFO ./minas.py:232 clustering clustering 166, Example(None, ) # len: 2 {'label': None, 'item': [5.951765761894434, 6.805047628607929], 'timestamp': 1556928560227597100, 'tries': 2}
+2019-05-03 21:09:21,159 INFO ./minas.py:423 bufferFull [after novelty Detection]<Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
+2019-05-03 21:09:21,160 INFO ./minas.py:433 bufferFull Sleep 0
+2019-05-03 21:09:21,160 INFO ./minas.py:437 bufferFull [after Sleep Clean] <Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
+2019-05-03 21:09:21,161 INFO ./minas.py:444 bufferFull [Cleaning Cycle]	Discarting 166 examples
+2019-05-03 21:09:21,161 INFO ./minas.py:445 bufferFull [after Unkown Clean] <Model Status clusters: 16, sleepers: 0, known: 894, unkown: 0 (166), total: 1060>
+2019-05-03 21:09:21,430 INFO C:\dev\minas-py\self_test.py:116 testRun aggregatin resutls
+2019-05-03 21:09:22,596 INFO C:\dev\minas-py\self_test.py:152 testRun 
 
 	=== Final Results ===
 # <Model Status clusters: 16, sleepers: 0, known: 1267, unkown: 56 (222), total: 1489>
-Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 165, 'representationThr': 3, 'globalCount': 1489, 'lastExapleTMS': 1556905246.2573917, 'lastCleaningCycle': 1556905245.9933944, 'counter': 1267, 'noveltyIndex': 0, 'clusters': 16, 'sleepers': 0, 'unknownBuffer': 56, 'diff': 222, 'known': 1267}
+Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 165, 'representationThr': 3, 'globalCount': 1489, 'lastExapleTMS': 1556928561429594500, 'lastCleaningCycle': 1556928561160587000, 'counter': 1267, 'noveltyIndex': 0, 'clusters': 16, 'sleepClusters': [], 'unknownBuffer': 56, 'diff': 222, 'known': 1267, 'sleepers': 0}
 	Cluster(label=Class #0,	n=70,	sum=71.80,	max=2.04,	center=[5.94, 8.06])
 	Cluster(label=Class #0,	n=88,	sum=154.56,	max=3.68,	center=[2.98, 9.22])
 	Cluster(label=Class #0,	n=63,	sum=110.78,	max=3.00,	center=[7.80, 12.72])
