@@ -252,10 +252,7 @@ class Minas:
     # Add examples to its cluster
     for ex in examples:
       nearCl, dist = self.closestCluster(ex.item, clusters)
-      try:
-        nearCl.addExample(ex)
-      except:
-        pass
+      nearCl.addExample(ex)
     return clusters
 
   @timed

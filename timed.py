@@ -1,6 +1,6 @@
-import time
+import time, _collections
 
-timedResume = {}
+timedResume = _collections.defaultdict(list)
 
 def timed(func):
   global timedResume
@@ -25,7 +25,7 @@ def clearTimes():
   timedResume = dict([ (k, []) for k in timedResume.keys() ])
 
 def statisticSummary():
-  import matplotlib, numpy, logging, pandas
+  import numpy, pandas
   global timedResume
   means = []
   stds = []
