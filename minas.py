@@ -268,25 +268,6 @@ class Minas:
         dist = d
         nearCl = cl
     return nearCl, dist
-
-  @timed
-  def validationCriterion(self, cluster: Cluster, unknownBuffer):
-    isRepresentative = cluster.n > self.representationThr
-    # 
-    near, dist = self.closestCluster(cluster.center)
-    silhouette = lambda a, b: (b - a) / max([a, b])
-    distances = []
-    for ex in unknownBuffer:
-      d = cluster.dist(ex.item)
-      if d <= (self.radiusFactor * cluster.radius()):
-        distances.append(d)
-    mean = sum(distances) / len(distances)
-    devianceSqrSum = sum([(d - mean) **2 for d in distances])
-    var = devianceSqrSum / len(distances)
-    stdDevDistance = var **0.5
-    # 
-    isCohesive = silhouette(dist, stdDevDistance) > 0
-    return isRepresentative and isCohesive
   
   @timed
   def classify(self, example: Example):
@@ -441,6 +422,28 @@ class Minas:
     logging.info('[Cleaning Cycle]\tDiscarting {n} examples'.format(n=ogLen - len(self.unknownBuffer)))
     logging.info('[after Unkown Clean] {}'.format(self))
     return self
+
+
+  @timed
+  def validationCriterion(self, cluster: Cluster, unknownBuffer):
+    isRepresentative = cluster.n > self.representationThr
+    # 
+    near, dist = self.closestCluster(cluster.center)
+    silhouette = lambda a, b: (b - a) / max([a, b])
+    distances = []
+    for ex in unknownBuffer:
+      d = cluster.dist(ex.item)
+      if d <= (self.radiusFactor * cluster.radius()):
+        # NOTE: this method is flawd, since we need to fill the cluster first
+        # and the current RADIUS method being the max distance: this assertion is always true
+        distances.append(d)
+    mean = sum(distances) / len(distances)
+    devianceSqrSum = sum([(d - mean) **2 for d in distances])
+    var = devianceSqrSum / len(distances)
+    stdDevDistance = var **0.5
+    # 
+    isCohesive = silhouette(dist, stdDevDistance) > 0
+    return isRepresentative and isCohesive
 
   @timed
   def noveltyDetection(self):
