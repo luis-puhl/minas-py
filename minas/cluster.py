@@ -4,7 +4,7 @@ import time
 
 import scipy
 
-from example import Example, Vector
+from .example import Example, Vector
 
 @dataclasses.dataclass
 class Cluster:
@@ -15,6 +15,14 @@ class Cluster:
     lastExapleTMS: int = 0
     maxDistance: float = 0.0
     temp_examples: typing.Union[list, None] = None
+    def __getstate__(self):
+        return {
+            'label': self.label,
+            'center': [float(i) for i in self.center],
+            'n': self.n,
+            'maxDistance': self.maxDistance,
+            'lastExapleTMS': self.lastExapleTMS,
+        }
     def radius(self):
         return self.maxDistance
     def dist(self, vec):

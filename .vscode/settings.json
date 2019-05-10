@@ -1,3 +1,14 @@
 {
-    "python.pythonPath": "venv/bin/python3"
+    "python.pythonPath": "venv\\Scripts\\python.exe",
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./tests",
+        "-p",
+        "test*.py"
+    ],
+    "python.testing.pyTestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.unittestEnabled": true,
+    "python.linting.enabled": true
 }

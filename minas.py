@@ -111,10 +111,7 @@ class Cluster:
   def dist(self, vec: List[float] = []):
     # assert type(vec) is list, 'dist takes only lists'
     assert len(vec) == len(self.center), 'dist can only compare same-dimetion vectors'
-    try:
-      return scipy.spatial.distance.euclidean(self.center, vec)
-    except:
-      return float('inf')
+    return scipy.spatial.distance.euclidean(self.center, vec)
   
   @timed
   def addExample(self, example, distance=None):

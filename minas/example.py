@@ -12,3 +12,10 @@ class Example:
     label: typing.Union[str, None] = None
     timestamp: int = time.time_ns()
     tries: int = 0
+    def __getstate__(self):
+        return {
+            'item': [float(i) for i in self.item],
+            'label': self.label,
+            'timestamp': self.timestamp,
+            'tries': self.tries,
+        }

@@ -10,8 +10,8 @@ from sklearn.cluster import KMeans
 import dask
 from dask.distributed import Client
 
-from example import Example, Vector
-from cluster import Cluster
+from .example import Example, Vector
+from .cluster import Cluster
 
 @dataclasses.dataclass
 class MinasConsts:
@@ -22,6 +22,16 @@ class MinasConsts:
     ndProcedureThr: int = 2000
     representationThr: int = 3
     silhouetteThr: int = 0
+    def __getstate__(self):
+        return {
+            'k': self.k,
+            'radiusFactor': self.radiusFactor,
+            'noveltyThr': self.noveltyThr,
+            'windowSize': self.windowSize,
+            'ndProcedureThr': self.ndProcedureThr,
+            'representationThr': self.representationThr,
+            'silhouetteThr': self.silhouetteThr,
+        }
 
 ClusterList = typing.List[Cluster]
 ExampleList = typing.List[Example]
@@ -29,41 +39,26 @@ ExampleList = typing.List[Example]
 @dataclasses.dataclass
 class MinasAlgorith:
     CONSTS: MinasConsts = MinasConsts()
-    def closestCluster(self, item, clusters):
-        if len(clusters) == 0:
-            return float('inf'), None
-        dist, nearCl = min( ((cl.dist(item), cl) for cl in clusters), key=lambda x: x[0])
-        return dist, nearCl
-    def clustering(self, examples, label=None):
-        kmeans = KMeans( n_clusters=min(self.CONSTS.k, int(len(examples) / (3 * self.CONSTS.representationThr))), n_jobs=-1 )
-        with joblib.parallel_backend('dask', scatter[examples]):
-            kmeans.fit(examples)
+    def closestCluster(self, item: Vector, clusters: ClusterList) -> (float, Cluster):
+        return min( ((cl.dist(item), cl) for cl in clusters), key=lambda x: x[0])
+    def clustering(self, examples: typing.List[Vector], label: str = None) -> ClusterList:
+        n_clusters = min(self.CONSTS.k, int(len(examples) / (3 * self.CONSTS.representationThr)))
+        kmeans = KMeans( n_clusters=n_clusters)
+        kmeans.fit(examples)
         return [Cluster(center=centroid, label=label) for centroid in kmeans.cluster_centers_]
-    @dask.delayed
-    def trainGroup(self, label, group):
+    def trainGroup(self, group, label: str = None):
         clusters = self.clustering(group, label)
         for ex in group:
             dist, nearCl = self.closestCluster(ex, clusters)
             nearCl += Example(ex)
         return [cluster for cluster in clusters if cluster.n > self.CONSTS.representationThr]
-    def training(self, examplesDf, daskClient: Client = None):
+    def training(self, examplesDf):
         clusters = []
         groupSize = self.CONSTS.k * self.CONSTS.representationThr
         for label, group in examplesDf.groupby('label'):
-            for chunk in range(0, len(group), groupSize):
-                subgroup = group[chunk:chunk + groupSize]
-                subgroupDf = pd.DataFrame(iter(subgroup['item']))
-                try:
-                    if daskClient:
-                        pass
-                        # daskClient.scatter(subgroupDf)
-                except Exception as ex:
-                    pass
-                clusters += self.trainGroup(label, subgroupDf)
+            groupDf = pd.DataFrame(iter(group['item']))
+            clusters += self.trainGroup(groupDf, label)
         return clusters
-    def offline(self, examplesDf):
-        newClusters = self.training(examplesDf).compute()
-        self.clusters.extend(newClusters)
     #
     def online(self, stream):
         for example in stream:
@@ -93,14 +88,24 @@ class MinasAlgorith:
         if len(unknownBuffer) > self.CONSTS.ndProcedureThr:
             init = time.time_ns()
             outStream.append('bufferFull')
-            knownCount = self.recurenceDetection(clusters, sleepClusters, unknownBuffer, knownCount, outStream)
-            knownCount, noveltyIndex = self.noveltyDetection(clusters, sleepClusters, unknownBuffer, lastCleaningCycle, noveltyIndex, outStream)
-            self.cleanupCycle(clusters, sleepClusters, unknownBuffer, knownCount)
+            knownCount += self.recurenceDetection(clusters, sleepClusters, unknownBuffer, outStream)
+            knownCount, noveltyIndex = self.noveltyDetection(clusters, sleepClusters, unknownBuffer, knownCount, noveltyIndex, outStream)
+            # self.cleanupCycle(clusters, sleepClusters, unknownBuffer, knownCount)
+            for cluster in clusters:
+                if cluster.lastExapleTMS < lastCleaningCycle:
+                    sleepClusters.append(cluster)
+                    clusters.remove(cluster)
+            if len(clusters) == 0:
+                clusters.extend(sleepClusters)
+                sleepClusters.clear()
+            for ex in unknownBuffer:
+                if ex.tries >= 3:
+                    unknownBuffer.remove(ex)
             lastCleaningCycle = time.time_ns()
             outStream.append('bufferFull done {}ns'.format(time.time_ns() - init))
         return example, isClassified, cluster, dist, knownCount, noveltyIndex, lastCleaningCycle
-    #
-    def recurenceDetection(self, clusters: ClusterList, sleepClusters: ClusterList, unknownBuffer: ExampleList, knownCount: int, outStream: list):
+    def recurenceDetection(self, clusters: ClusterList, sleepClusters: ClusterList, unknownBuffer: ExampleList, outStream: list):
+        knownCount = 0
         allClusters = clusters + sleepClusters
         for sleepExample in unknownBuffer:
             isClassified, cluster, dist, example = self.classify(sleepExample, allClusters)
@@ -114,22 +119,9 @@ class MinasAlgorith:
                     sleepClusters.remove(cluster)
                     knownCount += 1
         return knownCount
-    def cleanupCycle(self, clusters: ClusterList, sleepClusters: ClusterList, unknownBuffer: ExampleList, lastCleaningCycle: int):
-        # Model ← move-sleepMem(Model, SleepMem, CurrentTime, windowSize)
-        for cluster in clusters:
-            if cluster.lastExapleTMS < lastCleaningCycle:
-                sleepClusters.append(cluster)
-                clusters.remove(cluster)
-        if len(clusters) == 0:
-            clusters.extend(sleepClusters)
-            sleepClusters.clear()
-        # ShortMem ← remove-oldExamples(ShortMem, windowsize)
-        for ex in unknownBuffer:
-            if ex.tries >= 3:
-                unknownBuffer.remove(ex)
     def noveltyDetection(self, clusters: ClusterList, sleepClusters: ClusterList, unknownBuffer: ExampleList, knownCount: int, noveltyIndex: int, outStream: list):
-        newClusters = self.clustering([ex.item for ex in unknownBuffer])
-        
+        df = pd.DataFrame([ex.item for ex in unknownBuffer])
+        newClusters = self.clustering(df)
         # fill in cluster radius
         for ex in unknownBuffer:
             dist, nearCl = self.closestCluster(ex.item, newClusters)
@@ -155,9 +147,9 @@ class MinasAlgorith:
                 outStream.append('Extention {}'.format(nearCl2Cl.label))
                 cluster.label = nearCl2Cl.label
             else:
-                noveltyIndex += 1
                 label = 'Novelty {}'.format(noveltyIndex)
                 outStream.append(label)
+                noveltyIndex += 1
                 cluster.label = label
             newValidClusters.append(cluster)
         # 

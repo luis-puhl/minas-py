@@ -1,13 +1,10 @@
 import time
 import inspect
 
-import matplotlib
-import matplotlib.pyplot as plt
-
-import matplotlib
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import matplotlib
+import matplotlib.pyplot as plt
 
 class Timed():
     def __init__(self):
@@ -79,25 +76,3 @@ class Timed():
         ax.grid(True)
         ax.legend()
         return fig, ax
-
-if __name__ == "__main__":
-    tm = Timed()
-    timed = tm.timed
-    funcs = []
-    for i in range(10):
-        mu = np.random.random()
-        sigma = np.random.random()
-        # @timed
-        def func():
-            value = np.random.normal(loc=mu, scale=sigma)
-            time.sleep(abs(value))
-            return value
-        func.__name__ = 'func_' + str(i)
-        funcs.append(timed(func))
-    #
-    for i in range(np.random.randint(10, 100)):
-        funcs[np.random.randint(0, len(funcs))]()
-    #
-    print(tm.timedResume)
-    fig, ax = tm.mkTimedResumePlot()
-    plt.show()
