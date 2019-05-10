@@ -66,14 +66,14 @@ class MinasAlgorith:
         for ex in group:
             dist, nearCl = self.closestCluster(ex, clusters)
             nearCl += Example(ex)
-        return [cluster for cluster in clusters if cluster.n > 0]
+        return [cluster for cluster in clusters if cluster.n > 0 and cluster.maxDistance > 0]
     def training(self, examplesDf):
         clusters = []
         groupSize = self.CONSTS.k * self.CONSTS.representationThr
         for label, group in examplesDf.groupby('label'):
             clusters += self.trainGroupMin(list(group['item']), label)
         # check training
-        assert sum(map(lambda x: x.n, clusters)) == len(examplesDf), 'Not all training examples were consumed'
+        # assert sum(map(lambda x: x.n, clusters)) == len(examplesDf), 'Not all training examples were consumed'
         return clusters
     #
     def online(self, stream):

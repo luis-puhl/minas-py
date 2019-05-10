@@ -135,35 +135,35 @@ class MinasFakeExamplesTest(unittest.TestCase):
         del basicModel
         rootLogger.removeHandler(logHandler)
 
-    def test_sample(self):
-        logging.info('Running self test')
-        # ------------------------------------------------------------------------------------------------
-        seed = 200
-        stdout_ = sys.stdout #Keep track of the previous value.
-        if os.path.exists('run/seeds'):
-            shutil.rmtree('run/seeds')
-        testInit = time.time_ns()
-        timed = Timed()
-        TimedMinasAlgorith = timed.timedClass(MinasAlgorith)
-        CONSTS=MinasConsts()
-        CONSTS.k = 5
-        CONSTS.ndProcedureThr = 100
-        while time.time_ns() - testInit < 10 * (10 ** 9):
-            logging.info('Next seed: {}'.format(seed))
-            minas = MinasBase(minasAlgorith=TimedMinasAlgorith(CONSTS=CONSTS))
-            self.runSeeded(minas, seed)
-            # ------------------------------------------------------------------------------------------------
-            seed += 1
-        logging.info('Done self test')
+    # def test_sample(self):
+    #     logging.info('Running self test')
+    #     # ------------------------------------------------------------------------------------------------
+    #     seed = 200
+    #     stdout_ = sys.stdout #Keep track of the previous value.
+    #     if os.path.exists('run/seeds'):
+    #         shutil.rmtree('run/seeds')
+    #     testInit = time.time_ns()
+    #     timed = Timed()
+    #     TimedMinasAlgorith = timed.timedClass(MinasAlgorith)
+    #     CONSTS=MinasConsts()
+    #     # CONSTS.k = 5
+    #     # CONSTS.ndProcedureThr = 100
+    #     while time.time_ns() - testInit < 10 * (10 ** 9):
+    #         logging.info('Next seed: {}'.format(seed))
+    #         minas = MinasBase(minasAlgorith=TimedMinasAlgorith(CONSTS=CONSTS))
+    #         self.runSeeded(minas, seed)
+    #         # ------------------------------------------------------------------------------------------------
+    #         seed += 1
+    #     logging.info('Done self test')
         
-        # ------------------------------------------------------------------------------------------------
-        df = timed.statisticSummary()
-        logging.info(f'=========== Timed Functions Summary ===========\n{df}')
-        fig, ax = timed.mkTimedResumePlot(df)
-        plt.tight_layout(.5)
-        plt.savefig('./run/seeds/timed-run.png')
-        plt.close(fig)
-        timed.clearTimes()
+    #     # ------------------------------------------------------------------------------------------------
+    #     df = timed.statisticSummary()
+    #     logging.info(f'=========== Timed Functions Summary ===========\n{df}')
+    #     fig, ax = timed.mkTimedResumePlot(df)
+    #     plt.tight_layout(.5)
+    #     plt.savefig('./run/seeds/timed-run.png')
+    #     plt.close(fig)
+    #     timed.clearTimes()
     
     def fake_seed(self, seed):
         dirr = 'run/seeds/' + str(seed) + '/'
