@@ -11,7 +11,10 @@ from sklearn.cluster import KMeans
 import dask
 from dask.distributed import Client
 
-from .minas_base import Cluster, Example
+from .example import Example, Vector
+from .cluster import Cluster
+from .minas_algo import MinasAlgorith, ClusterList, ExampleList
+from .minas_base import MinasBase
 
 @dataclasses.dataclass
 class MinasAlgorithJoblib(MinasAlgorith):

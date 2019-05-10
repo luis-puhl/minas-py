@@ -36,12 +36,12 @@ class MinasBase:
     def __str__(self):
         return (
             repr(self)[:-1]
-            + 'clustersLen=' + str(len(self.clusters))
-            + 'clusters=[' + ( '\n\t' + '\n\t'.join(map(lambda x: str(x), self.clusters)) if len(self.clusters) != 0 else '' ) + ']'
-            + 'sleepClustersLen=' + str(len(self.sleepClusters))
-            + 'sleepClusters=[' + ( '\n\t' + '\n\t'.join(map(lambda x: str(x), self.sleepClusters)) if len(self.sleepClusters) != 0 else '' ) + ']'
-            + 'unknownBufferLen=' + str(len(self.unknownBuffer))
-            + 'unknownBuffer=[' + ( '\n\t' + '\n\t'.join(map(lambda x: str(x), self.unknownBuffer)) if len(self.unknownBuffer) != 0 else '' ) + ']'
+            + ', clustersLen=' + str(len(self.clusters))
+            + ', clusters=[' + ( '\n\t' + '\n\t'.join(map(lambda x: str(x), self.clusters)) if len(self.clusters) != 0 else '' ) + ']'
+            + ', sleepClustersLen=' + str(len(self.sleepClusters))
+            + ', sleepClusters=[' + ( '\n\t' + '\n\t'.join(map(lambda x: str(x), self.sleepClusters)) if len(self.sleepClusters) != 0 else '' ) + ']'
+            + ', unknownBufferLen=' + str(len(self.unknownBuffer))
+            + ', unknownBuffer=[' + ( '\n\t' + '\n\t'.join(map(lambda x: str(x), self.unknownBuffer)) if len(self.unknownBuffer) != 0 else '' ) + ']'
             + ')'
         )
     def storeToFile(self, filename: str):

@@ -10,7 +10,7 @@ from dask.distributed import Client
 def mkPlot(examples=[], clusters=[]):
     labels = [ex.label for ex in examples]
     labels.extend([ex.label for ex in clusters])
-    labelSet = sorted(set(labels))
+    labelSet = sorted(set(map(str, labels)))
     # 
     fig, ax = plt.subplots()
     for i, label in enumerate(labelSet):

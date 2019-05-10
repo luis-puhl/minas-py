@@ -42,7 +42,7 @@ class MinasAlgorith:
     def closestCluster(self, item: Vector, clusters: ClusterList) -> (float, Cluster):
         return min( ((cl.dist(item), cl) for cl in clusters), key=lambda x: x[0])
     def clustering(self, examples: typing.List[Vector], label: str = None) -> ClusterList:
-        n_clusters = min(self.CONSTS.k, int(len(examples) / (3 * self.CONSTS.representationThr)))
+        n_clusters = min(self.CONSTS.k, int(len(examples) / (self.CONSTS.representationThr + 1)))
         kmeans = KMeans( n_clusters=n_clusters)
         kmeans.fit(examples)
         return [Cluster(center=centroid, label=label) for centroid in kmeans.cluster_centers_]
