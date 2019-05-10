@@ -20,7 +20,7 @@ class MinasConsts:
     noveltyThr: int = 100
     windowSize: int = 100
     ndProcedureThr: int = 2000
-    representationThr: int = 3
+    representationThr: int = 2
     silhouetteThr: int = 0
     def __getstate__(self):
         return {
@@ -40,24 +40,40 @@ ExampleList = typing.List[Example]
 class MinasAlgorith:
     CONSTS: MinasConsts = MinasConsts()
     def closestCluster(self, item: Vector, clusters: ClusterList) -> (float, Cluster):
+        assert len(item) == len(clusters[0].center)
         return min( ((cl.dist(item), cl) for cl in clusters), key=lambda x: x[0])
     def clustering(self, examples: typing.List[Vector], label: str = None) -> ClusterList:
         n_clusters = min(self.CONSTS.k, int(len(examples) / (self.CONSTS.representationThr + 1)))
         kmeans = KMeans( n_clusters=n_clusters)
-        kmeans.fit(examples)
+        kmeans.fit(pd.DataFrame(examples))
         return [Cluster(center=centroid, label=label) for centroid in kmeans.cluster_centers_]
-    def trainGroup(self, group, label: str = None):
+    def trainGroup(self, group: list, label: str = None):
         clusters = self.clustering(group, label)
         for ex in group:
             dist, nearCl = self.closestCluster(ex, clusters)
             nearCl += Example(ex)
-        return [cluster for cluster in clusters if cluster.n > self.CONSTS.representationThr]
+        validClusters = []
+        for cluster in clusters:
+            if cluster.n >= self.CONSTS.representationThr:
+                validClusters.append(Cluster(center=cluster.center, label=label))
+        # move all examples to nearest valid cluster
+        for ex in group:
+            dist, nearCl = self.closestCluster(ex, validClusters)
+            nearCl += Example(ex)
+        return validClusters
+    def trainGroupMin(self, group, label):
+        clusters = self.clustering(group, label)
+        for ex in group:
+            dist, nearCl = self.closestCluster(ex, clusters)
+            nearCl += Example(ex)
+        return [cluster for cluster in clusters if cluster.n > 0]
     def training(self, examplesDf):
         clusters = []
         groupSize = self.CONSTS.k * self.CONSTS.representationThr
         for label, group in examplesDf.groupby('label'):
-            groupDf = pd.DataFrame(iter(group['item']))
-            clusters += self.trainGroup(groupDf, label)
+            clusters += self.trainGroupMin(list(group['item']), label)
+        # check training
+        assert sum(map(lambda x: x.n, clusters)) == len(examplesDf), 'Not all training examples were consumed'
         return clusters
     #
     def online(self, stream):
@@ -125,7 +141,7 @@ class MinasAlgorith:
         # fill in cluster radius
         for ex in unknownBuffer:
             dist, nearCl = self.closestCluster(ex.item, newClusters)
-            if nearCl.temp_examples is None:
+            if not hasattr(nearCl, 'temp_examples'):
                 nearCl.temp_examples = []
             nearCl.addExample(ex, dist=dist)
         

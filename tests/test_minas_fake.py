@@ -78,7 +78,7 @@ class MinasFakeExamplesTest(unittest.TestCase):
         plotExamples2D(dirr, '1-training_set', training_set)
         
         trainingDf = pd.DataFrame(map(lambda x: {'item': x.item, 'label': x.label}, training_set))
-        logging.info(str(trainingDf.describe()) + '\n' + str(trainingDf.groupby('label').describe()) + '\n')
+        logging.info('trainingDf' + '\n' + str(trainingDf.groupby('label').describe()) + '\n')
         basicModel.offline(trainingDf)
         basicModel.storeToFile(dirr + 'minas.yaml')
         basicModel.restoreFromFile(dirr + 'minas.yaml')
@@ -172,8 +172,8 @@ class MinasFakeExamplesTest(unittest.TestCase):
         timed = Timed()
         TimedMinasAlgorith = timed.timedClass(MinasAlgorith)
         CONSTS=MinasConsts()
-        CONSTS.k = 5
-        CONSTS.ndProcedureThr = 100
+        # CONSTS.k = 5
+        # CONSTS.ndProcedureThr = 100
         logging.info('Next seed: {}'.format(seed))
         minas = MinasBase(minasAlgorith=TimedMinasAlgorith(CONSTS=CONSTS))
         self.runSeeded(minas, seed)
