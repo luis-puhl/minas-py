@@ -8,13 +8,13 @@ from .example import Example, Vector
 
 @dataclasses.dataclass
 class Cluster:
-    center: Vector
+    center: Vector = dataclasses.field(repr=False)
     id: int = time.time_ns()
     label: typing.Union[str, None] = None
     n: int = 0
     lastExapleTMS: int = 0
     maxDistance: float = 0.0
-    temp_examples: typing.Union[list, None] = None
+    # temp_examples: typing.Union[list, None] = None
     def __getstate__(self):
         return {
             'label': self.label,
@@ -23,6 +23,8 @@ class Cluster:
             'maxDistance': self.maxDistance,
             'lastExapleTMS': self.lastExapleTMS,
         }
+    def __str__(self):
+        return repr(self)[:-1] + ', center=[' + ', '.join(map(lambda x: '{: .4f}'.format(x), self.center)) + '])'
     def radius(self):
         return self.maxDistance
     def dist(self, vec):
@@ -36,10 +38,10 @@ class Cluster:
         self.n += 1
         self.lastExapleTMS = max(other.timestamp, self.lastExapleTMS)
         self.maxDistance = max(self.dist(other.item), self.maxDistance)
-        if isinstance(self.temp_examples, list):
+        if hasattr(self, 'temp_examples') and isinstance(self.temp_examples, list):
             self.temp_examples.append((other, dist))
     def silhouette(self):
-        if not isinstance(self.temp_examples, list):
+        if hasattr(self, 'temp_examples') and not isinstance(self.temp_examples, list):
             return None
         distances = []
         for ex, dist in self.temp_examples:

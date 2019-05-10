@@ -78,11 +78,11 @@ class MinasFakeExamplesTest(unittest.TestCase):
         plotExamples2D(dirr, '1-training_set', training_set)
         
         trainingDf = pd.DataFrame(map(lambda x: {'item': x.item, 'label': x.label}, training_set))
-        logging.info(str(repr(trainingDf.describe())) + '\n' + str(repr(trainingDf.groupby('label').describe())) + '\n')
+        logging.info(str(trainingDf.describe()) + '\n' + str(trainingDf.groupby('label').describe()) + '\n')
         basicModel.offline(trainingDf)
         basicModel.storeToFile(dirr + 'minas.yaml')
         basicModel.restoreFromFile(dirr + 'minas.yaml')
-        logging.info(str(basicModel) + str(repr(basicModel)))
+        logging.info(str(basicModel) + str(basicModel))
         self.assertGreater(len(basicModel.clusters), 0, 'model must be trainded after offline call')
         
         plotExamples2D(dirr, '2-offline_clusters', [], basicModel.clusters)
@@ -124,7 +124,7 @@ class MinasFakeExamplesTest(unittest.TestCase):
                 results.append(ex)
                 # end results map
         logging.info('\n\n\t=== Final Results ===\n{model}\n[seed {seed}] positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%})\n'.format(
-        model=repr(basicModel),
+        model=str(basicModel),
         seed=seed,
         p=positiveCount, pp=positiveCount/totalExamples,
         n=negativeCount, nn=negativeCount/totalExamples,
@@ -164,4 +164,31 @@ class MinasFakeExamplesTest(unittest.TestCase):
         plt.savefig('./run/seeds/timed-run.png')
         plt.close(fig)
         timed.clearTimes()
+    
+    def fake_seed(self, seed):
+        dirr = 'run/seeds/' + str(seed) + '/'
+        if os.path.exists(dirr):
+            shutil.rmtree(dirr)
+        timed = Timed()
+        TimedMinasAlgorith = timed.timedClass(MinasAlgorith)
+        CONSTS=MinasConsts()
+        CONSTS.k = 5
+        CONSTS.ndProcedureThr = 100
+        logging.info('Next seed: {}'.format(seed))
+        minas = MinasBase(minasAlgorith=TimedMinasAlgorith(CONSTS=CONSTS))
+        self.runSeeded(minas, seed)
+        # ------------------------------------------------------------------------------------------------
+        df = timed.statisticSummary()
+        logging.info(f'=========== Timed Functions Summary ===========\n{df}')
+        fig, ax = timed.mkTimedResumePlot()
+        plt.tight_layout(.5)
+        plt.savefig(dirr + 'timed-run.png')
+        plt.close(fig)
+        timed.clearTimes()
+    def test_fake_seed200(self):
+        self.fake_seed(200)
+    def test_fake_seed201(self):
+        self.fake_seed(201)
+    def test_fake_seed202(self):
+        self.fake_seed(202)
 # 

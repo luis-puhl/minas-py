@@ -18,9 +18,9 @@ class MinasBase:
     noveltyIndex: int = 0
     lastExapleTMS: int = 0
     lastCleaningCycle: int = 0
-    clusters: ClusterList = None
-    sleepClusters: ClusterList = None
-    unknownBuffer: ExampleList = None
+    clusters: ClusterList = dataclasses.field(repr=False, default=None)
+    sleepClusters: ClusterList = dataclasses.field(repr=False, default=None)
+    unknownBuffer: ExampleList = dataclasses.field(repr=False, default=None)
     minasAlgorith: MinasAlgorith = MinasAlgorith()
     daskClient: typing.Union[Client, None] = None
     def asDict(self):
@@ -33,6 +33,17 @@ class MinasBase:
             'lastExapleTMS': self.lastExapleTMS, 'lastCleaningCycle': self.lastCleaningCycle,
             'clusters': asDictMap(self.clusters), 'sleepClusters': asDictMap(self.sleepClusters),
             'unknownBuffer': asDictMap(self.unknownBuffer), 'CONSTS': self.minasAlgorith.CONSTS.__getstate__()}
+    def __str__(self):
+        return (
+            repr(self)[:-1]
+            + 'clustersLen=' + str(len(self.clusters))
+            + 'clusters=[' + ( '\n\t' + '\n\t'.join(map(lambda x: str(x), self.clusters)) if len(self.clusters) != 0 else '' ) + ']'
+            + 'sleepClustersLen=' + str(len(self.sleepClusters))
+            + 'sleepClusters=[' + ( '\n\t' + '\n\t'.join(map(lambda x: str(x), self.sleepClusters)) if len(self.sleepClusters) != 0 else '' ) + ']'
+            + 'unknownBufferLen=' + str(len(self.unknownBuffer))
+            + 'unknownBuffer=[' + ( '\n\t' + '\n\t'.join(map(lambda x: str(x), self.unknownBuffer)) if len(self.unknownBuffer) != 0 else '' ) + ']'
+            + ')'
+        )
     def storeToFile(self, filename: str):
         directory = os.path.dirname(filename)
         if len(directory) > 0 and not os.path.exists(directory):
