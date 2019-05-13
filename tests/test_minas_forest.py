@@ -133,6 +133,7 @@ class MinasForestCoverDataSetTest(unittest.TestCase):
             logging.info('Loading model')
             minas.restoreFromFile(directory + 'minas_offline.yaml')
             logging.info(str(minas))
+            minas.minasAlgorith.checkTraining(trainingDf, minas.clusters)
             
             outStream = []
             events = []

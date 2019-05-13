@@ -88,6 +88,7 @@ class MinasFakeExamplesTest(unittest.TestCase):
         plotExamples2D(dirr, '2-offline_clusters', [], basicModel.clusters)
         plotExamples2D(dirr, '3-offline_training', training_set, basicModel.clusters)
         plotExamples2D(dirr, '4-offline_all_data', examples, basicModel.clusters)
+        basicModel.minasAlgorith.checkTraining(trainingDf, basicModel.clusters)
         # ------------------------------------------------------------------------------------------------
         testSet = examples[int(len(examples) * .1):]
         basicModel.online( i.item for i in testSet )
@@ -132,6 +133,8 @@ class MinasFakeExamplesTest(unittest.TestCase):
         ))
         plotExamples2D(dirr, '5-online_clusters', [], basicModel.clusters if basicModel else [])
         plotExamples2D(dirr, '6-online_resutls', results, basicModel.clusters if basicModel else [])
+        onlyFalses = [x for x in results if x.label is not 'Positive']
+        plotExamples2D(dirr, '7-online_neg_unk', onlyFalses, basicModel.clusters if basicModel else [])
         del basicModel
         rootLogger.removeHandler(logHandler)
 

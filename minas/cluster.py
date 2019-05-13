@@ -9,7 +9,6 @@ from .example import Example, Vector
 @dataclasses.dataclass
 class Cluster:
     center: Vector = dataclasses.field(repr=False)
-    id: int = time.time_ns()
     label: typing.Union[str, None] = None
     n: int = 0
     lastExapleTMS: int = 0
@@ -35,9 +34,11 @@ class Cluster:
             return self
         return self
     def addExample(self, other, dist=None):
+        if dist is None:
+            dist = self.dist(other.item)
         self.n += 1
         self.lastExapleTMS = max(other.timestamp, self.lastExapleTMS)
-        self.maxDistance = max(self.dist(other.item), self.maxDistance)
+        self.maxDistance = max(dist, self.maxDistance)
         if hasattr(self, 'temp_examples') and isinstance(self.temp_examples, list):
             self.temp_examples.append((other, dist))
     def silhouette(self):
