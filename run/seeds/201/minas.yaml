@@ -1,144 +1,290 @@
+CONSTS:
+  k: 100
+  ndProcedureThr: 2000
+  noveltyThr: 100
+  radiusFactor: 1.1
+  representationThr: 1
+  silhouetteThr: 0
+  windowSize: 4000
 clusters:
 - center:
-  - 5.935359021431076
-  - 8.06157615939953
+  - 6.874081642240003
+  - 7.710709115017274
   label: 'Class #0'
-  lastExapleTMS: 1556928559003608800
-  maxDistance: 1.5183782549235862
-  n: 10
-  sumDistance: 10.290892557897639
-- center:
-  - 2.981549685538557
-  - 9.221838072580168
-  label: 'Class #0'
-  lastExapleTMS: 1556928559003608800
-  maxDistance: 3.6765600630444326
-  n: 12
-  sumDistance: 16.975599084806067
-- center:
-  - 7.80207410332637
-  - 12.723603631604046
-  label: 'Class #0'
-  lastExapleTMS: 1556928559004609100
-  maxDistance: 2.7231772383438857
-  n: 8
-  sumDistance: 11.945339098080668
-- center:
-  - 3.6999909478493986
-  - 4.39674961921186
-  label: 'Class #0'
-  lastExapleTMS: 1556928559004609100
-  maxDistance: 2.318349452053199
-  n: 8
-  sumDistance: 11.47872510774157
-- center:
-  - 10.720319969008619
-  - 7.08879508130634
-  label: 'Class #0'
-  lastExapleTMS: 1556928559003608800
-  maxDistance: 2.430208501918772
-  n: 11
-  sumDistance: 14.988980658238486
-- center:
-  - 7.863052244684834
-  - 4.942371969269326
-  label: 'Class #0'
-  lastExapleTMS: 1556928559003608800
-  maxDistance: 2.301612884307205
-  n: 14
-  sumDistance: 18.038626422302848
-- center:
-  - 7.978030690732006
-  - 9.008510491176251
-  label: 'Class #0'
-  lastExapleTMS: 1556928559003608800
-  maxDistance: 1.0973114342071375
-  n: 12
-  sumDistance: 8.859761719559238
-- center:
-  - 11.079275947648995
-  - 10.56693987679477
-  label: 'Class #0'
-  lastExapleTMS: 1556928559001607200
-  maxDistance: 2.87045059361428
-  n: 6
-  sumDistance: 7.95765863828214
-- center:
-  - 6.390421780510809
-  - 6.445843858823454
-  label: 'Class #1'
-  lastExapleTMS: 1556928559010609000
-  maxDistance: 0.10579105484284523
-  n: 13
-  sumDistance: 0.7882710173519859
-- center:
-  - 6.655585656568972
-  - 6.626998807215273
-  label: 'Class #1'
-  lastExapleTMS: 1556928559010609000
-  maxDistance: 0.10339259020703769
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.7226559607376705
   n: 5
-  sumDistance: 0.40243045669904437
 - center:
-  - 6.311845647128354
-  - 6.276575728135812
-  label: 'Class #1'
-  lastExapleTMS: 1556928559011614700
-  maxDistance: 0.21528991556736593
-  n: 8
-  sumDistance: 0.6944313988034938
+  - 7.328591511137062
+  - 11.72501192542815
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 2.939917726868806
+  n: 4
 - center:
-  - 6.394193838891408
-  - 6.625306378311663
-  label: 'Class #1'
-  lastExapleTMS: 1556928559011614700
-  maxDistance: 0.27017560549189584
-  n: 11
-  sumDistance: 1.0680675030059272
+  - 8.714710707254323
+  - 4.936052737805882
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 1.0896201331362163
+  n: 6
 - center:
-  - 6.593215018487764
-  - 6.419700561161118
-  label: 'Class #1'
-  lastExapleTMS: 1556928559010609000
-  maxDistance: 0.17114482895423003
-  n: 11
-  sumDistance: 1.0040603594361328
+  - 3.2326867374156234
+  - 8.311266441834887
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.9063472712615201
+  n: 5
 - center:
-  - 0.70386430129357
-  - 0.0481150947953495
-  label: 'Class #2'
-  lastExapleTMS: 1556928559015608600
-  maxDistance: 1.1264367688310792
-  n: 11
-  sumDistance: 4.731369850764658
-- center:
-  - -0.29012286232423046
-  - 0.29920918290612913
-  label: 'Class #2'
-  lastExapleTMS: 1556928559015608600
-  maxDistance: 0.8274929282419483
-  n: 15
-  sumDistance: 5.641847427780181
-- center:
-  - 0.13958505775783367
-  - -0.9458148456327025
-  label: 'Class #2'
-  lastExapleTMS: 1556928559014608000
-  maxDistance: 0.8610268730557888
+  - 10.304717670130877
+  - 7.937490076680115
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 1.1227200142458857
   n: 7
-  sumDistance: 3.8124699871272187
-counter: 0
+- center:
+  - 2.9205506640017163
+  - 3.603906688318647
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.8170141399541492
+  n: 3
+- center:
+  - 8.530234279362245
+  - 8.695803044505649
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.772078758663258
+  n: 5
+- center:
+  - 4.795365639872761
+  - 5.141705642934671
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.06470349667698978
+  n: 2
+- center:
+  - 10.421432979832026
+  - 10.046943913880291
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 3.6540766493699692
+  n: 6
+- center:
+  - 6.3846020461551705
+  - -1.3163093839509274
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 3.948606552762825
+  n: 2
+- center:
+  - 7.622843052528322
+  - 9.397690580678923
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.756222681230528
+  n: 6
+- center:
+  - 8.772041127697285
+  - 13.180256251121076
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 1.144598453930218
+  n: 4
+- center:
+  - 11.447623992044669
+  - 5.603578839402233
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 4.673495298599504
+  n: 5
+- center:
+  - 3.315345585853646
+  - 9.909743770835838
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 2.689214690084954
+  n: 6
+- center:
+  - 2.7052202393463363
+  - 5.2903609800030615
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 3.132639469510988
+  n: 3
+- center:
+  - 6.099148577184298
+  - 3.7545301828080793
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 1.7116353014027854
+  n: 4
+- center:
+  - 7.580309700539298
+  - 5.826014088457451
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 1.0679969849370972
+  n: 5
+- center:
+  - 5.3584563087646035
+  - 7.3575034689448255
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 1.0756816396671216
+  n: 3
+- center:
+  - 5.610567762179073
+  - 9.106015629351425
+  label: 'Class #0'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.2383757543450768
+  n: 3
+- center:
+  - 6.425379152203691
+  - 6.451306170337096
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.05647899633160834
+  n: 7
+- center:
+  - 6.608031306569005
+  - 6.658723900292566
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.13146022134654434
+  n: 3
+- center:
+  - 6.504436005293207
+  - 6.38208550792635
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.047722306760680226
+  n: 4
+- center:
+  - 6.438955205739521
+  - 6.669280749230317
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.19514603348164178
+  n: 5
+- center:
+  - 6.335703894093754
+  - 6.331531658333413
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.005353846729414985
+  n: 2
+- center:
+  - 6.719417254010079
+  - 6.37125783207325
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.06395072266442335
+  n: 3
+- center:
+  - 6.561896264131935
+  - 6.471029985588693
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.058292510450719676
+  n: 5
+- center:
+  - 6.327543436143468
+  - 6.451253537849785
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.2761564703939194
+  n: 7
+- center:
+  - 6.442391344556106
+  - 6.57690300722288
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.058915266045733834
+  n: 5
+- center:
+  - 6.663515493555297
+  - 6.562071230859437
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.053866749386278584
+  n: 2
+- center:
+  - 6.313651976456682
+  - 6.249750857392088
+  label: 'Class #1'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.15433318879694768
+  n: 5
+- center:
+  - -0.0764178724916488
+  - 0.6638820980496554
+  label: 'Class #2'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.259796000140338
+  n: 4
+- center:
+  - -0.2619048250980781
+  - -0.5749532128434984
+  label: 'Class #2'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.15361525566851966
+  n: 2
+- center:
+  - 0.41647110622966177
+  - 0.19807191868458074
+  label: 'Class #2'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.23041110674762977
+  n: 7
+- center:
+  - -0.38951664087004734
+  - 0.1825206680096511
+  label: 'Class #2'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.22441533154844734
+  n: 6
+- center:
+  - 0.6255961164650653
+  - -0.9650467804061669
+  label: 'Class #2'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.6071211699765109
+  n: 3
+- center:
+  - 1.0934453844582253
+  - -0.05274257035580837
+  label: 'Class #2'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.7894670062881869
+  n: 4
+- center:
+  - -0.9662916120551588
+  - 0.21331088886104746
+  label: 'Class #2'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.15532411460575984
+  n: 2
+- center:
+  - -0.2462101556718592
+  - -0.9899128000636822
+  label: 'Class #2'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.12947635229892335
+  n: 2
+- center:
+  - 0.07450387481124718
+  - 0.10362118853777172
+  label: 'Class #2'
+  lastExapleTMS: 1557780745888476848
+  maxDistance: 0.24668646726802992
+  n: 3
 diff: 0
-globalCount: 0
-k: 100
-known: 0
-lastCleaningCycle: -1
-lastExapleTMS: -1
-ndProcedureThr: 165
+exampleCount: 0
+knownCount: 0
+lastCleaningCycle: 0
+lastExapleTMS: 0
 noveltyIndex: 0
-noveltyThr: 100
-radiusFactor: 1.1
-representationThr: 3
 sleepClusters: []
 unknownBuffer: []
-windowTimeSize: 100

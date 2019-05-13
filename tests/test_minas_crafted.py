@@ -29,6 +29,8 @@ from .plots import *
 from .test_minas_fake import MinasFakeExamplesTest
 
 class MinasCraftedExamplesTest(MinasFakeExamplesTest):
+    def setUp(self):
+        self.basedir = 'run/crafted/'
     def setupFakeExamples(self, seed):
         np.random.seed(seed)
         attributes = np.random.randint(2, 40)
@@ -58,25 +60,4 @@ class MinasCraftedExamplesTest(MinasFakeExamplesTest):
             examples.append(example)
         # np.random.shuffle(examples)
         return examples
-    
-    def fake_seed(self, seed):
-        dirr = 'run/crafted/' + str(seed) + '/'
-        if os.path.exists(dirr):
-            shutil.rmtree(dirr)
-        timed = Timed()
-        TimedMinasAlgorith = timed.timedClass(MinasAlgorith)
-        CONSTS=MinasConsts()
-        # CONSTS.k = 5
-        # CONSTS.ndProcedureThr = 100
-        logging.info('Next seed: {}'.format(seed))
-        minas = MinasBase(minasAlgorith=TimedMinasAlgorith(CONSTS=CONSTS))
-        self.runSeeded(minas, seed)
-        # ------------------------------------------------------------------------------------------------
-        df = timed.statisticSummary()
-        logging.info(f'=========== Timed Functions Summary ===========\n{df}')
-        fig, ax = timed.mkTimedResumePlot()
-        plt.tight_layout(.5)
-        plt.savefig(dirr + 'timed-run.png')
-        plt.close(fig)
-        timed.clearTimes()
 # 

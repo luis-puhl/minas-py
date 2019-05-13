@@ -38,7 +38,7 @@ class MinasFakeExamplesTest(unittest.TestCase):
     def tearDownClass(cls):
         pass
     def setUp(self):
-        pass
+        self.basedir = 'run/seeds/'
     def tearDown(self):
         pass
 
@@ -58,11 +58,18 @@ class MinasFakeExamplesTest(unittest.TestCase):
         np.random.shuffle(examples)
         return examples
     
-    def runSeeded(self, basicModel: MinasBase, seed):
-        # dirr = input()
-        dirr = 'run/seeds/' + str(seed) + '/'
+    def fake_seed(self, seed):
+        dirr = self.basedir + str(seed) + '/'
+        if os.path.exists(dirr):
+            shutil.rmtree(dirr)
         if not os.path.exists(dirr):
             os.makedirs(dirr)
+        timed = Timed()
+        TimedMinasAlgorith = timed.timedClass(MinasAlgorith)
+        CONSTS=MinasConsts()
+        logging.info('Next seed: {}'.format(seed))
+        minas = MinasBase(minasAlgorith=TimedMinasAlgorith(CONSTS=CONSTS))
+        # 
         rootLogger = logging.getLogger()
         logHandler = logging.FileHandler(dirr + 'run.log')
         logHandler.formatter = rootLogger.handlers[0].formatter
@@ -79,19 +86,19 @@ class MinasFakeExamplesTest(unittest.TestCase):
         
         trainingDf = pd.DataFrame(map(lambda x: {'item': x.item, 'label': x.label}, training_set))
         logging.info('trainingDf' + '\n' + str(trainingDf.groupby('label').describe()) + '\n')
-        basicModel.offline(trainingDf)
-        basicModel.storeToFile(dirr + 'minas.yaml')
-        basicModel.restoreFromFile(dirr + 'minas.yaml')
-        logging.info(str(basicModel) + str(basicModel))
-        self.assertGreater(len(basicModel.clusters), 0, 'model must be trainded after offline call')
+        minas.offline(trainingDf)
+        minas.storeToFile(dirr + 'minas.yaml')
+        minas.restoreFromFile(dirr + 'minas.yaml')
+        logging.info(str(minas) + str(minas))
+        self.assertGreater(len(minas.clusters), 0, 'model must be trainded after offline call')
         
-        plotExamples2D(dirr, '2-offline_clusters', [], basicModel.clusters)
-        plotExamples2D(dirr, '3-offline_training', training_set, basicModel.clusters)
-        plotExamples2D(dirr, '4-offline_all_data', examples, basicModel.clusters)
-        basicModel.minasAlgorith.checkTraining(trainingDf, basicModel.clusters)
+        plotExamples2D(dirr, '2-offline_clusters', [], minas.clusters)
+        plotExamples2D(dirr, '3-offline_training', training_set, minas.clusters)
+        plotExamples2D(dirr, '4-offline_all_data', examples, minas.clusters)
+        minas.minasAlgorith.checkTraining(trainingDf, minas.clusters)
         # ------------------------------------------------------------------------------------------------
         testSet = examples[int(len(examples) * .1):]
-        basicModel.online( i.item for i in testSet )
+        minas.online( i.item for i in testSet )
         # ------------------------------------------------------------------------------------------------
         logging.info('aggregatin resutls')
         results = []
@@ -103,8 +110,8 @@ class MinasFakeExamplesTest(unittest.TestCase):
             for ex in examples:
                 ex = deepcopy(ex)
                 hasLabel, cluster, d = None, None, None
-                if basicModel:
-                    hasLabel, cluster, d, ex = basicModel.classify(ex)
+                if minas:
+                    hasLabel, cluster, d, ex = minas.classify(ex)
                 examplesCsv.write(
                     ','.join([str(i) for i in ex.item]) + ',' +
                     ex.label + ',' +
@@ -124,62 +131,19 @@ class MinasFakeExamplesTest(unittest.TestCase):
                     unknownCount += 1
                 results.append(ex)
                 # end results map
-        logging.info('\n\n\t=== Final Results ===\n{model}\n[seed {seed}] positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%})\n'.format(
-        model=str(basicModel),
-        seed=seed,
-        p=positiveCount, pp=positiveCount/totalExamples,
-        n=negativeCount, nn=negativeCount/totalExamples,
-        u=unknownCount, uu=unknownCount/totalExamples,
-        ))
-        plotExamples2D(dirr, '5-online_clusters', [], basicModel.clusters if basicModel else [])
-        plotExamples2D(dirr, '6-online_resutls', results, basicModel.clusters if basicModel else [])
+        result = '[seed {seed}] positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%})'.format(
+            seed=seed,
+            p=positiveCount, pp=positiveCount/totalExamples,
+            n=negativeCount, nn=negativeCount/totalExamples,
+            u=unknownCount, uu=unknownCount/totalExamples,
+        )
+        logging.info('\n\n\t=== Final Results ===\n{model}\n{result}\n'.format(model=str(minas), result=result))
+        plotExamples2D(dirr, '5-online_clusters', [], minas.clusters if minas else [])
+        plotExamples2D(dirr, '6-online_resutls', results, minas.clusters if minas else [])
         onlyFalses = [x for x in results if x.label is not 'Positive']
-        plotExamples2D(dirr, '7-online_neg_unk', onlyFalses, basicModel.clusters if basicModel else [])
-        del basicModel
+        plotExamples2D(dirr, '7-online_neg_unk', onlyFalses, minas.clusters if minas else [])
+        del minas
         rootLogger.removeHandler(logHandler)
-
-    # def test_sample(self):
-    #     logging.info('Running self test')
-    #     # ------------------------------------------------------------------------------------------------
-    #     seed = 200
-    #     stdout_ = sys.stdout #Keep track of the previous value.
-    #     if os.path.exists('run/seeds'):
-    #         shutil.rmtree('run/seeds')
-    #     testInit = time.time_ns()
-    #     timed = Timed()
-    #     TimedMinasAlgorith = timed.timedClass(MinasAlgorith)
-    #     CONSTS=MinasConsts()
-    #     # CONSTS.k = 5
-    #     # CONSTS.ndProcedureThr = 100
-    #     while time.time_ns() - testInit < 10 * (10 ** 9):
-    #         logging.info('Next seed: {}'.format(seed))
-    #         minas = MinasBase(minasAlgorith=TimedMinasAlgorith(CONSTS=CONSTS))
-    #         self.runSeeded(minas, seed)
-    #         # ------------------------------------------------------------------------------------------------
-    #         seed += 1
-    #     logging.info('Done self test')
-        
-    #     # ------------------------------------------------------------------------------------------------
-    #     df = timed.statisticSummary()
-    #     logging.info(f'=========== Timed Functions Summary ===========\n{df}')
-    #     fig, ax = timed.mkTimedResumePlot(df)
-    #     plt.tight_layout(.5)
-    #     plt.savefig('./run/seeds/timed-run.png')
-    #     plt.close(fig)
-    #     timed.clearTimes()
-    
-    def fake_seed(self, seed):
-        dirr = 'run/seeds/' + str(seed) + '/'
-        if os.path.exists(dirr):
-            shutil.rmtree(dirr)
-        timed = Timed()
-        TimedMinasAlgorith = timed.timedClass(MinasAlgorith)
-        CONSTS=MinasConsts()
-        # CONSTS.k = 5
-        # CONSTS.ndProcedureThr = 100
-        logging.info('Next seed: {}'.format(seed))
-        minas = MinasBase(minasAlgorith=TimedMinasAlgorith(CONSTS=CONSTS))
-        self.runSeeded(minas, seed)
         # ------------------------------------------------------------------------------------------------
         df = timed.statisticSummary()
         logging.info(f'=========== Timed Functions Summary ===========\n{df}')
@@ -188,10 +152,11 @@ class MinasFakeExamplesTest(unittest.TestCase):
         plt.savefig(dirr + 'timed-run.png')
         plt.close(fig)
         timed.clearTimes()
+        return result, df.describe()
     def test_fake_seed200(self):
-        self.fake_seed(200)
+        return self.fake_seed(200)
     def test_fake_seed201(self):
-        self.fake_seed(201)
+        return self.fake_seed(201)
     def test_fake_seed202(self):
-        self.fake_seed(202)
+        return self.fake_seed(202)
 # 

@@ -34,14 +34,12 @@ class MinasBase:
             'clusters': asDictMap(self.clusters), 'sleepClusters': asDictMap(self.sleepClusters),
             'unknownBuffer': asDictMap(self.unknownBuffer), 'CONSTS': self.minasAlgorith.CONSTS.__getstate__()}
     def __str__(self):
+        toStr = lambda items: ( '\n\t' + ',\n\t'.join(map(lambda x: str(x), items[:10])) + '\n' if len(items) != 0 else '' )
         return (
             repr(self)[:-1]
-            + ', clustersLen=' + str(len(self.clusters))
-            + ', clusters=[' + ( '\n\t' + ',\n\t'.join(map(lambda x: str(x), self.clusters)) + '\n' if len(self.clusters) != 0 else '' ) + ']'
-            + ', sleepClustersLen=' + str(len(self.sleepClusters))
-            + ', sleepClusters=[' + ( '\n\t' + ',\n\t'.join(map(lambda x: str(x), self.sleepClusters)) + '\n' if len(self.sleepClusters) != 0 else '' ) + ']'
-            + ', unknownBufferLen=' + str(len(self.unknownBuffer))
-            + ', unknownBuffer=[' + ( '\n\t' + ',\n\t'.join(map(lambda x: str(x), self.unknownBuffer)) + '\n' if len(self.unknownBuffer) != 0 else '' ) + ']'
+            + f', clustersLen={len(self.clusters)}, clusters=[{toStr(self.clusters)}]'
+            + f', sleepClustersLen={len(self.sleepClusters)}, sleepClusters=[{toStr(self.sleepClusters)}]'
+            + f', unknownBufferLen={len(self.unknownBuffer)}, unknownBuffer=[{toStr(self.unknownBuffer)}]'
             + ')'
         )
     def storeToFile(self, filename: str):
@@ -76,19 +74,18 @@ class MinasBase:
         if clusters is None:
             clusters = self.clusters + self.sleepClusters
         return self.minasAlgorith.classify(ex, clusters)
-    def online(self, stream):
-        for example in stream:
-            if example is None:
-                break
-            self.onlineProcessExample(example) # custo 1000 -> 10
+    def online(self, stream, outStream = []):
+        self.minasAlgorith.online(stream, clusters=self.clusters, sleepClusters=self.sleepClusters,
+            unknownBuffer=self.unknownBuffer, knownCount=self.knownCount, noveltyIndex=self.noveltyIndex, outStream=outStream)
         return self
     def onlineProcessExample(self, item, outStream = []):
         assert len(self.clusters) > 0, 'Minas is not trained yet'
         self.exampleCount += 1
         self.lastExapleTMS = time.time_ns()
-        example, isClassified, cluster, dist, self.knownCount, self.noveltyIndex, self.lastCleaningCycle = self.minasAlgorith.processExample(
-            item=item, clusters=self.clusters, sleepClusters=self.sleepClusters,
+        processed = self.minasAlgorith.processExample(
+            index=self.exampleCount, item=item, clusters=self.clusters, sleepClusters=self.sleepClusters,
             unknownBuffer=self.unknownBuffer, knownCount=self.knownCount, noveltyIndex=self.noveltyIndex,
             outStream=outStream
         )
+        example, isClassified, cluster, dist, self.knownCount, self.noveltyIndex, self.lastCleaningCycle = processed
         return example, isClassified, cluster, dist

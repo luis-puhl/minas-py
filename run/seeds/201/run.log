@@ -1,57 +1,60 @@
-2019-05-03 21:09:19,388 INFO ./minas.py:232 clustering clustering 84, Example(Class #0, ) # len: 2 {'label': 'Class #0', 'item': [7.348138576802921, 8.236967187513239], 'timestamp': 1556928558996627500, 'tries': 0}
-2019-05-03 21:09:19,468 INFO ./minas.py:232 clustering clustering 48, Example(Class #1, ) # len: 2 {'label': 'Class #1', 'item': [6.501216809388728, 6.573651352188045], 'timestamp': 1556928559006606900, 'tries': 0}
-2019-05-03 21:09:19,509 INFO ./minas.py:232 clustering clustering 33, Example(Class #2, ) # len: 2 {'label': 'Class #2', 'item': [0.9850207447154946, -0.23671097655392714], 'timestamp': 1556928559011614700, 'tries': 0}
-2019-05-03 21:09:19,538 INFO ./minas.py:340 offline [offline end]
-2019-05-03 21:09:19,599 INFO C:\dev\minas-py\self_test.py:104 testRun <Model Status clusters: 16, sleepers: 0, known: 0, unkown: 0 (0), total: 0># <Model Status clusters: 16, sleepers: 0, known: 0, unkown: 0 (0), total: 0>
-Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 165, 'representationThr': 3, 'globalCount': 0, 'lastExapleTMS': -1, 'lastCleaningCycle': -1, 'counter': 0, 'noveltyIndex': 0, 'clusters': 16, 'sleepClusters': [], 'unknownBuffer': 0, 'diff': 0, 'known': 0, 'sleepers': 0}
-	Cluster(label=Class #0,	n=10,	sum=10.29,	max=1.52,	center=[5.94, 8.06])
-	Cluster(label=Class #0,	n=12,	sum=16.98,	max=3.68,	center=[2.98, 9.22])
-	Cluster(label=Class #0,	n=8,	sum=11.95,	max=2.72,	center=[7.80, 12.72])
-	Cluster(label=Class #0,	n=8,	sum=11.48,	max=2.32,	center=[3.70, 4.40])
-	Cluster(label=Class #0,	n=11,	sum=14.99,	max=2.43,	center=[10.72, 7.09])
-	Cluster(label=Class #0,	n=14,	sum=18.04,	max=2.30,	center=[7.86, 4.94])
-	Cluster(label=Class #0,	n=12,	sum=8.86,	max=1.10,	center=[7.98, 9.01])
-	Cluster(label=Class #0,	n=6,	sum=7.96,	max=2.87,	center=[11.08, 10.57])
-	Cluster(label=Class #1,	n=13,	sum=0.79,	max=0.11,	center=[6.39, 6.45])
-	Cluster(label=Class #1,	n=5,	sum=0.40,	max=0.10,	center=[6.66, 6.63])
-	Cluster(label=Class #1,	n=8,	sum=0.69,	max=0.22,	center=[6.31, 6.28])
-	Cluster(label=Class #1,	n=11,	sum=1.07,	max=0.27,	center=[6.39, 6.63])
-	Cluster(label=Class #1,	n=11,	sum=1.00,	max=0.17,	center=[6.59, 6.42])
-	Cluster(label=Class #2,	n=11,	sum=4.73,	max=1.13,	center=[0.70, 0.05])
-	Cluster(label=Class #2,	n=15,	sum=5.64,	max=0.83,	center=[-0.29, 0.30])
-	Cluster(label=Class #2,	n=7,	sum=3.81,	max=0.86,	center=[0.14, -0.95])
-)
-2019-05-03 21:09:20,865 INFO ./minas.py:407 bufferFull bufferFull, <Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
-2019-05-03 21:09:20,866 INFO ./minas.py:420 bufferFull [after sleep check]<Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
-2019-05-03 21:09:20,867 INFO ./minas.py:477 noveltyDetection [noveltyDetection]	 unknownBuffer: 166, sleepClusters: 0
-2019-05-03 21:09:20,867 INFO ./minas.py:232 clustering clustering 166, Example(None, ) # len: 2 {'label': None, 'item': [5.951765761894434, 6.805047628607929], 'timestamp': 1556928560227597100, 'tries': 2}
-2019-05-03 21:09:21,159 INFO ./minas.py:423 bufferFull [after novelty Detection]<Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
-2019-05-03 21:09:21,160 INFO ./minas.py:433 bufferFull Sleep 0
-2019-05-03 21:09:21,160 INFO ./minas.py:437 bufferFull [after Sleep Clean] <Model Status clusters: 16, sleepers: 0, known: 894, unkown: 166 (166), total: 1060>
-2019-05-03 21:09:21,161 INFO ./minas.py:444 bufferFull [Cleaning Cycle]	Discarting 166 examples
-2019-05-03 21:09:21,161 INFO ./minas.py:445 bufferFull [after Unkown Clean] <Model Status clusters: 16, sleepers: 0, known: 894, unkown: 0 (166), total: 1060>
-2019-05-03 21:09:21,430 INFO C:\dev\minas-py\self_test.py:116 testRun aggregatin resutls
-2019-05-03 21:09:22,596 INFO C:\dev\minas-py\self_test.py:152 testRun 
+2019-05-13 17:52:36,930 INFO /home/puhl/project/minas-py/tests/test_minas_fake.py:88 fake_seed trainingDf
+          item                                                        
+         count unique                                         top freq
+label                                                                 
+Class #0    84     84      [8.438110383955795, 4.594533426326659]    1
+Class #1    48     48     [6.5289206202665255, 6.390790759584326]    1
+Class #2    33     33  [-0.8162353104177009, 0.17320244938814586]    1
+
+2019-05-13 17:52:37,499 INFO /home/puhl/project/minas-py/tests/test_minas_fake.py:92 fake_seed MinasBase(exampleCount=0, knownCount=0, noveltyIndex=0, lastExapleTMS=0, lastCleaningCycle=0, minasAlgorith=MinasAlgorithTimed(CONSTS=MinasConsts(k=100, radiusFactor=1.1, noveltyThr=100, ndProcedureThr=2000, windowSize=4000, representationThr=1, silhouetteThr=0)), daskClient=None, clustersLen=39, clusters=[
+	Cluster(label='Class #0', n=5, lastExapleTMS=1557780745888476848, maxDistance=0.7226559607376705, center=[ 6.8741,  7.7107]),
+	Cluster(label='Class #0', n=4, lastExapleTMS=1557780745888476848, maxDistance=2.939917726868806, center=[ 7.3286,  11.7250]),
+	Cluster(label='Class #0', n=6, lastExapleTMS=1557780745888476848, maxDistance=1.0896201331362163, center=[ 8.7147,  4.9361]),
+	Cluster(label='Class #0', n=5, lastExapleTMS=1557780745888476848, maxDistance=0.9063472712615201, center=[ 3.2327,  8.3113]),
+	Cluster(label='Class #0', n=7, lastExapleTMS=1557780745888476848, maxDistance=1.1227200142458857, center=[ 10.3047,  7.9375]),
+	Cluster(label='Class #0', n=3, lastExapleTMS=1557780745888476848, maxDistance=0.8170141399541492, center=[ 2.9206,  3.6039]),
+	Cluster(label='Class #0', n=5, lastExapleTMS=1557780745888476848, maxDistance=0.772078758663258, center=[ 8.5302,  8.6958]),
+	Cluster(label='Class #0', n=2, lastExapleTMS=1557780745888476848, maxDistance=0.06470349667698978, center=[ 4.7954,  5.1417]),
+	Cluster(label='Class #0', n=6, lastExapleTMS=1557780745888476848, maxDistance=3.6540766493699692, center=[ 10.4214,  10.0469]),
+	Cluster(label='Class #0', n=2, lastExapleTMS=1557780745888476848, maxDistance=3.948606552762825, center=[ 6.3846, -1.3163])
+], sleepClustersLen=0, sleepClusters=[], unknownBufferLen=0, unknownBuffer=[])MinasBase(exampleCount=0, knownCount=0, noveltyIndex=0, lastExapleTMS=0, lastCleaningCycle=0, minasAlgorith=MinasAlgorithTimed(CONSTS=MinasConsts(k=100, radiusFactor=1.1, noveltyThr=100, ndProcedureThr=2000, windowSize=4000, representationThr=1, silhouetteThr=0)), daskClient=None, clustersLen=39, clusters=[
+	Cluster(label='Class #0', n=5, lastExapleTMS=1557780745888476848, maxDistance=0.7226559607376705, center=[ 6.8741,  7.7107]),
+	Cluster(label='Class #0', n=4, lastExapleTMS=1557780745888476848, maxDistance=2.939917726868806, center=[ 7.3286,  11.7250]),
+	Cluster(label='Class #0', n=6, lastExapleTMS=1557780745888476848, maxDistance=1.0896201331362163, center=[ 8.7147,  4.9361]),
+	Cluster(label='Class #0', n=5, lastExapleTMS=1557780745888476848, maxDistance=0.9063472712615201, center=[ 3.2327,  8.3113]),
+	Cluster(label='Class #0', n=7, lastExapleTMS=1557780745888476848, maxDistance=1.1227200142458857, center=[ 10.3047,  7.9375]),
+	Cluster(label='Class #0', n=3, lastExapleTMS=1557780745888476848, maxDistance=0.8170141399541492, center=[ 2.9206,  3.6039]),
+	Cluster(label='Class #0', n=5, lastExapleTMS=1557780745888476848, maxDistance=0.772078758663258, center=[ 8.5302,  8.6958]),
+	Cluster(label='Class #0', n=2, lastExapleTMS=1557780745888476848, maxDistance=0.06470349667698978, center=[ 4.7954,  5.1417]),
+	Cluster(label='Class #0', n=6, lastExapleTMS=1557780745888476848, maxDistance=3.6540766493699692, center=[ 10.4214,  10.0469]),
+	Cluster(label='Class #0', n=2, lastExapleTMS=1557780745888476848, maxDistance=3.948606552762825, center=[ 6.3846, -1.3163])
+], sleepClustersLen=0, sleepClusters=[], unknownBufferLen=0, unknownBuffer=[])
+2019-05-13 17:52:40,376 INFO /home/puhl/project/minas-py/tests/test_minas_fake.py:103 fake_seed aggregatin resutls
+2019-05-13 17:52:42,589 INFO /home/puhl/project/minas-py/tests/test_minas_fake.py:140 fake_seed 
 
 	=== Final Results ===
-# <Model Status clusters: 16, sleepers: 0, known: 1267, unkown: 56 (222), total: 1489>
-Minas({'k': 100, 'radiusFactor': 1.1, 'noveltyThr': 100, 'windowTimeSize': 100, 'ndProcedureThr': 165, 'representationThr': 3, 'globalCount': 1489, 'lastExapleTMS': 1556928561429594500, 'lastCleaningCycle': 1556928561160587000, 'counter': 1267, 'noveltyIndex': 0, 'clusters': 16, 'sleepClusters': [], 'unknownBuffer': 56, 'diff': 222, 'known': 1267, 'sleepers': 0}
-	Cluster(label=Class #0,	n=70,	sum=71.80,	max=2.04,	center=[5.94, 8.06])
-	Cluster(label=Class #0,	n=88,	sum=154.56,	max=3.68,	center=[2.98, 9.22])
-	Cluster(label=Class #0,	n=63,	sum=110.78,	max=3.00,	center=[7.80, 12.72])
-	Cluster(label=Class #0,	n=62,	sum=88.72,	max=2.62,	center=[3.70, 4.40])
-	Cluster(label=Class #0,	n=117,	sum=172.95,	max=3.09,	center=[10.72, 7.09])
-	Cluster(label=Class #0,	n=90,	sum=139.40,	max=3.19,	center=[7.86, 4.94])
-	Cluster(label=Class #0,	n=99,	sum=102.28,	max=1.80,	center=[7.98, 9.01])
-	Cluster(label=Class #0,	n=59,	sum=84.86,	max=3.31,	center=[11.08, 10.57])
-	Cluster(label=Class #1,	n=96,	sum=6.41,	max=0.15,	center=[6.39, 6.45])
-	Cluster(label=Class #1,	n=60,	sum=4.91,	max=0.16,	center=[6.66, 6.63])
-	Cluster(label=Class #1,	n=82,	sum=9.56,	max=0.23,	center=[6.31, 6.28])
-	Cluster(label=Class #1,	n=125,	sum=12.64,	max=0.29,	center=[6.39, 6.63])
-	Cluster(label=Class #1,	n=123,	sum=12.60,	max=0.20,	center=[6.59, 6.42])
-	Cluster(label=Class #2,	n=114,	sum=55.74,	max=1.13,	center=[0.70, 0.05])
-	Cluster(label=Class #2,	n=127,	sum=60.75,	max=1.09,	center=[-0.29, 0.30])
-	Cluster(label=Class #2,	n=54,	sum=27.30,	max=0.86,	center=[0.14, -0.95])
-)
-[seed 201] positive: 1470(88.88%), negative: 2(0.12%), unknown: 182(11.00%)
+MinasBase(exampleCount=0, knownCount=0, noveltyIndex=0, lastExapleTMS=0, lastCleaningCycle=0, minasAlgorith=MinasAlgorithTimed(CONSTS=MinasConsts(k=100, radiusFactor=1.1, noveltyThr=100, ndProcedureThr=2000, windowSize=4000, representationThr=1, silhouetteThr=0)), daskClient=None, clustersLen=39, clusters=[
+	Cluster(label='Class #0', n=35, lastExapleTMS=1557780745888476848, maxDistance=0.9818335127719665, center=[ 6.8741,  7.7107]),
+	Cluster(label='Class #0', n=59, lastExapleTMS=1557780745888476848, maxDistance=3.027706812376053, center=[ 7.3286,  11.7250]),
+	Cluster(label='Class #0', n=36, lastExapleTMS=1557780745888476848, maxDistance=1.3090229032548135, center=[ 8.7147,  4.9361]),
+	Cluster(label='Class #0', n=19, lastExapleTMS=1557780745888476848, maxDistance=0.9951339487711476, center=[ 3.2327,  8.3113]),
+	Cluster(label='Class #0', n=50, lastExapleTMS=1557780745888476848, maxDistance=1.490935907071937, center=[ 10.3047,  7.9375]),
+	Cluster(label='Class #0', n=7, lastExapleTMS=1557780745888476848, maxDistance=0.8568764498666492, center=[ 2.9206,  3.6039]),
+	Cluster(label='Class #0', n=31, lastExapleTMS=1557780745888476848, maxDistance=0.900617198842763, center=[ 8.5302,  8.6958]),
+	Cluster(label='Class #0', n=2, lastExapleTMS=1557780745888476848, maxDistance=0.06470349667698978, center=[ 4.7954,  5.1417]),
+	Cluster(label='Class #0', n=87, lastExapleTMS=1557780745888476848, maxDistance=4.04434757214065, center=[ 10.4214,  10.0469]),
+	Cluster(label='Class #0', n=15, lastExapleTMS=1557780745888476848, maxDistance=4.513136063359566, center=[ 6.3846, -1.3163])
+], sleepClustersLen=0, sleepClusters=[], unknownBufferLen=113, unknownBuffer=[
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[ 0.2781,  0.4154]),
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[-0.8782,  0.5061]),
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[-0.0691,  0.3436]),
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[ 0.5164,  0.8757]),
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[ 0.1453,  0.4537]),
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[-1.0077, -0.2266]),
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[ 0.2582,  1.0220]),
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[ 0.1668,  1.2576]),
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[-0.6917, -0.3722]),
+	Example(label=None, timestamp=1557780745888476848, tries=1, item=[ 0.2305,  0.6224])
+])
+[seed 201] positive: 1534(92.74%), negative: 24(1.45%), unknown: 96(5.80%)
 

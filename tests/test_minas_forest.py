@@ -38,13 +38,18 @@ class MinasForestCoverDataSetTest(unittest.TestCase):
         print('sizeof dataset', sizeof_fmt(dataset.data.nbytes), 'len', total)
         print('dataset', dataset.data[0], dataset.target[0])
 
+        zipToMap = lambda x: {'item': x[0], 'label': str(x[1])}
+
         onePercent = int(total*0.01)
-        cls.onPercentDataFrame = pd.DataFrame(map(lambda x: {'item': x[0], 'label': str(x[1])}, zip(dataset.data[:onePercent], dataset.target[:onePercent])))
+        baseMap = map(zipToMap, zip(dataset.data[:onePercent], dataset.target[:onePercent]))
+        cls.onPercentDataFrame = pd.DataFrame(baseMap)
         fivePercent = int(total*0.05)
-        cls.fivePercentDataIterator = list(zip(dataset.data[onePercent+1:fivePercent], map(str, dataset.target[onePercent+1:fivePercent])))
+        fivePercentZip = zip(dataset.data[onePercent+1:fivePercent], map(str, dataset.target[onePercent+1:fivePercent]))
+        cls.fivePercentDataIterator = list(fivePercentZip)
 
         tenPercent = int(total*0.10)
-        cls.tenPercentDataFrame = pd.DataFrame(map(lambda x: {'item': x[0], 'label': str(x[1])}, zip(dataset.data[:tenPercent], dataset.target[:tenPercent])))
+        baseMap = map(zipToMap, zip(dataset.data[:tenPercent], dataset.target[:tenPercent]))
+        cls.tenPercentDataFrame = pd.DataFrame(baseMap)
         cls.allDataIterator = list(zip(dataset.data, map(str, dataset.target)))
     def setUp(self):
         self.timed = Timed()
@@ -94,22 +99,52 @@ class MinasForestCoverDataSetTest(unittest.TestCase):
 
     def test_small_dataset(self):
         minas = MinasBase(minasAlgorith=self.TimedMinasAlgorith())
-        self.runDataset(name='test_small_dataset', trainSet=self.onPercentDataFrame, testSet=self.fivePercentDataIterator, minas=minas)
+        kwargs = {
+            'name': 'test_small_dataset',
+            'trainSet': self.onPercentDataFrame,
+            'testSet': self.fivePercentDataIterator,
+            'minas': minas
+        }
+        self.runDataset(**kwargs)
     def test_small_dataset_MinasAlgorithJoblib(self):
         TimedMinasAlgorith = self.timed.timedClass(MinasAlgorithJoblib)
         minas = MinasBase(minasAlgorith=self.TimedMinasAlgorith())
-        self.runDataset(name='test_small_dataset_MinasAlgorithJoblib', trainSet=self.onPercentDataFrame, testSet=self.fivePercentDataIterator, minas=minas)
+        kwargs = {
+            'name': 'test_small_dataset_MinasAlgorithJoblib',
+            'trainSet': self.onPercentDataFrame,
+            'testSet': self.fivePercentDataIterator,
+            'minas': minas
+        }
+        self.runDataset(**kwargs)
     def test_small_dataset_MinasAlgorithDaskKmeans(self):
         TimedMinasAlgorith = self.timed.timedClass(MinasAlgorithDaskKmeans)
         minas = MinasBase(minasAlgorith=self.TimedMinasAlgorith())
-        self.runDataset(name='test_small_dataset_MinasAlgorithDaskKmeans', trainSet=self.onPercentDataFrame, testSet=self.fivePercentDataIterator, minas=minas)
+        kwargs = {
+            'name': 'test_small_dataset_MinasAlgorithDaskKmeans',
+            'trainSet': self.onPercentDataFrame,
+            'testSet': self.fivePercentDataIterator,
+            'minas': minas
+        }
+        self.runDataset(**kwargs)
     def test_small_dataset_MinasAlgorithDaskKmeansScatter(self):
         TimedMinasAlgorith = self.timed.timedClass(MinasAlgorithDaskKmeansScatter)
         minas = MinasBase(minasAlgorith=self.TimedMinasAlgorith())
-        self.runDataset(name='test_small_dataset_MinasAlgorithDaskKmeansScatter', trainSet=self.onPercentDataFrame, testSet=self.fivePercentDataIterator, minas=minas)
+        kwargs = {
+            'name': 'test_small_dataset_MinasAlgorithDaskKmeansScatter',
+            'trainSet': self.onPercentDataFrame,
+            'testSet': self.fivePercentDataIterator,
+            'minas': minas
+        }
+        self.runDataset(**kwargs)
     def test_zz_big_dataset(self):
         minas = MinasBase(minasAlgorith=self.TimedMinasAlgorith())
-        self.runDataset(name='test_zz_big_dataset', trainSet=self.tenPercentDataFrame, testSet=self.allDataIterator, minas=minas)
+        kwargs = {
+            'name': 'test_zz_big_dataset',
+            'trainSet': self.tenPercentDataFrame,
+            'testSet': self.allDataIterator,
+            'minas': minas
+        }
+        self.runDataset(**kwargs)
     def runDataset(self, name, trainSet, testSet, minas):
         print(f"\n{20*'='} {name} {20*'='}")
         directory = 'run/forest-cover-type-dataset/' + name + '/'
@@ -133,7 +168,7 @@ class MinasForestCoverDataSetTest(unittest.TestCase):
             logging.info('Loading model')
             minas.restoreFromFile(directory + 'minas_offline.yaml')
             logging.info(str(minas))
-            minas.minasAlgorith.checkTraining(trainingDf, minas.clusters)
+            minas.minasAlgorith.checkTraining(trainSet, minas.clusters)
             
             outStream = []
             events = []
@@ -163,7 +198,9 @@ class MinasForestCoverDataSetTest(unittest.TestCase):
             
             self.assertEqual(pos + neg + unk, i, 'Every sample must have a result')
             i = max(i, 1)
-            print('positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%}) {el:.3f}s'.format(p=pos, pp=pos/i, n=neg, nn=neg/i, u=unk, uu=unk/i, el=el))
+            resultMsg = 'positive: {p}({pp:.2%}), negative: {n}({nn:.2%}), unknown: {u}({uu:.2%}) {el:.3f}s'
+            resultMsgVals = dict(p=pos, pp=pos/i, n=neg, nn=neg/i, u=unk, uu=unk/i, el=el)
+            print(resultMsg.format_map(resultMsgVals))
         avg = sum(elapsed) / max(len(elapsed), 1)
         print(name, map(lambda el:'{:.3f}s'.format(el), elapsed), '{:.3f}s'.format(avg))
         statisticSummary = self.timed.statisticSummary()
