@@ -30,7 +30,8 @@ def mkClass(label): return dict(label=label, mu=np.random.random_sample((2,)), s
 def nextExample(klass): return Example(label=klass['label'], item=np.random.normal(klass['mu'], klass['sigma']))
 
 
-classes = list(map(mkClass, ['zero', 'one', 'duo', 'tri']))
+def sampleClasses():
+    return list(map(mkClass, ['zero', 'one', 'duo', 'tri']))
 def nextRandExample(classes=classes): return nextExample(np.random.choice(classes) )
 def randExamplesIter(classes=classes):
     while True:
@@ -42,6 +43,12 @@ def loopExamplesIter(classes=classes):
         i = (i + 1) % len(classes)
 
 def minasOnline(exampleSource, inClusters=[]):
+    RADIUS_FACTOR = 1.1
+    BUFF_FULL = 100
+    MAX_K_CLUSTERS = 100
+    REPR_TRESHOLD = 20
+    CLEANUP_WINDOW = 100
+    #
     unknownBuffer = []
     clusters=[cl for cl in inClusters]
     sleepClusters = []
@@ -59,7 +66,7 @@ def minasOnline(exampleSource, inClusters=[]):
         example.n = counter
         dists = map(lambda cl: (sum((cl.center - example.item) ** 2) ** 1/2, cl), clusters)
         d, cl = min(dists, key=lambda x: x[0])
-        if d / cl.maxDist <= 1.1:
+        if d / cl.maxDist <= RADIUS_FACTOR:
             cl.maxDist = max(cl.maxDist, d)
             cl.latest = counter
             cl.n += 1
@@ -67,7 +74,7 @@ def minasOnline(exampleSource, inClusters=[]):
         else:
             unknownBuffer.append(example)
             yield f"[UNKNOWN] {example.n}: {example.item}"
-            if len(unknownBuffer) > 100:
+            if len(unknownBuffer) > BUFF_FULL:
                 if len(sleepClusters) > 0:
                     yield f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}'
                     # recurenceDetection
@@ -84,11 +91,11 @@ def minasOnline(exampleSource, inClusters=[]):
                                 clusters.append(cl)
                                 sleepClusters.remove(cl)
                                 yield f"[Recurence] {cl.label}"
-                if len(unknownBuffer) % 100 == 0:
+                if len(unknownBuffer) % (BUFF_FULL // 10) == 0:
                     yield '[noveltyDetection]'
                     # noveltyDetection
                     df = pd.DataFrame([ex.item for ex in unknownBuffer])
-                    n_clusters = min(100, len(unknownBuffer) // ( 3 * 20))
+                    n_clusters = min(MAX_K_CLUSTERS, len(unknownBuffer) // ( 3 * REPR_TRESHOLD))
                     kmeans = KMeans(n_clusters=n_clusters)
                     kmeans.fit(df)
                     newClusters = [Cluster(center=centroid, label=None, n=0, maxDist=0, latest=0) for centroid in kmeans.cluster_centers_]
@@ -114,6 +121,7 @@ def minasOnline(exampleSource, inClusters=[]):
                         silhouetteFn = lambda a, b: (b - a) / max([a, b])
                         silhouette = silhouetteFn(stdDevDistance, distCl2Cl)
                         if silhouette < 0: continue
+                        # 
                         if distCl2Cl / nearCl2Cl.maxDist < 10:
                             yield f'Extention {nearCl2Cl.label}'
                             ncl.label = nearCl2Cl.label
@@ -126,13 +134,13 @@ def minasOnline(exampleSource, inClusters=[]):
                         for ex, d in temp_examples[ncl]:
                             yield f"[CLASSIFIED] {ex.n}: {ncl.label}"
                             unknownBuffer.remove(ex)
-        if counter % 100 == 0:
+        if counter % CLEANUP_WINDOW == 0:
             yield '[cleanup]'
             for ex in unknownBuffer:
-                if counter - ex.n < 2000:
+                if counter - ex.n < 3 * CLEANUP_WINDOW:
                     unknownBuffer.remove(ex)
             for cl in clusters:
-                if counter - cl.latest < 200:
+                if counter - cl.latest < 2 * CLEANUP_WINDOW:
                     sleepClusters.append(cl)
                     clusters.remove(cl)
             if len(clusters) == 0:
