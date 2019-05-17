@@ -49,8 +49,6 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
         counter += 1
         example.timestamp = time.time_ns()
         example.n = counter
-        # dists = map(lambda cl: (sum((cl.center - example.item) ** 2) ** 1/2, cl), clusters)
-        # d, cl = min(dists, key=lambda x: x[0])
         d, cl = minDist(clusters, example.item)
         if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
             cl.maxDistance = max(cl.maxDistance, d)
@@ -63,10 +61,7 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
             if len(unknownBuffer) > BUFF_FULL:
                 if len(sleepClusters) > 0:
                     yield f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}'
-                    # recurenceDetection
                     for sleepExample in unknownBuffer:
-                        # sleepDists = list(map(lambda cl: (sum((cl.center - sleepExample.item) ** 2) ** 1/2, cl), sleepClusters))
-                        # d, cl = min(sleepDists, key=lambda x: x[0])
                         d, cl = minDist(sleepClusters, sleepExample.item)
                         if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
                             cl.maxDistance = max(cl.maxDistance, d)
@@ -79,17 +74,9 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
                                 yield f"[Recurence] {cl.label}"
                 if len(unknownBuffer) % (BUFF_FULL // 10) == 0:
                     yield '[noveltyDetection]'
-                    # noveltyDetection
-                    # df = pd.DataFrame([ex.item for ex in unknownBuffer])
-                    # n_clusters = min(MAX_K_CLUSTERS, len(unknownBuffer) // ( 3 * REPR_TRESHOLD))
-                    # kmeans = KMeans(n_clusters=n_clusters)
-                    # kmeans.fit(df)
-                    # newClusters = [Cluster(center=centroid, label=None, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
                     newClusters = clustering([ ex.item for ex in unknownBuffer ])
                     temp_examples = {cl: [] for cl in newClusters}
                     for sleepExample in unknownBuffer:
-                        # dists = map(lambda cl: (sum((cl.center - sleepExample.item) ** 2) ** 1/2, cl), newClusters)
-                        # d, cl = min(dists, key=lambda x: x[0])
                         d, cl = minDist(newClusters, sleepExample.item)
                         cl.maxDistance = max(cl.maxDistance, d)
                         cl.latest = counter
@@ -99,8 +86,6 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
                         if ncl.n < 2: continue
                         distances = [ d for ex, d in temp_examples[ncl] ]
                         if len(distances) == 0: continue
-                        # distsCl2Cl = map(lambda cl: (sum((cl.center - ncl.center) ** 2) ** 1/2, cl), clusters + sleepClusters)
-                        # distCl2Cl, nearCl2Cl = min(distsCl2Cl, key=lambda x: x[0])
                         distCl2Cl, nearCl2Cl = minDist(clusters + sleepClusters, ncl.center)
                         #
                         mean = sum(distances) / len(distances)
@@ -162,14 +147,7 @@ def minasOffline(examplesDf, minDist=minDist, clustering=clustering):
             if chunk + 2*groupSize > len(group):
                 groupSize = chunk - len(group)
             unknownBuffer = group[chunk:chunk + groupSize]
-            newClusters = clustering(unknownBuffer)
-            # df = pd.DataFrame(unknownBuffer).drop_duplicates()
-            # n_clusters = min(MAX_K_CLUSTERS, len(unknownBuffer) // ( 3 * REPR_TRESHOLD))
-            # if n_clusters == 0:
-            #     n_clusters = len(unknownBuffer)
-            # kmeans = KMeans(n_clusters=n_clusters)
-            # kmeans.fit(df)
-            # newClusters = [Cluster(center=centroid, label=label, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
+            newClusters = clustering(unknownBuffer, label=label)
             temp_examples = {cl: [] for cl in newClusters}
             for sleepExample in unknownBuffer:
                 dists = map(lambda cl: (sum((cl.center - sleepExample) ** 2) ** 1/2, cl), newClusters)

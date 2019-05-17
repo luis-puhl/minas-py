@@ -2,23 +2,68 @@ import time
 
 from numba import jit
 import dask.dataframe as dd
+from dask.distributed import Client
 
 from minas.map_minas import *
 from minas.map_minas_support import *
 
-# classes = list(map(mkClass, ['zero', 'one', 'duo', 'tri']))
-# clusters = [ Cluster(center=cl['mu'], label=cl['label'], n=0, maxDist=sum(cl['sigma']), latest=0) for cl in classes ]
-# inputStream = loopExamplesIter()
-# for kl in range(10):
-#     for i, o in zip(range(10), metaMinas(minasOnline(inputStream, clusters))):
-#         print(o)
-#     newClass = mkClass(f'New {kl}')
-#     print(newClass)
-#     classes.append(newClass)
-#     inputStream.send(classes)
-# print('done')
-
 zipToMap = lambda x: {'item': x[0], 'label': str(x[1])}
+
+daskClient = Client('192.168.15.12:8786')
+def clusteringDask(unknownBuffer, label=None, MAX_K_CLUSTERS=100, REPR_TRESHOLD=20):
+    df = pd.DataFrame(unknownBuffer).drop_duplicates()
+    if len(df) == 0:
+        return []
+    n_clusters = min(MAX_K_CLUSTERS, len(unknownBuffer) // ( 3 * REPR_TRESHOLD))
+    if n_clusters == 0:
+        n_clusters = len(unknownBuffer)
+    # ddf = dd.from_pandas(df, npartitions=8)
+    # daskClient.scatter(ddf, broadcast=True)
+    with joblib.parallel_backend('dask'):
+        kmeans = KMeans(n_clusters=n_clusters)
+        kmeans.fit(df)
+    newClusters = [Cluster(center=centroid, label=label, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
+    return newClusters
+
+def testSamples():
+    np.random.seed(300)
+    classes = list(map(mkClass, ['zero', 'one', 'duo', 'tri']))
+    clusters = sampleClusters(classes)
+    inputStream = loopExamplesIter(classes)
+    
+    init = time.time()
+    for kl in range(10):
+        for i, o in zip(range(1000), minasOnline(inputStream, clusters)):
+            pass
+            # print(o)
+        newClass = mkClass(f'New {kl}')
+        print(newClass)
+        classes.append(newClass)
+        inputStream.send(classes)
+    print(f'minasOnline testSamples {time.time() - init} seconds')
+    
+    sumary = dict(
+        clusteringDask=[],
+        testSamples=[],
+        minDistNumba=[],
+    )
+    for iter_ in range(100):
+        init = time.time()
+        for i, o in zip(range(4428), minasOnline(inputStream, clusters, clustering=clusteringDask)):
+            pass
+        sumary['clusteringDask'].append(time.time() - init)
+    
+        init = time.time()
+        for i, o in zip(range(4428), minasOnline(inputStream, clusters)):
+            pass
+        sumary['testSamples'].append(time.time() - init)
+    
+        init = time.time()
+        for i, o in zip(range(4428), minasOnline(inputStream, clusters, minDist=minDistNumba)):
+            pass
+        sumary['minDistNumba'].append(time.time() - init)
+    for k, v in sumary.items():
+        print(f'{k}=>\t{sum(v)}')
 
 def testCovtype():
     from sklearn.datasets import fetch_covtype
@@ -29,14 +74,18 @@ def testCovtype():
     baseMap = map(zipToMap, zip(covtype.data[:onePercent], covtype.target[:onePercent]))
     onPercentDataFrame = pd.DataFrame(baseMap)
 
+    init = time.time()
     clusters = minasOffline(onPercentDataFrame)
+    print(f'minasOffline(testCovtype) => {len(clusters)}, {time.time() - init} seconds')
     print(len(clusters))
 
     fivePercent = int(total*0.05)
     fivePercentZip = zip(covtype.data[onePercent+1:fivePercent], map(str, covtype.target[onePercent+1:fivePercent]))
     inputStream = ( Example(item=i, label=t) for i, t in fivePercentZip)
+    init = time.time()
     for o in metaMinas(minasOnline(inputStream, clusters)):
         print(o)
+    print(f'metaMinas(minasOnline(testCovtype) {time.time() - init} seconds')
 
 def testKddcup99():
     from sklearn.datasets import fetch_kddcup99
@@ -66,10 +115,11 @@ def testKddcup99():
     for data, target in zip(kddcup99.data[:tenPercent], kddcup99.target[:tenPercent]):
         baseMapKddcup99.append({'item': kddNormalize(data), 'label': str(target)})
     trainingDF = pd.DataFrame(baseMapKddcup99)
+
     print(trainingDF.head())
     init = time.time()
-    clusters = minasOffline(trainingDF)
-    print('minasOffline(onPercentDataFrame)', len(clusters), time.time() - init, 'seconds')
+    clusters = minasOffline(trainingDF, clustering=clusteringDask)
+    print(f'minasOffline(testKddcup99) => {len(clusters)}, {time.time() - init} seconds')
     labels = []
     for cl in clusters:
         if not cl.label in labels:
@@ -107,67 +157,9 @@ def testKddcup99():
     allZip = zip(map(kddNormalize, kddcup99.data[tenPercent+1:]), map(str, kddcup99.target[tenPercent+1:]))
     inputStream = ( Example(item=i, label=t) for i, t in allZip)
     init = time.time()
-    for o in metaMinas(minasOnline(inputStream, clusters)):
+    for o in metaMinas(minasOnline(inputStream, clusters, clustering=clusteringDask)):
         print(o)
-    print('metaMinas(minasOnline(inputStream, clusters))', time.time() - init, 'seconds')
+    print(f'metaMinas(minasOnline(testKddcup99) {time.time() - init} seconds')
 
-
-def testKddcup99Numba():
-    @jit(nopython=True)
-    def minDist(clusters, item):
-        dists = map(lambda cl: (sum((cl['center'] - item) ** 2) ** (1/2), cl['id']), clusters)
-        d, clId = min(dists, key=lambda x: x[0])
-        return d, clId
-    def minDistNumba(clusters, item):
-        centers = [ {'center': cl.center, 'id': id(cl)} for cl in clusters ]
-        d, clId = minDist(centers, item)
-        for cl in clusters:
-            if id(cl) == clId:
-                return d, cl
-    from sklearn.datasets import fetch_kddcup99
-    kddcup99 = fetch_kddcup99()
-    total = len(kddcup99.data)
-    online = 442800
-    offline = 48791
-    # total - online - offline
-
-    print(kddcup99.data[0])
-    kddNormalizeMap = list(range(40))
-    kddNormalizeMap[1:3] = {}, {}, {}
-    def kddNormalize(kddArr):
-        # [0 b'tcp' b'http' b'SF' ...
-        result = []
-        for i, kddMap, kddEntry in zip(range(len(kddArr)), kddNormalizeMap, kddArr):
-            if i == 0 or i >= 4:
-                result.append(float(kddEntry))
-                continue
-            if not kddEntry in kddMap:
-                kddMap[kddEntry] = len(kddMap)
-            result.append(float(kddMap[kddEntry]))
-        return np.array(result)
-
-    tenPercent = (total // 10)
-    baseMapKddcup99 = []
-    for data, target in zip(kddcup99.data[:tenPercent], kddcup99.target[:tenPercent]):
-        baseMapKddcup99.append({'item': kddNormalize(data), 'label': str(target)})
-    trainingDF = pd.DataFrame(baseMapKddcup99)
-    print(trainingDF.head())
-    init = time.time()
-    clusters = minasOffline(trainingDF)
-    print('minasOffline(onPercentDataFrame)', len(clusters), time.time() - init, 'seconds')
-    labels = []
-    for cl in clusters:
-        if not cl.label in labels:
-            print(cl)
-            labels.append(cl.label)
-    print('\n')
-
-    minasOnline
-    allZip = zip(map(kddNormalize, kddcup99.data[tenPercent+1:]), map(str, kddcup99.target[tenPercent+1:]))
-    inputStream = ( Example(item=i, label=t) for i, t in allZip)
-    init = time.time()
-    for o in metaMinas(minasOnline(inputStream, clusters, minDist=minDistNumba)):
-        print(o)
-    print('Numba jit minDist', time.time() - init, 'seconds')
-
-testKddcup99()
+testSamples()
+# testKddcup99()
