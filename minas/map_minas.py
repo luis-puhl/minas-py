@@ -1,6 +1,7 @@
 import dataclasses
 import typing
 import time
+import itertools
 
 import numpy as np
 import pandas as pd
@@ -9,46 +10,17 @@ from sklearn.cluster import KMeans
 from .example import Example, Vector
 from .cluster import Cluster
 
-def mkClass(label): return dict(label=label, mu=np.random.random_sample((2,)), sigma=np.random.random_sample((2,)))
-def nextExample(klass): return Example(label=klass['label'], item=np.random.normal(klass['mu'], klass['sigma']))
-
-
-def sampleClasses():
-    return list(map(mkClass, ['zero', 'one', 'duo', 'tri']))
-def nextRandExample(classes=[]): return nextExample(np.random.choice(classes) )
-def randExamplesIter(classes=[]):
-    while True:
-        yield nextRandExample(classes=[])
-def loopExamplesIter(classes=[]):
-    i = 0
-    while True:
-        yield nextExample(classes[i])
-        i = (i + 1) % len(classes)
-# 
-def distKlass(ex, classes=[]): return map(lambda cl: (sum((cl['mu'] - ex.item) ** 2) ** 1/2, cl), classes)
-def minDistKlass(ex, classes=[]): return min(distKlass(ex, classes), key=lambda x: x[0])
-
-
-def dist(ex, clusters=[]):
-    if len(clusters) == 0:
-        return []
-    return map(lambda cl: (sum((cl.center - ex.item) ** 2) ** 1/2, cl), clusters)
-
-def minDist(ex, clusters=[]): return min(dist(ex, clusters), key=lambda x: x[0])
-
-import itertools
-
-from sklearn.cluster import KMeans
-import numpy as np
-import pandas as pd
-
 def minDist(clusters, item):
     dists = map(lambda cl: (sum((cl.center - item) ** 2) ** (1/2), cl), clusters)
     d, cl = min(dists, key=lambda x: x[0])
     return d, cl
 def clustering(unknownBuffer, label=None, MAX_K_CLUSTERS=100, REPR_TRESHOLD=20):
-    df = pd.DataFrame([ex.item for ex in unknownBuffer])
+    df = pd.DataFrame(unknownBuffer).drop_duplicates()
+    if len(df) == 0:
+        return []
     n_clusters = min(MAX_K_CLUSTERS, len(unknownBuffer) // ( 3 * REPR_TRESHOLD))
+    if n_clusters == 0:
+        n_clusters = len(unknownBuffer)
     kmeans = KMeans(n_clusters=n_clusters)
     kmeans.fit(df)
     newClusters = [Cluster(center=centroid, label=label, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
@@ -56,6 +28,7 @@ def clustering(unknownBuffer, label=None, MAX_K_CLUSTERS=100, REPR_TRESHOLD=20):
 
 def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=clustering):
     RADIUS_FACTOR = 1.1
+    EXTENTION_FACTOR = 3
     BUFF_FULL = 100
     MAX_K_CLUSTERS = 100
     REPR_TRESHOLD = 20
@@ -79,7 +52,7 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
         # dists = map(lambda cl: (sum((cl.center - example.item) ** 2) ** 1/2, cl), clusters)
         # d, cl = min(dists, key=lambda x: x[0])
         d, cl = minDist(clusters, example.item)
-        if d / cl.maxDistance <= RADIUS_FACTOR:
+        if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
             cl.maxDistance = max(cl.maxDistance, d)
             cl.latest = counter
             cl.n += 1
@@ -95,7 +68,7 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
                         # sleepDists = list(map(lambda cl: (sum((cl.center - sleepExample.item) ** 2) ** 1/2, cl), sleepClusters))
                         # d, cl = min(sleepDists, key=lambda x: x[0])
                         d, cl = minDist(sleepClusters, sleepExample.item)
-                        if d / cl.maxDistance <= 1.1:
+                        if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
                             cl.maxDistance = max(cl.maxDistance, d)
                             cl.latest = counter
                             unknownBuffer.remove(sleepExample)
@@ -112,7 +85,7 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
                     # kmeans = KMeans(n_clusters=n_clusters)
                     # kmeans.fit(df)
                     # newClusters = [Cluster(center=centroid, label=None, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
-                    newClusters = clustering(unknownBuffer)
+                    newClusters = clustering([ ex.item for ex in unknownBuffer ])
                     temp_examples = {cl: [] for cl in newClusters}
                     for sleepExample in unknownBuffer:
                         # dists = map(lambda cl: (sum((cl.center - sleepExample.item) ** 2) ** 1/2, cl), newClusters)
@@ -141,7 +114,7 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
                         sameLabel = [ cl for cl in clusters + sleepClusters if cl.label ==  nearCl2Cl.label ]
                         sameLabelDists = [ sum((cl1.center - cl2.center) ** 2) ** (1/2) for cl1, cl2 in itertools.combinations(sameLabel, 2) ]
                         #
-                        if distCl2Cl / nearCl2Cl.maxDistance < 1.1 or distCl2Cl / max(sameLabelDists) < 2:
+                        if distCl2Cl / max(1.0, nearCl2Cl.maxDistance) < EXTENTION_FACTOR or distCl2Cl / max(sameLabelDists) < 2:
                             yield f'Extention {nearCl2Cl.label}'
                             ncl.label = nearCl2Cl.label
                         else:
@@ -173,43 +146,7 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
     #
 #
 
-def metaMinas(minasMaping):
-    status = dict(
-        known = 0,
-        unknown = 0,
-        cleanup = 0,
-        fallback = 0,
-        recurenceDetection = 0,
-        recurence = 0,
-        noveltyDetection = 0,
-    )
-    sentinel = object()
-    while minasMaping:
-        o = next(minasMaping, sentinel)
-        if o == sentinel:
-            break
-        if '[CLASSIFIED]' in o:
-            status['known'] += 1
-        elif '[UNKNOWN]' in o:
-            status['unknown'] += 1
-        elif '[cleanup]' in o:
-            status['cleanup'] += 1
-        elif '[fallback]' in o:
-            status['fallback'] += 1
-        elif '[recurenceDetection]' in o:
-            status['recurenceDetection'] += 1
-        elif '[noveltyDetection]' in o:
-            status['noveltyDetection'] += 1
-        elif '[Recurence]' in o:
-            status['recurence'] += 1
-        else: 
-            yield o
-    else:
-        yield 'Stream Done'
-    print(status)
-#
-
-def minasOffline(examplesDf):
+def minasOffline(examplesDf, minDist=minDist, clustering=clustering):
     RADIUS_FACTOR = 1.1
     BUFF_FULL = 100
     MAX_K_CLUSTERS = 100
@@ -218,14 +155,21 @@ def minasOffline(examplesDf):
     clusters = []
     groupSize = MAX_K_CLUSTERS * REPR_TRESHOLD
     for label, group in examplesDf.groupby('label'):
+        group = list(group['item'])
         for chunk in range(0, len(group), groupSize):
-            subgroup = group[chunk:chunk + groupSize]
-            unknownBuffer = list(subgroup['item'])
-            df = pd.DataFrame(unknownBuffer)
-            n_clusters = min(MAX_K_CLUSTERS, len(unknownBuffer) // ( 3 * REPR_TRESHOLD))
-            kmeans = KMeans(n_clusters=n_clusters)
-            kmeans.fit(df)
-            newClusters = [Cluster(center=centroid, label=label, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
+            if chunk + groupSize > len(group):
+                break
+            if chunk + 2*groupSize > len(group):
+                groupSize = chunk - len(group)
+            unknownBuffer = group[chunk:chunk + groupSize]
+            newClusters = clustering(unknownBuffer)
+            # df = pd.DataFrame(unknownBuffer).drop_duplicates()
+            # n_clusters = min(MAX_K_CLUSTERS, len(unknownBuffer) // ( 3 * REPR_TRESHOLD))
+            # if n_clusters == 0:
+            #     n_clusters = len(unknownBuffer)
+            # kmeans = KMeans(n_clusters=n_clusters)
+            # kmeans.fit(df)
+            # newClusters = [Cluster(center=centroid, label=label, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
             temp_examples = {cl: [] for cl in newClusters}
             for sleepExample in unknownBuffer:
                 dists = map(lambda cl: (sum((cl.center - sleepExample) ** 2) ** 1/2, cl), newClusters)
@@ -234,7 +178,8 @@ def minasOffline(examplesDf):
                 cl.n += 1
                 temp_examples[cl].append((sleepExample, d))
             for ncl in newClusters:
-                if ncl.n < 2: continue
+                if ncl.n < 2 or cl.maxDistance <= 0:
+                    continue
                 #
                 clusters.append(ncl)
     return clusters
