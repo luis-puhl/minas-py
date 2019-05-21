@@ -13,8 +13,8 @@ import dask.dataframe as dd
 from .example import Example, Vector
 from .cluster import Cluster
 
-def mkClass(label):
-    return dict(label=label, mu=np.random.random_sample((2,)), sigma=np.random.random_sample((2,)))
+def mkClass(label, dim=2):
+    return dict(label=label, mu=np.random.random_sample((dim,)), sigma=np.random.random_sample((dim,)))
 def nextExample(klass):
     return Example(label=klass['label'], item=np.random.normal(klass['mu'], klass['sigma']))
 
