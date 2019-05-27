@@ -40,7 +40,9 @@ print(f'dist linalg.norm\t{elapsed} seconds, consumed {counter} items, {int(coun
 # ----------------------------------------------------------------------------------------------------------
 from numpy import linalg as LA
 
+init = time.time()
 centers = np.array([cl.center for cl in clusters])
+print('prep', time.time() - init)
 counter = 0
 results = []
 init = time.time()
