@@ -48,6 +48,10 @@ def minas_producer():
         time.sleep(0.01)
     print(f'minas producer kafka {elapsed} seconds, produced {counter} items, {int(counter / elapsed)} i/s')
 
+def minDistOG(clusters, item):
+    dists = map(lambda cl: (sum((cl.center - item) ** 2) ** (1/2), cl), clusters)
+    d, cl = min(dists, key=lambda x: x[0])
+    return d, cl
 
 def minDist(clusters, centers, item):
     dists = LA.norm(centers - item, axis=1)
@@ -61,7 +65,12 @@ def minas_local():
     init = time.time()
     for i, example in examples:
         counter += 1
-        result = minDist(clusters, centers, example.item)
+        result = minDistOG(clusters, example.item)
+        resultNorm = minDist(clusters, centers, example.item)
+        if np.abs(result[0] - resultNorm[0]) > 10**(-5) or result[1] != resultNorm[1]:
+            print('result\t\t', result[0])
+            print('resultNorm\t', resultNorm[0])
+            raise Exception("wowo")
         results.append(result)
     elapsed = time.time() - init
     len(results)
@@ -93,6 +102,7 @@ async def minas_consumer_streamz():
         return f
     print('kafkaSource map')
     outStream = kafkaSource.map(combinedMap).sink(asSink('raw'))
+    outStream = kafkaSource.scatter().map(combinedMap).gatter().sink(asSink('raw'))
     
     while True:
         await gen.sleep(1000)

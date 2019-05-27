@@ -1,0 +1,14 @@
+1010.1110
+3210-1234
+8421-248F
+
+            (stateless)
+examples -> classify    |-> class ->          |-> (final eg: Cassales)
+           |            |-> no class -> minas |
+clusters ->|                            (unkBuff, sleep, novelty)->
+                                                            <-------
+
+kafka reader group
+
+
+medir e explicar
