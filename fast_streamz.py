@@ -10,6 +10,10 @@ def minDist(clusters, item):
     dists = map(lambda cl: (sum((cl.center - item) ** 2) ** (1/2), cl), clusters)
     d, cl = min(dists, key=lambda x: x[0])
     return d, cl
+def minDist(clusters, item):
+    dists = map(lambda cl: (np.linalg.norm(cl.center - item), cl), clusters)
+    d, cl = min(dists, key=lambda x: x[0])
+    return d, cl
 counter = 0
 results = []
 init = time.time()
