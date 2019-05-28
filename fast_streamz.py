@@ -25,7 +25,7 @@ examples = list(zip(range(20000), inputStream))
 
 centers = np.array([cl.center for cl in clusters])
 
-kafkaConfig = {'bootstrap.servers': 'localhost:9092', 'group.id': 'streamz-minas'}
+kafkaConfig = {'bootstrap.servers': 'localhost:9092,localhost:9093,localhost:9094', 'group.id': 'streamz-minas'}
 topic = 'test'
 doneFlag = b'done'
 
