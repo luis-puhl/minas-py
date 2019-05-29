@@ -11,6 +11,7 @@ from tornado import gen
 
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
+from kafka import RoundRobinPartitioner
 
 from minas.map_minas_support import *
 
@@ -70,8 +71,7 @@ kafkaConfig = dict(
     key_serializer=key_serializer,
     group_id='stream_share',
 )
-topic = 'my-failsafe-topic'
-doneFlag = b'done'
+topic = 'minas-topic'
 
 def minas_producer():
     print('minas_producer')
@@ -82,11 +82,16 @@ def minas_producer():
     )
     init = time.time()
     counter = 0
+    futures = []
     for i, example in examples:
         example.timestamp = time.time_ns()
         value = {'example': example.__getstate__()}
-        kprod.send(topic=topic, value=value, key=i)
+        futureRecordMetadata = kprod.send(topic=topic, value=value, key=i)
+        futures.append(futureRecordMetadata)
         counter += 1
+    
+    for future in futures:
+        record_metadata = future.get()
     elapsed = time.time() - init
     print(f'minas producer {elapsed} seconds, produced {counter} items, {int(counter / elapsed)} i/s')
     # print(kprod.metrics())
@@ -96,19 +101,29 @@ def minas_consumer_kafka():
     consumer = KafkaConsumer(
         topic,
         bootstrap_servers=kafkaConfig['bootstrap_servers'],
-        # group_id=kafkaConfig['group_id'],
-        # client_id=client_id,
+        group_id=kafkaConfig['group_id'],
+        client_id=client_id,
         value_deserializer=value_deserializer,
         consumer_timeout_ms=1000,
-        # max_poll_records=1,
+        max_poll_records=10,
+        auto_offset_reset='latest',
     )
     kprod = KafkaProducer(
         bootstrap_servers=kafkaConfig['bootstrap_servers'],
         value_serializer=value_serializer,
         key_serializer=key_serializer,
     )
-
-    print('ready', client_id, consumer.assignment(), consumer.partitions_for_topic(topic), consumer.subscription())
+    
+    pid = os.getpid()
+    partitions = consumer.partitions_for_topic(topic)
+    assignment = consumer.assignment()
+    # group_protocols = consumer.group_protocols()
+    group_protocols = None
+    subscription = consumer.subscription()
+    status = dict(client_id=client_id, assignment=assignment, partitions=partitions, subscription=subscription, group_protocols=group_protocols)
+    print('ready', status)
+    if partitions is not None:
+        consumer.seek_to_end()
 
     results = []
     results_elapsed = []
@@ -121,7 +136,11 @@ def minas_consumer_kafka():
         if kafkaRecord and kafkaRecord.value:
             val = kafkaRecord.value
         if type(val) is bytes:
-            val = json.loads(val.decode('utf-8'))
+            try:
+                val = json.loads(val.decode('utf-8'))
+            except:
+                print(val)
+                continue
         if not 'example' in val:
             print('not example in Record')
             continue
@@ -136,28 +155,51 @@ def minas_consumer_kafka():
         # 
         counter += 1
         elapsed += time.time() - init
-    speed = int(counter / elapsed)
-    print(f'consumer {client_id}: {(elapsed * 1000) //1} ms, consumed {counter} items, {speed} i/s', time.time() - totalTime)
-    # print('done', client_id, consumer.metrics())
+    speed = counter // max(0.001, elapsed)
+    elapsed = int(elapsed * 1000)
+    print(f'consumer {client_id}: {elapsed} ms, consumed {counter} items, {speed} i/s', time.time() - totalTime)
     kprod.flush()
 
-def minas_consumer_entrypoint():
-    try:
-        IOLoop().run_sync(minas_consumer_kafka)
-    except KeyboardInterrupt:
-        pass
+def minas_output_counter():
+    client_id = mk_client_id()
+    consumer = KafkaConsumer(
+        f'{topic}_out',
+        bootstrap_servers=kafkaConfig['bootstrap_servers'],
+        group_id=kafkaConfig['group_id'],
+        client_id=client_id,
+        value_deserializer=value_deserializer,
+        consumer_timeout_ms=10000,
+        auto_offset_reset='latest',
+    )
+    
+    counter = 0
+    init = False
+    for kafkaRecord in consumer:
+        if not init:
+            init = time.time()
+        counter += 1
+    if init:
+        elapsed = time.time() - init
+    else:
+        elapsed = 0
+    speed = counter // max(0.001, elapsed)
+    elapsed = int(elapsed * 1000)
+    print(f'output {client_id}: {elapsed} ms, {counter} items, {speed} i/s')
 
 if __name__ == '__main__':
     print('main line')
     minas_local()
+    consumers = [ mp.Process(target=minas_consumer_kafka) for i in range(min(3, os.cpu_count())) ]
+    # out = mp.Process(target=minas_output_counter)
     producer = mp.Process(target=minas_producer)
-    consumers = [ mp.Process(target=minas_consumer_kafka) for i in range(os.cpu_count() -1) ]
     # 
     for consumer in consumers:
         consumer.start()
+    # out.start()
     time.sleep(1)
     producer.start()
     
     producer.join()
     for consumer in consumers:
         consumer.join()
+    # out.join()
