@@ -11,17 +11,19 @@ from tornado import gen
 
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
-from kafka import RoundRobinPartitioner
+import kafka as kafkaPy
 
 from minas.map_minas_support import *
 
-np.random.seed(300)
-classes = list(map(mkClass, range(1000)))
-clusters = sampleClusters(classes)
-inputStream = loopExamplesIter(classes)
-examples = list(zip(range(200), inputStream))
+def mkTestData(dim=2, classesLen=1000, examplesLen=200):
+    np.random.seed(300)
+    classes = [ mkClass(i, dim) for i in range(classesLen) ]
+    clusters = sampleClusters(classes)
+    inputStream = loopExamplesIter(classes)
+    examples = list(zip(range(examplesLen), inputStream))
 
-centers = np.array([cl.center for cl in clusters])
+    centers = np.array([cl.center for cl in clusters])
+    return dict(classes=classes, clusters=clusters, inputStream=inputStream, examples=examples, centers=centers)
 
 def minDist(clusters, centers, item):
     dists = LA.norm(centers - item, axis=1)
@@ -29,7 +31,7 @@ def minDist(clusters, centers, item):
     cl = clusters[ dists.tolist().index(d) ]
     return d, cl
 
-def minas_local():
+def minas_local(classes=[], clusters=[], inputStream=[], examples=[], centers=[]):
     counter = 0
     results = []
     init = time.time()
@@ -73,7 +75,7 @@ kafkaConfig = dict(
 )
 topic = 'minas-topic'
 
-def minas_producer():
+def minas_producer(classes=[], clusters=[], inputStream=[], examples=[], centers=[]):
     print('minas_producer')
     kprod = KafkaProducer(
         bootstrap_servers=kafkaConfig['bootstrap_servers'],
@@ -90,13 +92,54 @@ def minas_producer():
         futures.append(futureRecordMetadata)
         counter += 1
     
+    kprod.flush()
+    topics = set()
+    partitions = set()
+    offsets = set()
     for future in futures:
         record_metadata = future.get()
+        topics.add(record_metadata.topic)
+        partitions.add(record_metadata.partition)
+        offsets.add(record_metadata.offset)
     elapsed = time.time() - init
     print(f'minas producer {elapsed} seconds, produced {counter} items, {int(counter / elapsed)} i/s')
-    # print(kprod.metrics())
+    resume = lambda x: f'{min(x)} to {max(x)} ({len(x)})'
+    print(f'topics: {topics}\tpartitions: {resume(partitions)}\toffsets: {resume(offsets)}')
 
-def minas_consumer_kafka():
+def consumeRecord(kafkaRecord, results, results_elapsed, classes=[], clusters=[], inputStream=[], examples=[], centers=[]):
+    init = time.time()
+    val = None
+    if kafkaRecord and kafkaRecord.value:
+        val = kafkaRecord.value
+    if type(val) is bytes:
+        try:
+            val = json.loads(val.decode('utf-8'))
+        except:
+            print(val)
+            return
+    if not 'example' in val:
+        print('not example in Record')
+        return
+    example = Example(**val['example'])
+    processed = minDist(clusters, centers, example.item)
+    # 
+    timeDiff = time.time_ns() - example.timestamp
+    results.append(processed)
+    results_elapsed.append(timeDiff)
+    value = {'d': processed[0], 'label': processed[1].label, 'elapsed': timeDiff}
+    kprod.send(topic=topic+'_out', value=value)
+
+def minas_consumer_kafka(topic, classes=[], clusters=[], inputStream=[], examples=[], centers=[], readyness=None, go=None):
+    results = []
+    counter = 0
+    elapsed = 0
+    results_elapsed = []
+    kwargs = dict(
+        classes=classes, clusters=clusters,
+        inputStream=inputStream, examples=examples,
+        centers=centers, results_elapsed=results_elapsed,
+    )
+
     client_id = mk_client_id()
     consumer = KafkaConsumer(
         topic,
@@ -104,7 +147,8 @@ def minas_consumer_kafka():
         group_id=kafkaConfig['group_id'],
         client_id=client_id,
         value_deserializer=value_deserializer,
-        consumer_timeout_ms=1000,
+        # StopIteration if no message after 1 sec
+        consumer_timeout_ms=1 * 1000,
         max_poll_records=10,
         auto_offset_reset='latest',
     )
@@ -113,46 +157,29 @@ def minas_consumer_kafka():
         value_serializer=value_serializer,
         key_serializer=key_serializer,
     )
-    
-    pid = os.getpid()
+    # 
+    if topic not in consumer.topics():
+        raise Exception(f'Topic "{topic}" not found.')
+    topics = consumer.topics()
     partitions = consumer.partitions_for_topic(topic)
     assignment = consumer.assignment()
-    # group_protocols = consumer.group_protocols()
-    group_protocols = None
     subscription = consumer.subscription()
-    status = dict(client_id=client_id, assignment=assignment, partitions=partitions, subscription=subscription, group_protocols=group_protocols)
-    print('ready', status)
-    if partitions is not None:
-        consumer.seek_to_end()
+    topics = {}
+    try:
+        topics = consumer.poll(timeout_ms=1000, max_records=1)
+    except:
+        pass
+    # for topic, records in topics.items():
+    #     for re in records:
+    #         print(re)
+    #         consumeRecord(re, results, **kwargs)
+    readyness.set()
+    print('ready')
+    go.wait()
 
-    results = []
-    results_elapsed = []
-    counter = 0
-    elapsed = 0
     totalTime = time.time()
     for kafkaRecord in consumer:
-        init = time.time()
-        val = None
-        if kafkaRecord and kafkaRecord.value:
-            val = kafkaRecord.value
-        if type(val) is bytes:
-            try:
-                val = json.loads(val.decode('utf-8'))
-            except:
-                print(val)
-                continue
-        if not 'example' in val:
-            print('not example in Record')
-            continue
-        example = Example(**val['example'])
-        processed = minDist(clusters, centers, example.item)
-        # 
-        timeDiff = time.time_ns() - example.timestamp
-        results.append(processed)
-        results_elapsed.append(timeDiff)
-        value = {'d': processed[0], 'label': processed[1].label, 'elapsed': timeDiff}
-        kprod.send(topic=topic+'_out', value=value)
-        # 
+        consumeRecord(kafkaRecord, results, **kwargs)
         counter += 1
         elapsed += time.time() - init
     speed = counter // max(0.001, elapsed)
@@ -166,7 +193,8 @@ def minas_output_counter():
         f'{topic}_out',
         bootstrap_servers=kafkaConfig['bootstrap_servers'],
         group_id='minas_output_counter',
-        consumer_timeout_ms=10000,
+        # StopIteration if no message after 2 sec
+        consumer_timeout_ms=2 * 1000,
         auto_offset_reset='latest',
     )
     
@@ -184,20 +212,50 @@ def minas_output_counter():
     elapsed = int(elapsed * 1000)
     print(f'output {client_id}: {elapsed} ms, {counter} items, {speed} i/s')
 
-if __name__ == '__main__':
+def main_line(consumersLen=None, **kwargs):
     print('main line')
-    minas_local()
-    consumers = [ mp.Process(target=minas_consumer_kafka) for i in range(min(3, os.cpu_count())) ]
+    if consumersLen is None:
+        consumersLen = os.cpu_count()
+    consumers = []
+    readynessProbes = []
+    goProbes = []
+    for i in range(consumersLen):
+        kArgs = kwargs.copy()
+        
+        readyness = mp.Event()
+        readynessProbes.append(readyness)
+        kArgs['readyness'] = readyness
+        
+        go = mp.Event()
+        goProbes.append(go)
+        kArgs['go'] = go
+        
+        kArgs['topic'] = topic
+        p = mp.Process(target=minas_consumer_kafka, kwargs=kArgs)
+        consumers.append(p)
     # out = mp.Process(target=minas_output_counter)
-    producer = mp.Process(target=minas_producer)
+    producer = mp.Process(target=minas_producer, kwargs=kwargs)
     # 
     for consumer in consumers:
         consumer.start()
     # out.start()
-    time.sleep(1)
+    for ready in readynessProbes:
+        ready.wait()
     producer.start()
+    for go in goProbes:
+        go.set()
     
     producer.join()
     for consumer in consumers:
         consumer.join()
     # out.join()
+
+if __name__ == '__main__':
+    kwargs = mkTestData()
+    minas_local(**kwargs)
+    # 
+    # for i in range(100, 10 * 100, 100):
+    i = 3 * 100
+    kwargs = mkTestData(dim=i, classesLen=i, examplesLen=i)
+    # for consumersLen in range(1, os.cpu_count()):
+    main_line(consumersLen=os.cpu_count()*2, **kwargs)
