@@ -165,9 +165,7 @@ def minas_output_counter():
     consumer = KafkaConsumer(
         f'{topic}_out',
         bootstrap_servers=kafkaConfig['bootstrap_servers'],
-        group_id=kafkaConfig['group_id'],
-        client_id=client_id,
-        value_deserializer=value_deserializer,
+        group_id='minas_output_counter',
         consumer_timeout_ms=10000,
         auto_offset_reset='latest',
     )
