@@ -16,3 +16,10 @@ medir e explicar
 Dask é mais lento para o cálculo de distâncias, provavelmente pelo overhead de 'rede'.
 Qual o tamanho desse overhead, ou seja, para até qual tamanho de item/clusters isso é válido (inflection point)?
 
+
+Número de brokers, por que 3 (ou mais de um)?
+
+Montar um projeto da arquitetura com diagrama dos streams.
+Exemplo de código com tempos de 1 consumidor até N
+
+Como outros constroem projetos com kafka?

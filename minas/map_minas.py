@@ -10,10 +10,14 @@ from sklearn.cluster import KMeans
 from .example import Example, Vector
 from .cluster import Cluster
 
-def minDist(clusters, item):
-    dists = map(lambda cl: (sum((cl.center - item) ** 2) ** (1/2), cl), clusters)
-    d, cl = min(dists, key=lambda x: x[0])
+def minDist(clusters, centers, item):
+    dists = LA.norm(centers - item, axis=1)
+    d = dists.min()
+    cl = clusters[ dists.tolist().index(d) ]
     return d, cl
+def mkCenters(clusters):
+    return np.array([cl.center for cl in clusters])
+
 def clustering(unknownBuffer, label=None, MAX_K_CLUSTERS=100, REPR_TRESHOLD=20):
     df = pd.DataFrame(unknownBuffer).drop_duplicates()
     if len(df) == 0:
@@ -36,6 +40,7 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
     #
     unknownBuffer = []
     clusters=[cl for cl in inClusters]
+    centers = mkCenters(clusters)
     sleepClusters = []
     counter = 0
     noveltyIndex = 0

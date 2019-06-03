@@ -158,23 +158,23 @@ def minas_consumer_kafka(topic, classes=[], clusters=[], inputStream=[], example
         key_serializer=key_serializer,
     )
     # 
-    if topic not in consumer.topics():
-        raise Exception(f'Topic "{topic}" not found.')
-    topics = consumer.topics()
-    partitions = consumer.partitions_for_topic(topic)
-    assignment = consumer.assignment()
-    subscription = consumer.subscription()
-    topics = {}
-    try:
-        topics = consumer.poll(timeout_ms=1000, max_records=1)
-    except:
-        pass
+    # if topic not in consumer.topics():
+    #     raise Exception(f'Topic "{topic}" not found.')
+    # topics = consumer.topics()
+    # partitions = consumer.partitions_for_topic(topic)
+    # assignment = consumer.assignment()
+    # subscription = consumer.subscription()
+    # topics = {}
+    # try:
+    #     topics = consumer.poll(timeout_ms=10, max_records=1)
+    # except:
+    #     pass
     # for topic, records in topics.items():
     #     for re in records:
     #         print(re)
     #         consumeRecord(re, results, **kwargs)
-    readyness.set()
     print('ready')
+    readyness.set()
     go.wait()
 
     totalTime = time.time()
@@ -258,4 +258,5 @@ if __name__ == '__main__':
     i = 3 * 100
     kwargs = mkTestData(dim=i, classesLen=i, examplesLen=i)
     # for consumersLen in range(1, os.cpu_count()):
+    #     main_line(consumersLen=consumersLen, **kwargs)
     main_line(consumersLen=os.cpu_count()*2, **kwargs)
