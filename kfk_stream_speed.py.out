@@ -1,4 +1,6 @@
-kafkaProduce
-len 4867
+$ time python ./kfk_stream_speed.py
 kafkaConsume
-len 9488 with 987.531s avg, 9.36969e+06s total
+kafkaProduce
+len 4238
+len 4234 with 0.447927s avg, 1896.52s total
+python ./kfk_stream_speed.py  1.90s user 0.11s system 41% cpu 4.866 total
