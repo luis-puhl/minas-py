@@ -162,4 +162,4 @@ def testKddcup99():
     print(f'metaMinas(minasOnline(testKddcup99) {time.time() - init} seconds')
 
 testSamples()
-# testKddcup99()
+testKddcup99()

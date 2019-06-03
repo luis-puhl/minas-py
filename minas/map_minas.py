@@ -2,6 +2,7 @@ import dataclasses
 import typing
 import time
 import itertools
+from multiprocessing import Process, Pipe
 
 import numpy as np
 import pandas as pd
@@ -26,6 +27,10 @@ def clustering(unknownBuffer, label=None, MAX_K_CLUSTERS=100, REPR_TRESHOLD=20):
     newClusters = [Cluster(center=centroid, label=label, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
     return newClusters
 
+def clusteringProcessEntry(conn):
+    conn.send([42, None, 'hello'])
+    conn.close()
+
 def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=clustering):
     RADIUS_FACTOR = 1.1
     EXTENTION_FACTOR = 3
@@ -39,6 +44,12 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
     sleepClusters = []
     counter = 0
     noveltyIndex = 0
+    # 
+    # parent_conn, child_conn = Pipe()
+    # clusteringProcess = Process(target=clusteringProcessEntry, args=(child_conn,))
+    # clusteringProcess.start()
+    # print(parent_conn.recv())   # prints "[42, None, 'hello']"
+    # clusteringProcess.join()
     sentinel = object()
     while True:
         example = next(exampleSource, sentinel)
@@ -75,6 +86,8 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
                 if len(unknownBuffer) % (BUFF_FULL // 10) == 0:
                     yield '[noveltyDetection]'
                     newClusters = clustering([ ex.item for ex in unknownBuffer ])
+                    # parent_conn.send([ ex.item for ex in unknownBuffer ])
+                    # newClusters = parent_conn.recv()
                     temp_examples = {cl: [] for cl in newClusters}
                     for sleepExample in unknownBuffer:
                         d, cl = minDist(newClusters, sleepExample.item)
