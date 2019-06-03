@@ -1,0 +1,4 @@
+kafkaProduce
+len 4867
+kafkaConsume
+len 9488 with 987.531s avg, 9.36969e+06s total
