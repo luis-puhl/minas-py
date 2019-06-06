@@ -81,13 +81,13 @@ def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
     lastReportedCounter = 0
     nbytes = 0
     for data, label in datasetgenerator:
-        data = [ float(i) for i in data]
-        nbytes += 8*len(data)
-        kprod.send(topic='items', value=data, key=counter)
-        kprod.send(topic='items_raw', value={'item': data, 'label': label}, key=counter)
-        time.sleep(delay)
-        counter += 1
         currentTime = time.time_ns()
+        data = [ float(i) for i in data]
+        kprod.send(topic='items', value=data, key=counter, timestamp_ms=currentTime)
+        kprod.send(topic='items_raw', value={'item': data, 'label': label}, key=counter, timestamp_ms=currentTime)
+        time.sleep(delay)
+        nbytes += 8*len(data)
+        counter += 1
         timeDiff = currentTime - lastReport
         if timeDiff > report_interval:
             items = counter - lastReportedCounter
@@ -99,4 +99,3 @@ def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
             lastReport = currentTime
             lastReportedCounter = counter
             nbytes = 0
-

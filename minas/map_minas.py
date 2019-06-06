@@ -54,7 +54,7 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
         counter += 1
         example.timestamp = time.time_ns()
         example.n = counter
-        d, cl = minDist(clusters, example.item)
+        d, cl = minDist(clusters, centers, example.item)
         if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
             cl.maxDistance = max(cl.maxDistance, d)
             cl.latest = counter
