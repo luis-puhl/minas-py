@@ -6,7 +6,7 @@ from kafka import KafkaConsumer
 from kafka import KafkaProducer
 import msgpack
 
-def consumer():
+def final_consumer():
     consumer = KafkaConsumer(
         'classe-contagem', 'novidades',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
@@ -19,6 +19,7 @@ def consumer():
         # max_poll_records=10,
         auto_offset_reset='latest',
     )
+    print('final_consumer ready')
     for message in consumer:
         # message{ topic, partition, offset, key, value }
         print(message.topic, message.key, message.value)

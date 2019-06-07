@@ -1,4 +1,5 @@
 import time
+import traceback
 import os
 
 import numpy as np
@@ -52,7 +53,7 @@ def classifier():
                 continue
             if message.topic == 'items':
                 example = Example(item=message.value)
-                print(example)
+                # print(example)
             if clusters is None:
                 continue
             counter += 1
@@ -82,7 +83,8 @@ def classifier():
     except KeyboardInterrupt:
         pass
     except Exception as ex:
-        print('ex', ex)
+        traceback.print_exc()
+        print('Exception', ex)
         raise
     finally:
         speed = counter // max(0.001, elapsed)

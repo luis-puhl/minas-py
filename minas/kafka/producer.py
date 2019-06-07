@@ -63,6 +63,7 @@ def dataSetGenFake(runForever=True, classes=5, dim=2):
             runForever = False
 
 def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
+    print(dict(data_set_name=data_set_name, delay=delay, report_interval=report_interval))
     datasetgenerator = dataSetGenFake()
     if data_set_name is DATA_SET_COVTYPE:
         datasetgenerator = dataSetGenCovtype()
@@ -80,16 +81,17 @@ def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
     lastReport = time.time_ns()
     lastReportedCounter = 0
     nbytes = 0
+    print('producer ready')
     for data, label in datasetgenerator:
         currentTime = time.time_ns()
         data = [ float(i) for i in data]
         kprod.send(topic='items', value=data, key=counter, timestamp_ms=currentTime)
-        kprod.send(topic='items_raw', value={'item': data, 'label': label}, key=counter, timestamp_ms=currentTime)
+        kprod.send(topic='items-classes', value={'item': data, 'label': label}, key=counter, timestamp_ms=currentTime)
         time.sleep(delay)
         nbytes += 8*len(data)
         counter += 1
         timeDiff = currentTime - lastReport
-        if timeDiff > report_interval:
+        if report_interval > 0 and timeDiff > report_interval:
             items = counter - lastReportedCounter
             timeDiff = timeDiff / ONE_SECOND
             itemSpeed = items/timeDiff

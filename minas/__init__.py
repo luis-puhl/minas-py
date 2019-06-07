@@ -6,3 +6,6 @@ from .minas_base import *
 from .timed import *
 from .kafka.producer import producer
 from .kafka.classifier import classifier
+from .kafka.training_offline import training_offline
+from .kafka.training_online import training_online
+from .kafka.final_consumer import final_consumer

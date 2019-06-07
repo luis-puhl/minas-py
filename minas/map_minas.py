@@ -30,7 +30,7 @@ def clustering(unknownBuffer, label=None, MAX_K_CLUSTERS=100, REPR_TRESHOLD=20):
     newClusters = [Cluster(center=centroid, label=label, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
     return newClusters
 
-def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=clustering):
+def minasOnline(exampleSource, inClusters=[]):
     RADIUS_FACTOR = 1.1
     EXTENTION_FACTOR = 3
     BUFF_FULL = 100
@@ -136,7 +136,7 @@ def minasOnline(exampleSource, inClusters=[], minDist=minDist, clustering=cluste
     #
 #
 
-def minasOffline(examplesDf, minDist=minDist, clustering=clustering):
+def minasOffline(examplesDf):
     RADIUS_FACTOR = 1.1
     BUFF_FULL = 100
     MAX_K_CLUSTERS = 100
@@ -155,8 +155,8 @@ def minasOffline(examplesDf, minDist=minDist, clustering=clustering):
             newClusters = clustering(unknownBuffer, label=label)
             temp_examples = {cl: [] for cl in newClusters}
             for sleepExample in unknownBuffer:
-                dists = map(lambda cl: (sum((cl.center - sleepExample) ** 2) ** 1/2, cl), newClusters)
-                d, cl = min(dists, key=lambda x: x[0])
+                centers = mkCenters(newClusters)
+                d, cl = minDist(newClusters, centers, sleepExample)
                 cl.maxDistance = max(cl.maxDistance, d)
                 cl.n += 1
                 temp_examples[cl].append((sleepExample, d))

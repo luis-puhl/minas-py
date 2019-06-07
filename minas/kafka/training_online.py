@@ -1,4 +1,5 @@
 import time
+import traceback
 import os
 
 import numpy as np
@@ -10,7 +11,7 @@ from ..example import Example, Vector
 from ..cluster import Cluster
 from ..map_minas import *
 
-def classifier():
+def training_online():
     consumer = KafkaConsumer(
         'desconhecidos', 'clusters-loopback',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
@@ -36,23 +37,30 @@ def classifier():
     REPR_TRESHOLD = 20
     CLEANUP_WINDOW = 100
     # 
+    unknownBuffer = []
+    # clusters=[cl for cl in inClusters]
+    # centers = mkCenters(clusters)
+    sleepClusters = []
+    # counter = 0
+    noveltyIndex = 0
+    # sentinel = object()
+    # 
     clusters = None
     centers = None
     example_buffer = []
     classe_contagem = {}
     counter = 0
-    print('classifier ready')
+    elapsed = 0
+    print('training_online ready')
     try:
         for message in consumer:
             # message{ topic, partition, offset, key, value }
-            # print(message)
             if message.topic == 'clusters':
-                clusters = message.value
-                centers = mkCenters(clusters)
+                print(message)
                 continue
-            if message.topic == 'items':
-                example = Example(item=message.value)
-                print(example)
+            if message.topic == 'desconhecidos':
+                example = Example(**message.value['example'])
+                unknownBuffer.append(example)
             if clusters is None:
                 continue
             counter += 1
@@ -127,13 +135,13 @@ def classifier():
                     sleepClusters.clear()
                 #
             #
-    #
-#
             elapsed += time.time() - init
+        # 
     except KeyboardInterrupt:
         pass
     except Exception as ex:
-        print('ex', ex)
+        traceback.print_exc()
+        print('Exception', ex)
         raise
     finally:
         speed = counter // max(0.001, elapsed)
