@@ -1,6 +1,7 @@
 import time
 import traceback
 import os
+import logging
 
 import numpy as np
 from kafka import KafkaConsumer
@@ -12,6 +13,7 @@ from ..cluster import Cluster
 from ..map_minas import *
 
 def training_online():
+    log = logging.getLogger(__name__)
     consumer = KafkaConsumer(
         'desconhecidos', 'clusters',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
@@ -51,7 +53,7 @@ def training_online():
     classe_contagem = {}
     counter = 0
     elapsed = 0
-    print('training_online READY')
+    log.info('READY')
     try:
         for message in consumer:
             # message{ topic, partition, offset, key, value }
@@ -63,9 +65,7 @@ def training_online():
                     c_decoded['label'] = c_decoded['label'].decode(encoding="utf-8")
                     clusters.append(Cluster(**c_decoded))
                 centers = mkCenters(clusters)
-                print('training_online got clusters', len(clusters))
-                continue
-            if len(clusters) == 0:
+                log.info(f'got clusters {len(clusters)}')
                 continue
             if message.topic == 'desconhecidos':
                 example_decoded = { k.decode(encoding="utf-8"): v for k, v in message.value[b'example'].items() }
@@ -74,12 +74,15 @@ def training_online():
                 example = Example(**example_decoded)
                 unknownBuffer.append(example)
             counter += 1
+            log.info(f'unknownBuffer {counter}')
+            if len(clusters) == 0:
+                continue
             init = time.time()
             if len(unknownBuffer) > BUFF_FULL:
-                print('training_online unknownBuffer > BUFF_FULL')
+                log.info('unknownBuffer > BUFF_FULL')
                 if len(sleepClusters) > 0:
                     # yield f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}'
-                    print(f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}')
+                    log.info(f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}')
                     for sleepExample in unknownBuffer:
                         d, cl = minDist(sleepClusters, sleepExample.item)
                         if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
@@ -87,15 +90,15 @@ def training_online():
                             cl.latest = counter
                             unknownBuffer.remove(sleepExample)
                             # yield f"[CLASSIFIED] {sleepExample.n}: {cl.label}"
-                            print(f"[CLASSIFIED] {sleepExample.n}: {cl.label}")
+                            log.info(f"[CLASSIFIED] {sleepExample.n}: {cl.label}")
                             if cl in sleepClusters:
                                 clusters.append(cl)
                                 sleepClusters.remove(cl)
                                 # yield f"[Recurence] {cl.label}"
-                                print(f"[Recurence] {cl.label}")
+                                log.info(f"[Recurence] {cl.label}")
                 if len(unknownBuffer) % (BUFF_FULL // 10) == 0:
                     # yield '[noveltyDetection]'
-                    print('[noveltyDetection]')
+                    log.info('[noveltyDetection]')
                     newClusters = clustering([ ex.item for ex in unknownBuffer ])
                     temp_examples = {cl: [] for cl in newClusters}
                     for sleepExample in unknownBuffer:
@@ -123,24 +126,24 @@ def training_online():
                         #
                         if distCl2Cl / max(1.0, nearCl2Cl.maxDistance) < EXTENTION_FACTOR or distCl2Cl / max(sameLabelDists) < 2:
                             # yield f'Extention {nearCl2Cl.label}'
-                            print(f'Extention {nearCl2Cl.label}')
+                            log.info(f'Extention {nearCl2Cl.label}')
                             ncl.label = nearCl2Cl.label
                         else:
                             label = 'Novelty {}'.format(noveltyIndex)
                             ncl.label = label
                             # yield label
-                            print(label)
+                            log.info(label)
                             kprod.send(topic='novidades', value={'label': label, 'cluster': ncl})
                             noveltyIndex += 1
                         clusters.append(ncl)
                         for ex, d in temp_examples[ncl]:
                             if ex in unknownBuffer:
                                 # yield f"[CLASSIFIED] {ex.n}: {ncl.label}"
-                                print(f"[CLASSIFIED] {ex.n}: {ncl.label}")
+                                log.info(f"[CLASSIFIED] {ex.n}: {ncl.label}")
                                 unknownBuffer.remove(ex)
             if counter % CLEANUP_WINDOW == 0:
                 # yield '[cleanup]'
-                print('[cleanup]', counter)
+                log.info(f'[cleanup] {counter}')
                 for ex in unknownBuffer:
                     if counter - ex.n < 3 * CLEANUP_WINDOW:
                         unknownBuffer.remove(ex)
@@ -150,7 +153,7 @@ def training_online():
                         clusters.remove(cl)
                 if len(clusters) == 0:
                     # yield f'[fallback] {len(sleepClusters)} => clusters'
-                    print(f'[fallback] {len(sleepClusters)} => clusters')
+                    log.info(f'[fallback] {len(sleepClusters)} => clusters')
                     # fallback 
                     clusters.extend(sleepClusters)
                     sleepClusters.clear()
@@ -161,13 +164,12 @@ def training_online():
     except KeyboardInterrupt:
         pass
     except Exception as ex:
-        traceback.print_exc()
-        print('Exception', ex)
+        log.exception(ex)
         raise
     finally:
         speed = counter // max(0.001, elapsed)
         elapsed = int(elapsed * 1000)
-        print(f'consumer {client_id}: {elapsed} ms, consumed {counter} items, {speed} i/s', time.time() - totalTime)
+        log.info(f'consumer {client_id}: {elapsed} ms, consumed {counter} items, {speed} i/s', time.time() - totalTime)
         kprod.flush()
     #
 #

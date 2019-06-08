@@ -1,6 +1,7 @@
 import time
 import traceback
 import os
+import logging
 
 import numpy as np
 from kafka import KafkaConsumer
@@ -12,6 +13,7 @@ from ..cluster import Cluster
 from ..map_minas import *
 
 def training_offline():
+    log = logging.getLogger(__name__)
     consumer = KafkaConsumer(
         'items-classes',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
@@ -33,7 +35,7 @@ def training_offline():
     init = time.time()
     knownBuffer = []
     clusters = []
-    print('onffline training READY')
+    log.info('onffline training READY')
     try:
         for message in consumer:
             # message{ topic, partition, offset, key, value }
@@ -47,8 +49,8 @@ def training_offline():
                 break
             # 
         # 
-        print(f'onffline training started with {counter} examples')
-        print(knownBuffer[0])
+        log.info(f'onffline training started with {counter} examples')
+        log.info(knownBuffer[0])
         examplesDf = pd.DataFrame(knownBuffer)
         clusters = minasOffline(examplesDf)
         clusters_serial = [ c.__getstate__() for c in clusters ]
@@ -58,12 +60,12 @@ def training_offline():
     except KeyboardInterrupt:
         pass
     except Exception as ex:
-        traceback.print_exc()
-        print('Exception', ex)
+        traceback.log.info_exc()
+        log.info('Exception', ex)
         raise
     finally:
         speed = counter // max(0.001, elapsed)
         elapsed = int(elapsed * 1000)
-        print(len(clusters), 'clusters', clusters[0])
-        print(f'onffline training DONE: {elapsed} ms, consumed {counter} items, {speed} i/s')
+        log.info(f'{len(clusters)} clusters {clusters[0]}')
+        log.info(f'onffline training DONE: {elapsed} ms, consumed {counter} items, {speed} i/s')
         kprod.flush()

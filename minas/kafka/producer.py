@@ -1,4 +1,5 @@
 import time
+import logging
 
 import numpy as np
 # from kafka import KafkaConsumer
@@ -63,7 +64,8 @@ def dataSetGenFake(runForever=True, classes=5, dim=2):
             runForever = False
 
 def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
-    print(dict(data_set_name=data_set_name, delay=delay, report_interval=report_interval))
+    log = logging.getLogger(__name__)
+    log.info(f'data_set_name={data_set_name}, delay={delay}, report_interval={report_interval}')
     datasetgenerator = dataSetGenFake()
     if data_set_name is DATA_SET_COVTYPE:
         datasetgenerator = dataSetGenCovtype()
@@ -81,7 +83,7 @@ def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
     lastReport = time.time_ns()
     lastReportedCounter = 0
     nbytes = 0
-    print('producer READY')
+    log.info('producer READY')
     try:
         for data, label in datasetgenerator:
             currentTime = time.time_ns()
@@ -98,7 +100,7 @@ def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
                 itemSpeed = items/timeDiff
                 itemTime = timeDiff/items * 1000
                 byteSpeed = humanize_bytes(int(nbytes / timeDiff))
-                print('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
+                log.info('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
                 lastReport = currentTime
                 lastReportedCounter = counter
                 nbytes = 0
@@ -107,4 +109,4 @@ def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
     except KeyboardInterrupt:
         pass
     finally:
-        print('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
+        log.info('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
