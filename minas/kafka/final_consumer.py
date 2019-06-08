@@ -41,7 +41,7 @@ def final_consumer():
                 if time.time() - lastReport > 1:
                     itemSpeed = totalCounter / max(0.001, elapsed)
                     itemTime = elapsed / max(1, totalCounter) * 1000
-                    byteSpeed = humanize_bytes(int(2*8*totalCounter / elapsed))
+                    byteSpeed = humanize_bytes(int(16*totalCounter / elapsed))
                     log.info('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(elapsed, totalCounter, itemSpeed, itemTime, byteSpeed))
                     lastReport = time.time()
             else:
