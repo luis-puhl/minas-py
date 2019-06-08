@@ -13,9 +13,9 @@ from ..map_minas import *
 
 def training_online():
     consumer = KafkaConsumer(
-        'desconhecidos', 'clusters-loopback',
+        'desconhecidos', 'clusters',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
-        group_id='map_minas_kafka',
+        group_id='training_online',
         client_id=f'client_{os.uname().machine}_{hex(os.getpid())}',
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
@@ -45,42 +45,57 @@ def training_online():
     noveltyIndex = 0
     # sentinel = object()
     # 
-    clusters = None
-    centers = None
+    clusters = []
+    centers = []
     example_buffer = []
     classe_contagem = {}
     counter = 0
     elapsed = 0
-    print('training_online ready')
+    print('training_online READY')
     try:
         for message in consumer:
             # message{ topic, partition, offset, key, value }
             if message.topic == 'clusters':
-                print(message)
+                clusters = []
+                for c in message.value[b'clusters']:
+                    c_decoded = { k.decode(encoding="utf-8"): v for k, v in c.items() }
+                    c_decoded['center'] = np.array(c_decoded['center'])
+                    c_decoded['label'] = c_decoded['label'].decode(encoding="utf-8")
+                    clusters.append(Cluster(**c_decoded))
+                centers = mkCenters(clusters)
+                print('training_online got clusters', len(clusters))
+                continue
+            if len(clusters) == 0:
                 continue
             if message.topic == 'desconhecidos':
-                example = Example(**message.value['example'])
+                example_decoded = { k.decode(encoding="utf-8"): v for k, v in message.value[b'example'].items() }
+                if example_decoded['label'] is not None:
+                    example_decoded['label'] = example_decoded['label'].decode(encoding="utf-8")
+                example = Example(**example_decoded)
                 unknownBuffer.append(example)
-            if clusters is None:
-                continue
             counter += 1
             init = time.time()
             if len(unknownBuffer) > BUFF_FULL:
+                print('training_online unknownBuffer > BUFF_FULL')
                 if len(sleepClusters) > 0:
-                    yield f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}'
+                    # yield f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}'
+                    print(f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}')
                     for sleepExample in unknownBuffer:
                         d, cl = minDist(sleepClusters, sleepExample.item)
                         if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
                             cl.maxDistance = max(cl.maxDistance, d)
                             cl.latest = counter
                             unknownBuffer.remove(sleepExample)
-                            yield f"[CLASSIFIED] {sleepExample.n}: {cl.label}"
+                            # yield f"[CLASSIFIED] {sleepExample.n}: {cl.label}"
+                            print(f"[CLASSIFIED] {sleepExample.n}: {cl.label}")
                             if cl in sleepClusters:
                                 clusters.append(cl)
                                 sleepClusters.remove(cl)
-                                yield f"[Recurence] {cl.label}"
+                                # yield f"[Recurence] {cl.label}"
+                                print(f"[Recurence] {cl.label}")
                 if len(unknownBuffer) % (BUFF_FULL // 10) == 0:
-                    yield '[noveltyDetection]'
+                    # yield '[noveltyDetection]'
+                    print('[noveltyDetection]')
                     newClusters = clustering([ ex.item for ex in unknownBuffer ])
                     temp_examples = {cl: [] for cl in newClusters}
                     for sleepExample in unknownBuffer:
@@ -103,24 +118,29 @@ def training_online():
                         silhouette = silhouetteFn(stdDevDistance, distCl2Cl)
                         if silhouette < 0: continue
                         # 
-                        sameLabel = [ cl for cl in clusters + sleepClusters if cl.label ==  nearCl2Cl.label ]
+                        sameLabel = [ cl for cl in clusters + sleepClusters if cl.label == nearCl2Cl.label ]
                         sameLabelDists = [ sum((cl1.center - cl2.center) ** 2) ** (1/2) for cl1, cl2 in itertools.combinations(sameLabel, 2) ]
                         #
                         if distCl2Cl / max(1.0, nearCl2Cl.maxDistance) < EXTENTION_FACTOR or distCl2Cl / max(sameLabelDists) < 2:
-                            yield f'Extention {nearCl2Cl.label}'
+                            # yield f'Extention {nearCl2Cl.label}'
+                            print(f'Extention {nearCl2Cl.label}')
                             ncl.label = nearCl2Cl.label
                         else:
                             label = 'Novelty {}'.format(noveltyIndex)
                             ncl.label = label
-                            yield label
+                            # yield label
+                            print(label)
+                            kprod.send(topic='novidades', value={'label': label, 'cluster': ncl})
                             noveltyIndex += 1
                         clusters.append(ncl)
                         for ex, d in temp_examples[ncl]:
                             if ex in unknownBuffer:
-                                yield f"[CLASSIFIED] {ex.n}: {ncl.label}"
+                                # yield f"[CLASSIFIED] {ex.n}: {ncl.label}"
+                                print(f"[CLASSIFIED] {ex.n}: {ncl.label}")
                                 unknownBuffer.remove(ex)
             if counter % CLEANUP_WINDOW == 0:
-                yield '[cleanup]'
+                # yield '[cleanup]'
+                print('[cleanup]', counter)
                 for ex in unknownBuffer:
                     if counter - ex.n < 3 * CLEANUP_WINDOW:
                         unknownBuffer.remove(ex)
@@ -129,7 +149,8 @@ def training_online():
                         sleepClusters.append(cl)
                         clusters.remove(cl)
                 if len(clusters) == 0:
-                    yield f'[fallback] {len(sleepClusters)} => clusters'
+                    # yield f'[fallback] {len(sleepClusters)} => clusters'
+                    print(f'[fallback] {len(sleepClusters)} => clusters')
                     # fallback 
                     clusters.extend(sleepClusters)
                     sleepClusters.clear()
@@ -148,3 +169,5 @@ def training_online():
         elapsed = int(elapsed * 1000)
         print(f'consumer {client_id}: {elapsed} ms, consumed {counter} items, {speed} i/s', time.time() - totalTime)
         kprod.flush()
+    #
+#

@@ -15,7 +15,7 @@ def training_offline():
     consumer = KafkaConsumer(
         'items-classes',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
-        group_id='map_minas_kafka',
+        group_id='training_offline',
         client_id=f'client_{os.uname().machine}_{hex(os.getpid())}',
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
@@ -30,9 +30,10 @@ def training_offline():
         key_serializer=msgpack.packb,
     )
     # 
-    init = time.time_ns()
+    init = time.time()
     knownBuffer = []
-    print('onffline training ready')
+    clusters = []
+    print('onffline training READY')
     try:
         for message in consumer:
             # message{ topic, partition, offset, key, value }
@@ -42,7 +43,7 @@ def training_offline():
             value = {'item': item, 'label': label}
             knownBuffer.append(value)
             counter = len(knownBuffer)
-            if counter >= 1000:
+            if counter >= 2000:
                 break
             # 
         # 
@@ -50,9 +51,10 @@ def training_offline():
         print(knownBuffer[0])
         examplesDf = pd.DataFrame(knownBuffer)
         clusters = minasOffline(examplesDf)
-        value = {'source': 'offline', 'clusters': clusters}
+        clusters_serial = [ c.__getstate__() for c in clusters ]
+        value = {'source': 'offline', 'clusters': clusters_serial}
         kprod.send(topic='clusters', value=value)
-        elapsed = time.time_ns() - init
+        elapsed = time.time() - init
     except KeyboardInterrupt:
         pass
     except Exception as ex:
@@ -62,5 +64,6 @@ def training_offline():
     finally:
         speed = counter // max(0.001, elapsed)
         elapsed = int(elapsed * 1000)
-        print(f'onffline training done {client_id}: {elapsed} ms, consumed {counter} items, {speed} i/s')
+        print(len(clusters), 'clusters', clusters[0])
+        print(f'onffline training DONE: {elapsed} ms, consumed {counter} items, {speed} i/s')
         kprod.flush()

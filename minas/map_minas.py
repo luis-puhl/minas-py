@@ -4,6 +4,7 @@ import time
 import itertools
 
 import numpy as np
+from numpy import linalg as LA
 import pandas as pd
 from sklearn.cluster import KMeans
 
@@ -11,6 +12,9 @@ from .example import Example, Vector
 from .cluster import Cluster
 
 def minDist(clusters, centers, item):
+    assert len(clusters) > 0 and len(centers) > 0 and len(item) > 0
+    assert type(clusters[0]) is Cluster
+    # print('minDist', clusters, centers, item)
     dists = LA.norm(centers - item, axis=1)
     d = dists.min()
     cl = clusters[ dists.tolist().index(d) ]
@@ -67,7 +71,7 @@ def minasOnline(exampleSource, inClusters=[]):
                 if len(sleepClusters) > 0:
                     yield f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}'
                     for sleepExample in unknownBuffer:
-                        d, cl = minDist(sleepClusters, sleepExample.item)
+                        d, cl = minDist(sleepClusters, centers, sleepExample.item)
                         if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
                             cl.maxDistance = max(cl.maxDistance, d)
                             cl.latest = counter
@@ -136,22 +140,31 @@ def minasOnline(exampleSource, inClusters=[]):
     #
 #
 
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        end = i + n
+        if end + i > len(l):
+            end = len(l)
+            yield l[i:end]
+            break
+        if end > len(l):
+            break
+        yield l[i:end]
+
 def minasOffline(examplesDf):
     RADIUS_FACTOR = 1.1
-    BUFF_FULL = 100
-    MAX_K_CLUSTERS = 100
-    REPR_TRESHOLD = 20
+    MAX_K_CLUSTERS = 50
+    REPR_TRESHOLD = 5
     #
     clusters = []
     groupSize = MAX_K_CLUSTERS * REPR_TRESHOLD
     for label, group in examplesDf.groupby('label'):
         group = list(group['item'])
-        for chunk in range(0, len(group), groupSize):
-            if chunk + groupSize > len(group):
-                break
-            if chunk + 2*groupSize > len(group):
-                groupSize = chunk - len(group)
-            unknownBuffer = group[chunk:chunk + groupSize]
+        # print('grouped', label, len(group), 'groupSize', groupSize)
+        for chunk in chunks(group, groupSize):
+            unknownBuffer = chunk
+            # print('grouped', label, len(group), len(unknownBuffer))
             newClusters = clustering(unknownBuffer, label=label)
             temp_examples = {cl: [] for cl in newClusters}
             for sleepExample in unknownBuffer:
@@ -165,5 +178,7 @@ def minasOffline(examplesDf):
                     continue
                 #
                 clusters.append(ncl)
+            # 
+        # 
     return clusters
 # 

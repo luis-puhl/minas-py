@@ -1,7 +1,7 @@
 import time
 
 import numpy as np
-from kafka import KafkaConsumer
+# from kafka import KafkaConsumer
 from kafka import KafkaProducer
 import msgpack
 
@@ -81,23 +81,30 @@ def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
     lastReport = time.time_ns()
     lastReportedCounter = 0
     nbytes = 0
-    print('producer ready')
-    for data, label in datasetgenerator:
-        currentTime = time.time_ns()
-        data = [ float(i) for i in data]
-        kprod.send(topic='items', value=data, key=counter, timestamp_ms=currentTime)
-        kprod.send(topic='items-classes', value={'item': data, 'label': label}, key=counter, timestamp_ms=currentTime)
-        time.sleep(delay)
-        nbytes += 8*len(data)
-        counter += 1
-        timeDiff = currentTime - lastReport
-        if report_interval > 0 and timeDiff > report_interval:
-            items = counter - lastReportedCounter
-            timeDiff = timeDiff / ONE_SECOND
-            itemSpeed = items/timeDiff
-            itemTime = timeDiff/items * 1000
-            byteSpeed = humanize_bytes(int(nbytes / timeDiff))
-            print('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
-            lastReport = currentTime
-            lastReportedCounter = counter
-            nbytes = 0
+    print('producer READY')
+    try:
+        for data, label in datasetgenerator:
+            currentTime = time.time_ns()
+            data = [ float(i) for i in data]
+            kprod.send(topic='items', value=data, key=counter, timestamp_ms=currentTime)
+            kprod.send(topic='items-classes', value={'item': data, 'label': label}, key=counter, timestamp_ms=currentTime)
+            time.sleep(delay)
+            nbytes += 8*len(data)
+            counter += 1
+            timeDiff = currentTime - lastReport
+            if report_interval > 0 and timeDiff > report_interval:
+                items = counter - lastReportedCounter
+                timeDiff = timeDiff / ONE_SECOND
+                itemSpeed = items/timeDiff
+                itemTime = timeDiff/items * 1000
+                byteSpeed = humanize_bytes(int(nbytes / timeDiff))
+                print('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
+                lastReport = currentTime
+                lastReportedCounter = counter
+                nbytes = 0
+            # 
+        # 
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))

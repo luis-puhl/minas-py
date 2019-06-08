@@ -3,6 +3,7 @@ import argparse
 import signal
 import multiprocessing
 import concurrent.futures
+import os
 
 # from numba import jit
 
@@ -23,20 +24,23 @@ def main():
     parser.add_argument("-t", "--offline", action="store_true", help="Start offline training")
     parser.add_argument("-o", "--online", action="store_true", help="Start online training")
     parser.add_argument("-f", "--final", action="store_true", help="Start final consumer")
-    parser.add_argument("-a", "--all", action="store_true", help="Start all ")
     args = parser.parse_args()
 
-    pool = multiprocessing.Pool(initializer=init_worker)
-    if args.producer or args.all:
-        pool.apply_async(func=producer, kwds={'report_interval': 0})
-    if args.classifier or args.all:
-        pool.apply_async(classifier)
-    if args.offline or args.all:
+    pool = multiprocessing.Pool()
+    start_all = not (args.producer or args.classifier or args.offline or args.online or args.final)
+    print('start_all', start_all)
+    if args.producer or start_all:
+        pool.apply_async(func=producer, kwds={'report_interval': 10})
+    if args.offline or start_all:
         pool.apply_async(training_offline)
-    if args.online or args.all:
+    if args.online or start_all:
         pool.apply_async(training_online)
-    if args.final or args.all:
+    if args.final or start_all:
         pool.apply_async(final_consumer)
+    if args.classifier or start_all:
+        for i in range(os.cpu_count() - 5):
+            pool.apply_async(classifier)
+    print('processes started')
 
     try:
         while True:
