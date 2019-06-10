@@ -14,15 +14,16 @@ from ..map_minas import *
 
 def training_online():
     log = logging.getLogger(__name__)
+    client_id=f'client_{os.uname().machine}_{hex(os.getpid())}'
     consumer = KafkaConsumer(
         'desconhecidos', 'clusters',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
         group_id='training_online',
-        client_id=f'client_{os.uname().machine}_{hex(os.getpid())}',
+        client_id=client_id,
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        # consumer_timeout_ms=1 * 1000,
+        consumer_timeout_ms=10 * 1000,
         # max_poll_records=10,
         auto_offset_reset='latest',
     )
@@ -53,6 +54,7 @@ def training_online():
     classe_contagem = {}
     counter = 0
     elapsed = 0
+    totalTime = time.time()
     log.info('READY')
     try:
         for message in consumer:
@@ -74,7 +76,8 @@ def training_online():
                 example = Example(**example_decoded)
                 unknownBuffer.append(example)
             counter += 1
-            log.info(f'unknownBuffer {counter}')
+            if counter % 10 == 0:
+                log.info(f'unknownBuffer {counter}')
             if len(clusters) == 0:
                 continue
             init = time.time()
@@ -169,7 +172,7 @@ def training_online():
     finally:
         speed = counter // max(0.001, elapsed)
         elapsed = int(elapsed * 1000)
-        log.info(f'consumer {client_id}: {elapsed} ms, consumed {counter} items, {speed} i/s', time.time() - totalTime)
+        log.info(f'consumer {client_id}: {elapsed} ms, consumed {counter} items, {speed} i/s, {time.time() - totalTime}')
         kprod.flush()
     #
 #

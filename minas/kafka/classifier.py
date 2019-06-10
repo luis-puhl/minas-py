@@ -12,14 +12,13 @@ from ..example import Example, Vector
 from ..cluster import Cluster
 from ..map_minas import *
 
-
-def classifier(time_window=1, size_window=500):
-    log = logging.getLogger(__name__)
+def classifier_imp(log, time_window=1, size_window=500):
+    client_id=f'client_{os.uname().machine}_{hex(os.getpid())}',
     consumer = KafkaConsumer(
         'items', 'clusters',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
         group_id='classifier',
-        client_id=f'client_{os.uname().machine}_{hex(os.getpid())}',
+        client_id=client_id,
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
@@ -47,7 +46,7 @@ def classifier(time_window=1, size_window=500):
     counter = 0
     elapsed = 0
     last_clean_time = time.time()
-    log.info('classifier READY')
+    log.info('READY')
     try:
         for message in consumer:
             # message{ topic, partition, offset, key, value }
@@ -107,3 +106,12 @@ def classifier(time_window=1, size_window=500):
         elapsed = int(elapsed * 1000)
         log.info(f'consumer {client_id}: {elapsed} ms, consumed {counter} items, {speed} i/s')
         kprod.flush()
+
+def classifier(**kwargs):
+    log = logging.getLogger(__name__)
+    kwargs['log'] = log
+    try:
+        classifier_imp(**kwargs)
+    except Exception as ex:
+        log.exception(log)
+        raise

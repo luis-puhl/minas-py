@@ -35,11 +35,14 @@ def training_offline():
     init = time.time()
     knownBuffer = []
     clusters = []
+    counter_global = 0
+    init_global = time.time()
     log.info('onffline training READY')
     try:
         for message in consumer:
             # message{ topic, partition, offset, key, value }
             # {'item': data, 'label': label} = value
+            counter_global += 1
             item = message.value[b'item']
             label = message.value[b'label'].decode(encoding="utf-8")
             value = {'item': item, 'label': label}
@@ -64,8 +67,11 @@ def training_offline():
         log.info('Exception', ex)
         raise
     finally:
+        elapsed = time.time() - init_global
+        counter = counter_global
         speed = counter // max(0.001, elapsed)
         elapsed = int(elapsed * 1000)
-        log.info(f'{len(clusters)} clusters {clusters[0]}')
+        cl = clusters[0] if len(clusters) > 0 else ''
+        log.info(f'{len(clusters)} clusters {cl}')
         log.info(f'onffline training DONE: {elapsed} ms, consumed {counter} items, {speed} i/s')
         kprod.flush()

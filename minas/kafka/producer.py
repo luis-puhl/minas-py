@@ -13,14 +13,16 @@ DATA_SET_FAKE = 'DATA_SET_FAKE'
 DATA_SET_COVTYPE = 'DATA_SET_COVTYPE'
 DATA_SET_KDD99 = 'DATA_SET_KDD99'
 
-def dataSetGenCovtype(runForever=True):
+def dataSetGenCovtype(log):
     from sklearn.datasets import fetch_covtype
     covtype = fetch_covtype()
-    while runForever:
-        for data, target in zip(covtype.data, covtype.target):
-            msg = yield ( data, str(target) )
-            if msg is StopIteration:
-                runForever = False
+    log.info(f'Dataset len {len(covtype.data.shape)}')
+    for data, target in zip(covtype.data, covtype.target):
+        msg = yield ( data, str(target) )
+        if msg is StopIteration:
+            break
+        #
+    #
 
 def dataSetGenKdd99(runForever=True):
     def kddNormalize(kddArr):
@@ -41,6 +43,19 @@ def dataSetGenKdd99(runForever=True):
             msg = yield ( kddNormalize(data), str(target) )
             if msg is StopIteration:
                 runForever = False
+    from sklearn.datasets import fetch_covtype
+    covtype = fetch_covtype()
+    log.info(f'Dataset len {len(covtype.data.shape)}, runForever {runForever}')
+    firstRun = True
+    while runForever or firstRun:
+        firstRun = False
+        for data, target in zip(covtype.data, covtype.target):
+            msg = yield ( data, str(target) )
+            if msg is StopIteration:
+                runForever = False
+            #
+        #
+    #
 
 def dataSetGenFake(runForever=True, classes=5, dim=2):
     greek = [
@@ -63,14 +78,24 @@ def dataSetGenFake(runForever=True, classes=5, dim=2):
         if msg is StopIteration:
             runForever = False
 
-def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
-    log = logging.getLogger(__name__)
+def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
+    if log is None:
+        log = logging.getLogger(__name__)
     log.info(f'data_set_name={data_set_name}, delay={delay}, report_interval={report_interval}')
-    datasetgenerator = dataSetGenFake()
-    if data_set_name is DATA_SET_COVTYPE:
-        datasetgenerator = dataSetGenCovtype()
-    elif data_set_name is DATA_SET_KDD99:
-        datasetgenerator = dataSetGenKdd99()
+    if data_set_name == DATA_SET_FAKE:
+        datasetgenerator = dataSetGenFake(log=log)
+    if data_set_name == DATA_SET_COVTYPE:
+        datasetgenerator = dataSetGenCovtype(log=log)
+    elif data_set_name == DATA_SET_KDD99:
+        datasetgenerator = dataSetGenKdd99(log=log)
+    if type(datasetgenerator) == iter:
+        log.info(datasetgenerator)
+        print(datasetgenerator)
+        #
+    data, label = next(datasetgenerator)
+    serial = [ float(i) for i in data]
+    packed = msgpack.packb(serial)
+    log.info(f'data size={len(data)}, nbytes={data.nbytes}, serial={len(serial)}, packed={len(packed)}, \n\t{repr(data)}\n=>\t{packed}')
     # 
     kprod = KafkaProducer(
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
@@ -80,17 +105,11 @@ def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
     ONE_SECOND = 10**9 
     report_interval *= ONE_SECOND
     counter = 0
-    lastReport = time.time_ns()
-    lastReportedCounter = 0
     nbytes = 0
-    data, label = next(datasetgenerator)
-    try:
-        serial = [ float(i) for i in data]
-        packed = msgpack.packb(serial)
-        log.info(f'data size={len(data)}, nbytes={data.nbytes}, serial={len(serial)}, packed={len(packed)}, {data}=>{packed}')
-    except Exception as ex:
-        log.exception(ex)
-        raise
+    lastReportedCounter = 0
+    lastReport = time.time_ns()
+    init = time.time_ns()
+    timeDiff = 0
     log.info('READY')
     try:
         for data, label in datasetgenerator:
@@ -114,10 +133,23 @@ def producer(data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
                 nbytes = 0
             # 
         # 
+    finally:
+        currentTime = time.time_ns()
+        timeDiff = currentTime - init
+        items = max(counter, 1)
+        timeDiff = timeDiff / ONE_SECOND
+        itemSpeed = items/timeDiff
+        itemTime = timeDiff/items * 1000
+        byteSpeed = humanize_bytes(int(nbytes / timeDiff))
+        log.info('total produced: {:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
+    
+def producer(**kwargs):
+    log = logging.getLogger(__name__)
+    kwargs['log'] = log
+    try:
+        producer_imp(**kwargs)
     except KeyboardInterrupt:
         pass
     except Exception as ex:
-        log.exception(ex)
-        raise
-    finally:
-        log.info('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
+        log.exception(log)
+        exit(1)
