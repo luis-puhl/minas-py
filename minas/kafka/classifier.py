@@ -22,7 +22,7 @@ def classifier_imp(log, time_window=1, size_window=500):
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        # consumer_timeout_ms=1 * 1000,
+        consumer_timeout_ms=100 * 1000,
         # max_poll_records=10,
         auto_offset_reset='latest',
     )
@@ -46,7 +46,7 @@ def classifier_imp(log, time_window=1, size_window=500):
     counter = 0
     elapsed = 0
     last_clean_time = time.time()
-    log.info('READY')
+    log.info(f'READY {client_id}')
     try:
         for message in consumer:
             # message{ topic, partition, offset, key, value }
@@ -60,14 +60,15 @@ def classifier_imp(log, time_window=1, size_window=500):
                 centers = mkCenters(clusters)
                 log.info(f'Classifier got clusters {len(clusters)}')
                 continue
-            if message.topic == 'items':
-                example = Example(item=message.value, n=message.key)
-                # log.info(example)
+            if message.topic != 'items':
+                log.info('item unkown')
+                log.info(message.value)
+                continue
             if len(clusters) == 0:
                 continue
             counter += 1
             init = time.time()
-            example = Example(item=message.value)
+            example = Example(item=np.array(message.value), n=message.key)
             example.n = counter
             d, cl = minDist(clusters, centers, example.item)
             if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
@@ -90,7 +91,8 @@ def classifier_imp(log, time_window=1, size_window=500):
             if len(example_buffer) > CLEANUP_WINDOW and time.time() - last_clean_time > time_window :
                 sortedKeys = sorted(classe_contagem, key=lambda x: x if type(x) == str else '')
                 classe_contagem = { k: classe_contagem[k] for k in sortedKeys }
-                kprod.send(topic='classe-contagem', value=classe_contagem, key=message.key)
+                value = {'classe-contagem': classe_contagem, 'nbytes': example.item.nbytes}
+                kprod.send(topic='classe-contagem', value=value, key=message.key)
                 # log.info(f"[CLASSE_CONTAGEM] {classe_contagem}")
                 example_buffer = []
                 classe_contagem = {}

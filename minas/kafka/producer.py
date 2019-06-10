@@ -16,7 +16,7 @@ DATA_SET_KDD99 = 'DATA_SET_KDD99'
 def dataSetGenCovtype(log):
     from sklearn.datasets import fetch_covtype
     covtype = fetch_covtype()
-    log.info(f'Dataset len {len(covtype.data.shape)}')
+    log.info(f'Dataset len {covtype.data.shape}')
     for data, target in zip(covtype.data, covtype.target):
         msg = yield ( data, str(target) )
         if msg is StopIteration:
@@ -38,22 +38,11 @@ def dataSetGenKdd99(runForever=True):
         return result
     from sklearn.datasets import fetch_kddcup99
     kddcup99 = fetch_kddcup99()
-    while runForever:
-        for data, target in zip(kddcup99.data, kddcup99.target):
-            msg = yield ( kddNormalize(data), str(target) )
-            if msg is StopIteration:
-                runForever = False
-    from sklearn.datasets import fetch_covtype
-    covtype = fetch_covtype()
-    log.info(f'Dataset len {len(covtype.data.shape)}, runForever {runForever}')
-    firstRun = True
-    while runForever or firstRun:
-        firstRun = False
-        for data, target in zip(covtype.data, covtype.target):
-            msg = yield ( data, str(target) )
-            if msg is StopIteration:
-                runForever = False
-            #
+    log.info(f'Dataset len {kddcup99.data.shape}')
+    for data, target in zip(kddcup99.data, kddcup99.target):
+        msg = yield ( data, str(target) )
+        if msg is StopIteration:
+            break
         #
     #
 
@@ -112,11 +101,17 @@ def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_inte
     timeDiff = 0
     log.info('READY')
     try:
+        # TODO: separar dados rotulados e não rotulados nessa etapa
+        # TODO: carregar tudo na memória
+        # TODO: testar também com 1/2 para treinamento com validação cruzada
+        # TODO: testar N-fold cross validation
         for data, label in datasetgenerator:
             currentTime = time.time_ns()
             nbytes += data.nbytes
             data = [ float(i) for i in data]
+            # Dado não rotulado para classificadores
             kprod.send(topic='items', value=data, key=counter, timestamp_ms=currentTime)
+            # Dado rotulado para treinamento inicial (limitado a 2k)
             kprod.send(topic='items-classes', value={'item': data, 'label': label}, key=counter, timestamp_ms=currentTime)
             time.sleep(delay)
             counter += 1

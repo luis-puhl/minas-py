@@ -23,26 +23,10 @@ def setupLog():
     logging.config.dictConfig(config)
     install_mp_handler()
 
-def init_worker():
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-def tryWrap(fn=None, kwds=dict()):
-    if fn is None:
-        return
-    if type(kwds) is not dict:
-        kwds = dict()
-    kwds['log'] = logging.getLogger(fn.__name__)
-    kwds['log'].info('tryWrap')
-    try:
-        fn(**kwds)
-    except KeyboardInterrupt:
-        pass
-    except Exception as ex:
-        log.exception(ex)
-        raise
-
 def main():
     setupLog()
+    log = logging.getLogger(__name__)
+    log.info('INIT MINAS MAIN RUN.Py')
 
     parser = argparse.ArgumentParser(description='Minas Entrypoint.')
     # parser.add_argument("-c", "--classifier", type=int, default=0, help="Start item classifiers")

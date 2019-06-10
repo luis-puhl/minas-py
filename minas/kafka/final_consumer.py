@@ -26,26 +26,31 @@ def final_consumer(report_interval=10):
     classe_contagem = {}
     init = time.time()
     totalCounter = 0
+    nbytes = 0
     log.info('READY')
     lastReport = time.time()
     try:
         for message in consumer:
             # message{ topic, partition, offset, key, value }
-            if message.topic == 'classe-contagem':
-                for k, v in message.value.items():
+            if message.topic == 'classe-contagem' and b'classe-contagem' in message.value:
+                sizeof = 16
+                if b'nbytes' in message.value:
+                    sizeof = message.value[b'nbytes']
+                for k, v in message.value[b'classe-contagem'].items():
                     if k not in classe_contagem:
                         classe_contagem[k] = 0
                     classe_contagem[k] += v
                     totalCounter += v
+                    nbytes += v * sizeof
                 elapsed = time.time() - init
                 if time.time() - lastReport > report_interval:
                     itemSpeed = totalCounter / max(0.001, elapsed)
                     itemTime = elapsed / max(1, totalCounter) * 1000
-                    byteSpeed = humanize_bytes(int(16*totalCounter / elapsed))
+                    byteSpeed = humanize_bytes(int(nbytes / elapsed))
                     log.info('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(elapsed, totalCounter, itemSpeed, itemTime, byteSpeed))
                     lastReport = time.time()
             else:
-                log.info(f'{message.topic}, {message.key}, {message.value}')
+                log.info(f'topic={message.topic}, key={message.key}, value={message.value}')
             #
         #
     except KeyboardInterrupt:
@@ -58,7 +63,7 @@ def final_consumer(report_interval=10):
         elapsed = time.time() - init
         itemSpeed = totalCounter / max(0.001, elapsed)
         itemTime = elapsed / max(1, totalCounter) * 1000
-        byteSpeed = humanize_bytes(int(16*totalCounter / elapsed))
+        byteSpeed = humanize_bytes(int(nbytes / elapsed))
         log.info('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(elapsed, totalCounter, itemSpeed, itemTime, byteSpeed))
     #
 #

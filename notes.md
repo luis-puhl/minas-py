@@ -42,3 +42,11 @@ Com 0.01s delay entre items e relatório a cada 2s:
 Sem delay entre items e relatório a cada 10s:
 
     10.0000 s, 24824 i, 2482.39 i/s, 0.40 ms/i, 38.8 kB/s
+
+TODO: separar dados rotulados e não rotulados nessa etapa
+TODO: carregar tudo na memória
+TODO: testar também com 1/2 para treinamento com validação cruzada
+TODO: Tabela correlacionando tempos e N classificadores
+Pedir a copia do artigo aceito do Gui Cassales, ISCC
+
+TODO: testar N-fold cross validation
