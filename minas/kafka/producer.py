@@ -118,8 +118,8 @@ def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_inte
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
         value_serializer=msgpack.packb,
         key_serializer=msgpack.packb,
-        # batch_size=16384
-        # batch_size=2**64
+        # batch_size = 16384 = 2**14
+        batch_size=halfDataLen
     )
     report_interval *= ONE_SECOND
     counter = 0
