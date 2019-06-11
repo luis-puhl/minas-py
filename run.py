@@ -70,7 +70,7 @@ def main():
 
     try:
         while len(processes) > 0:
-            time.sleep(100)
+            time.sleep(10)
             for p in processes:
                 if not p.is_alive():
                     p.close()
