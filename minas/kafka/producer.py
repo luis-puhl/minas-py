@@ -1,8 +1,9 @@
 import time
 import logging
+import os
 
 import numpy as np
-# from kafka import KafkaConsumer
+from kafka import KafkaConsumer
 from kafka import KafkaProducer
 import msgpack
 
@@ -12,6 +13,7 @@ from minas.ext_lib.humanize_bytes import humanize_bytes
 DATA_SET_FAKE = 'DATA_SET_FAKE'
 DATA_SET_COVTYPE = 'DATA_SET_COVTYPE'
 DATA_SET_KDD99 = 'DATA_SET_KDD99'
+DATA_SET_KDD_CASSALES = 'DATA_SET_KDD_CASSALES'
 
 def dataSetGenCovtype(log):
     from sklearn.datasets import fetch_covtype
@@ -25,7 +27,20 @@ def dataSetGenCovtype(log):
     #
     return allData
 
-def dataSetGenKdd99():
+def dataSetGenKddCassales(log):
+    import csv
+    f = open('minas/kafka/KDDTe5Classes_cassales.csv')
+    reader = csv.reader(f)
+    allData = list()
+    for line in reader:
+        data, target = line[:-1], line[-1]
+        data = [ float(i) for i in data]
+        allData.append( (data, str(target)) )
+    log.info(f'Dataset len {len(allData)}')
+    #
+    return allData
+
+def dataSetGenKdd99(log):
     kddNormalizeMap = list(range(40))
     kddNormalizeMap[1:3] = {}, {}, {}
     def kddNormalize(kddArr):
@@ -47,7 +62,7 @@ def dataSetGenKdd99():
     for data, target in zip(kddcup99.data, kddcup99.target):
         data = kddNormalize(data)
         data = [ float(i) for i in data]
-        allData.append( (data, str(target)) )
+        allData.append( (data, target.decode(encoding="utf-8")) )
     #
     return allData
 
@@ -74,35 +89,19 @@ def dataSetGenFake(classes=5, dim=2):
     #
     return allData
 
-ONE_SECOND = 10**9
-def send_dataset(topic, dataset, kprod, counter, nbytes, report_interval, data_nbytes, init, log):
-    lastReport = time.time_ns()
-    for data in dataset:
-        currentTime = time.time_ns()
-        counter += 1
-        nbytes += data_nbytes
-        kprod.send(topic=topic, value=data, key=counter, timestamp_ms=currentTime)
-        if report_interval > 0 and currentTime - lastReport > report_interval:
-            timeDiff = (currentTime - init) / ONE_SECOND
-            itemSpeed = counter / timeDiff
-            itemTime = timeDiff / counter * 1000
-            byteSpeed = humanize_bytes(int(nbytes / timeDiff))
-            log.info('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, counter, itemSpeed, itemTime, byteSpeed))
-            lastReport = currentTime
-    kprod.flush()
-    return ( counter, nbytes )
-
-def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2):
+def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2, readyEvent=None):
     setup_init = time.time()
     if log is None:
         log = logging.getLogger(__name__)
     log.info(f'data_set_name={data_set_name}, delay={delay}, report_interval={report_interval}')
     if data_set_name == DATA_SET_FAKE:
         datasetgenerator = dataSetGenFake(log=log)
-    if data_set_name == DATA_SET_COVTYPE:
+    elif data_set_name == DATA_SET_COVTYPE:
         datasetgenerator = dataSetGenCovtype(log=log)
     elif data_set_name == DATA_SET_KDD99:
         datasetgenerator = dataSetGenKdd99(log=log)
+    elif data_set_name == DATA_SET_KDD_CASSALES:
+        datasetgenerator = dataSetGenKddCassales(log=log)
     #
     data, label = datasetgenerator[0]
     data_np = np.array(data)
@@ -110,37 +109,79 @@ def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_inte
     packed = msgpack.packb(data)
     log.info(f'data size={len(data)}, nbytes={data_nbytes}, serial={len(data)}, packed={len(packed)}, \n\t{repr(data)}\n=>\t{packed}')
     # 
-    halfDataLen = int(len(datasetgenerator)/2)
-    trainingData = [ {'item': data, 'label': label} for data, label in datasetgenerator[0:halfDataLen] ]
-    testData = [ data for data, label in datasetgenerator[halfDataLen:] ]
-    # 
+    N_SUBSET = min(10000, int(len(datasetgenerator)/10))
+    trainingData = [ msgpack.packb({'item': data, 'label': label}) for data, label in datasetgenerator[0:N_SUBSET] ]
+    testData = [ msgpack.packb(data) for data, label in datasetgenerator[N_SUBSET:] ]
+    #
+    kcons = KafkaConsumer(
+        'control-bus',
+        bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
+        group_id=__name__,
+        client_id=f'client_{os.uname().machine}_{hex(os.getpid())}',
+        value_deserializer=msgpack.unpackb,
+        key_deserializer=msgpack.unpackb,
+        # StopIteration if no message after 1 sec
+        consumer_timeout_ms=1 * 1000,
+        # max_poll_records=10,
+        auto_offset_reset='latest',
+    )
     kprod = KafkaProducer(
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
-        value_serializer=msgpack.packb,
+        # value_serializer=msgpack.packb,
         key_serializer=msgpack.packb,
         # batch_size = 16384 = 2**14
-        batch_size=halfDataLen
+        batch_size=max(N_SUBSET, 2**14)
     )
+    ONE_SECOND = 10**9
     report_interval *= ONE_SECOND
     counter = 0
     nbytes = 0
     lastReport = time.time_ns()
     init = time.time_ns()
     timeDiff = 0
+    def send_dataset(topic, dataset, kprod, counter, nbytes, report_interval, data_nbytes, init, log):
+        lastReport = time.time_ns()
+        for data in dataset:
+            currentTime = time.time_ns()
+            counter += 1
+            nbytes += data_nbytes
+            kprod.send(topic=topic, value=data, key=counter, timestamp_ms=currentTime)
+            if report_interval > 0 and currentTime - lastReport > report_interval:
+                timeDiff = (currentTime - init) / ONE_SECOND
+                itemSpeed = counter / timeDiff
+                itemTime = timeDiff / counter * 1000
+                byteSpeed = humanize_bytes(int(nbytes / timeDiff))
+                log.info('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, counter, itemSpeed, itemTime, byteSpeed))
+                lastReport = currentTime
+        kprod.flush()
+        return ( counter, nbytes )
     log.info(f'READY in {time.time() - setup_init} s')
-    # TODO: separar dados rotulados e não rotulados nessa etapa
-    # TODO: carregar tudo na memória
     # TODO: testar também com 1/2 para treinamento com validação cruzada
     # TODO: testar N-fold cross validation
     # 
     try:
+        # Dado rotulado para treinamento offline
+        log.info(f'offline_init_time={time.time_ns()}')
         counter, nbytes = send_dataset('items-classes', trainingData, kprod, counter, nbytes, report_interval, data_nbytes, init, log)
+        log.info(f'offline_end_time={time.time_ns()}')
         log.info('trainingData all produced')
         # 
+        lockInit = time.time_ns()
+        isLocked = True
+        while isLocked:
+            for record in kcons:
+                if record.topic == 'control-bus' and b'classifier' in record.value and record.value[b'classifier'] == b'ready':
+                    isLocked = False
+                    # timeout to 1ms
+                    kcons.config['consumer_timeout_ms'] = 1
+        # move lokced time
+        init += time.time_ns() - lockInit
         # Dado não rotulado para classificadores
-        init_time = time.time_ns()
-        kprod.send(topic='items', value={'init_time': init_time}, key=counter)
+        log.info(f'online_init_time={time.time_ns()}')
+        kprod.send(topic='items', value=msgpack.packb({'online_init_time': time.time_ns()}), key=counter)
         counter, nbytes = send_dataset('items', testData, kprod, counter, nbytes, report_interval, data_nbytes, init, log)
+        kprod.send(topic='items', value=msgpack.packb({'online_end_time': time.time_ns()}), key=counter)
+        log.info(f'online_end_time={time.time_ns()}')
         log.info('testData all produced')
     finally:
         currentTime = time.time_ns()

@@ -13,7 +13,7 @@ from ..cluster import Cluster
 from ..map_minas import *
 
 def classifier_imp(log, time_window=1, size_window=500):
-    client_id=f'client_{os.uname().machine}_{hex(os.getpid())}',
+    client_id = f'client_{os.uname().machine}_{hex(os.getpid())}'
     consumer = KafkaConsumer(
         'items', 'clusters',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
@@ -22,7 +22,7 @@ def classifier_imp(log, time_window=1, size_window=500):
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        consumer_timeout_ms=100 * 1000,
+        consumer_timeout_ms=10 * 1000,
         # max_poll_records=10,
         auto_offset_reset='latest',
     )
@@ -46,8 +46,21 @@ def classifier_imp(log, time_window=1, size_window=500):
     counter = 0
     elapsed = 0
     last_clean_time = time.time()
-    log.info(f'READY {client_id}')
     try:
+        while len(clusters) == 0:
+            log.info(f'WAIT ON CLUSTERS {client_id}')
+            for message in consumer:
+                if message.topic == 'clusters' and message.value[b'source'] == b'offline':
+                    for c in message.value[b'clusters']:
+                        c_decoded = { k.decode(encoding="utf-8"): v for k, v in c.items() }
+                        c_decoded['center'] = np.array(c_decoded['center'])
+                        c_decoded['label'] = c_decoded['label'].decode(encoding="utf-8")
+                        clusters.append(Cluster(**c_decoded))
+                    centers = mkCenters(clusters)
+                    log.info(f'Classifier got clusters {len(clusters)}')
+                    break
+        log.info(f'READY {client_id}')
+        kprod.send(topic='control-bus', value={'classifier': 'ready'})
         for message in consumer:
             # message{ topic, partition, offset, key, value }
             if message.topic == 'clusters' and message.value[b'source'] != b'classifier':

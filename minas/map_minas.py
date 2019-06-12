@@ -12,7 +12,11 @@ from .example import Example, Vector
 from .cluster import Cluster
 
 def minDist(clusters, centers, item):
-    assert len(clusters) > 0 and len(centers) > 0 and len(item) > 0
+    if len(clusters) == 0 or len(centers) == 0 or len(item) == 0:
+        print(clusters, centers, item)
+        msg = '"clusters" and "centers" arguments must be list and "item" argument must be NumpyArray.'
+        msg += f' Got \n\t clusters={repr(clusters)}\n\t centers={repr(centers)}\n\t item={repr(item)}'
+        raise ValueError(msg)
     assert type(clusters[0]) is Cluster
     # print('minDist', clusters, centers, item)
     dists = LA.norm(centers - item, axis=1)
@@ -26,9 +30,10 @@ def clustering(unknownBuffer, label=None, MAX_K_CLUSTERS=100, REPR_TRESHOLD=20):
     df = pd.DataFrame(unknownBuffer).drop_duplicates()
     if len(df) == 0:
         return []
-    n_clusters = min(MAX_K_CLUSTERS, len(unknownBuffer) // ( 3 * REPR_TRESHOLD))
-    if n_clusters == 0:
-        n_clusters = len(unknownBuffer)
+    n_samples = len(df)
+    n_clusters = min(MAX_K_CLUSTERS, n_samples // REPR_TRESHOLD)
+    if n_clusters < n_samples:
+        n_clusters = n_samples
     kmeans = KMeans(n_clusters=n_clusters)
     kmeans.fit(df)
     newClusters = [Cluster(center=centroid, label=label, n=0, maxDistance=0, latest=0) for centroid in kmeans.cluster_centers_]
