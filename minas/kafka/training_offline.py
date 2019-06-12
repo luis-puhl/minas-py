@@ -7,6 +7,7 @@ import numpy as np
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
 import msgpack
+import yaml
 
 from ..example import Example, Vector
 from ..cluster import Cluster
@@ -22,7 +23,7 @@ def training_offline():
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        # consumer_timeout_ms=1 * 1000,
+        consumer_timeout_ms=10 * 1000,
         # max_poll_records=10,
         auto_offset_reset='latest',
     )
@@ -35,40 +36,43 @@ def training_offline():
     init = time.time()
     knownBuffer = []
     clusters = []
-    counter_global = 0
-    init_global = time.time()
+    counter = 0
     log.info('onffline training READY')
     try:
-        for message in consumer:
-            # message{ topic, partition, offset, key, value }
-            # {'item': data, 'label': label} = value
-            counter_global += 1
-            item = message.value[b'item']
-            label = message.value[b'label'].decode(encoding="utf-8")
-            value = {'item': item, 'label': label}
-            knownBuffer.append(value)
-            counter = len(knownBuffer)
-            if counter >= 2000:
-                break
+        while len(knownBuffer) == 0:
+            for message in consumer:
+                # message{ topic, partition, offset, key, value }
+                # {'item': data, 'label': label} = value
+                counter += 1
+                if b'item' not in message.value:
+                    log.info(f'Unknown message {message}')
+                    continue
+                item = message.value[b'item']
+                label = message.value[b'label'].decode(encoding="utf-8")
+                value = {'item': item, 'label': label}
+                knownBuffer.append(value)
+                # if counter >= 2000:
+                #     break
             # 
         # 
         log.info(f'onffline training started with {counter} examples')
         log.info(knownBuffer[0])
         examplesDf = pd.DataFrame(knownBuffer)
         clusters = minasOffline(examplesDf)
+        assert len(clusters) > 0
         clusters_serial = [ c.__getstate__() for c in clusters ]
+        with open(f'offline_training_{counter}.yaml', 'w') as f:
+            f.write(yaml.dump(clusters_serial))
         value = {'source': 'offline', 'clusters': clusters_serial}
         kprod.send(topic='clusters', value=value)
-        elapsed = time.time() - init
+        kprod.flush()
     except KeyboardInterrupt:
         pass
     except Exception as ex:
-        traceback.log.info_exc()
-        log.info('Exception', ex)
+        log.exception(ex)
         raise
     finally:
-        elapsed = time.time() - init_global
-        counter = counter_global
+        elapsed = time.time() - init
         speed = counter // max(0.001, elapsed)
         elapsed = int(elapsed * 1000)
         cl = clusters[0] if len(clusters) > 0 else ''

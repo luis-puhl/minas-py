@@ -43,10 +43,13 @@ Sem delay entre items e relatório a cada 10s:
 
     10.0000 s, 24824 i, 2482.39 i/s, 0.40 ms/i, 38.8 kB/s
 
-TODO: separar dados rotulados e não rotulados nessa etapa
-TODO: carregar tudo na memória
-TODO: testar também com 1/2 para treinamento com validação cruzada
-TODO: Tabela correlacionando tempos e N classificadores
-Pedir a copia do artigo aceito do Gui Cassales, ISCC
+## Reunião 2019-06-10
 
-TODO: testar N-fold cross validation
+- [ ] Melhorar a didática da apresentação
+- [x] separar dados rotulados e não rotulados nessa etapa
+- [x] carregar tudo na memória
+- [x] testar também com 1/2 para treinamento com validação cruzada
+- [ ] Tabela correlacionando tempos e N classificadores
+- [ ] Pedir a copia do artigo aceito do Gui Cassales, ISCC
+- [ ] testar N-fold cross validation
+  - provavelmente esse teste mais longo seja melhor fazer após a quali

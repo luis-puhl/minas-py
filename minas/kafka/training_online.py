@@ -223,7 +223,7 @@ def training_online():
     finally:
         speed = counter // max(0.001, elapsed)
         elapsed = int(elapsed)
-        log.info(f'consumer {client_id}: {elapsed} s, consumed {counter} items, {speed} i/s, {time.time() - totalTime}')
+        log.info(f'{elapsed} s, consumed {counter} items, {speed} i/s, {time.time() - totalTime}')
         kprod.flush()
     #
 #
