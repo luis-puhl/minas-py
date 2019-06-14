@@ -39,7 +39,22 @@ def training_offline():
     counter = 0
     log.info('READY')
     try:
-        filename = f'offline_training_{counter}.yaml'
+        dataset = None
+        while dataset is None:
+            for message in consumer:
+                log.info('START')
+                counter += 1
+                if message.topic == 'items-classes':
+                    item = np.array(message.value[b'item'])
+                    label = message.value[b'label'].decode(encoding='utf-8')
+                    zeroItem = {'item': item, 'label': label}
+                    knownBuffer.append(zeroItem)
+                    dataset = message.value[b'dataset'].decode(encoding='utf-8')
+                    break
+                # 
+            # 
+        # 
+        filename = f'offline_training_{dataset}.yaml'
         if os.path.exists(filename):
             log.info(f'loading from file "{filename}".')
             with open(filename, 'r') as f:
@@ -48,7 +63,7 @@ def training_offline():
                 assert len(clusters) > 0
                 clusters_serial = [ c.__getstate__() for c in clusters ]
         else:
-            while len(knownBuffer) == 0:
+            while len(knownBuffer) < 1000:
                 for message in consumer:
                     # message{ topic, partition, offset, key, value }
                     # {'item': data, 'label': label} = value
@@ -57,7 +72,7 @@ def training_offline():
                         if message.value != {b'classifier': b'WAIT ON CLUSTERS'}:
                             log.info(f'Unknown message {message.value}')
                         continue
-                    item = message.value[b'item']
+                    item = np.array(message.value[b'item'])
                     label = message.value[b'label'].decode(encoding='utf-8')
                     value = {'item': item, 'label': label}
                     knownBuffer.append(value)
@@ -70,7 +85,8 @@ def training_offline():
             log.info(f'Running minasOffline and storing to file "{filename}".')
             examplesDf = pd.DataFrame(knownBuffer)
             clusters = minasOffline(examplesDf)
-            assert len(clusters) > 0
+            if len(clusters) == 0:
+                raise Exception(f'Zero clusters from minasOffline. Got {examplesDf}')
             clusters_serial = [ c.__getstate__() for c in clusters ]
             # 
             with open(filename, 'w') as f:
@@ -79,9 +95,8 @@ def training_offline():
         # 
         elapsed = time.time() - init
         speed = counter // max(0.001, elapsed)
-        cl = clusters[0] if len(clusters) > 0 else ''
-        log.info(f'{len(clusters)} clusters {cl}')
-        log.info(f'DONE: {elapsed} s, consumed {counter} items, {speed} i/s')
+        assert len(clusters) > 0
+        log.info(f'DONE: {elapsed} s, consumed {counter} items, {speed} i/s,\t clusters => {len(clusters)} \n\t{clusters[0]}')
         kprod.flush()
         value = {'source': 'offline', 'clusters': clusters_serial}
         # 
