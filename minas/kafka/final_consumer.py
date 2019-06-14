@@ -20,7 +20,7 @@ def final_consumer(report_interval=10):
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        # consumer_timeout_ms=20 * 1000,
+        consumer_timeout_ms=1 * 60 * 1000,
         # max_poll_records=10,
         auto_offset_reset='latest',
     )
@@ -67,7 +67,7 @@ def final_consumer(report_interval=10):
         pass
     except Exception as ex:
         log.exception(ex)
-        log.error(ex)
+        raise
     finally:
         log.info(f'classe_contagem {classe_contagem}')
         elapsed = time.time() - init
