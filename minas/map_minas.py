@@ -21,9 +21,10 @@ def minDist(clusters, centers, item):
         assert hasattr(item, 'shape') is not None, f'Expected item to have shape. Got item={item}.'
         assert centers.shape is not None, f'Expected centers to have shape. Got centers={centers}.'
         assert item.shape is not None, f'Expected item to have shape. Got item={item}.'
+        assert centers.shape[1] == item.shape[0], f'Expected centers and item to have equivalent shape. Got centers={centers.shape}, item={item.shape}.'
     except Exception as ex:
-        centers = np.array(centers)
-    assert centers.shape[1] == item.shape[0], f'Expected centers and item to have equivalent shape. Got centers={centers.shape}, item={item.shape}.'
+        print('\n\nMin Dist ERROR', centers, item, '\n\n')
+        raise Exception('Min Dist ERROR') from ex
     dists = LA.norm(centers - item, axis=1)
     d = dists.min()
     cl = clusters[ dists.tolist().index(d) ]
