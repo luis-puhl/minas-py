@@ -62,7 +62,7 @@ def dataSetGenKdd99(log):
     for data, target in zip(kddcup99.data, kddcup99.target):
         data = kddNormalize(data)
         data = [ float(i) for i in data]
-        allData.append( (data, target.decode(encoding="utf-8")) )
+        allData.append( (data, target.decode(encoding='utf-8')) )
     #
     return allData
 
@@ -90,6 +90,7 @@ def dataSetGenFake(classes=5, dim=2):
     return allData
 
 def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2, readyEvent=None):
+    time.sleep(1)
     setup_init = time.time()
     if log is None:
         log = logging.getLogger(__name__)
@@ -113,18 +114,6 @@ def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_inte
     trainingData = [ msgpack.packb({'item': data, 'label': label}) for data, label in datasetgenerator[0:N_SUBSET] ]
     testData = [ msgpack.packb(data) for data, label in datasetgenerator[N_SUBSET:] ]
     #
-    kcons = KafkaConsumer(
-        'control-bus',
-        bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
-        group_id=__name__,
-        client_id=f'client_{os.uname().machine}_{hex(os.getpid())}',
-        value_deserializer=msgpack.unpackb,
-        key_deserializer=msgpack.unpackb,
-        # StopIteration if no message after 1 sec
-        consumer_timeout_ms=1 * 1000,
-        # max_poll_records=10,
-        auto_offset_reset='latest',
-    )
     kprod = KafkaProducer(
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
         # value_serializer=msgpack.packb,
@@ -166,23 +155,12 @@ def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_inte
         log.info(f'offline_end_time={time.time_ns()}')
         log.info('trainingData all produced')
         # 
-        lockInit = time.time_ns()
-        isLocked = True
-        while isLocked:
-            for record in kcons:
-                if record.topic == 'control-bus' and b'classifier' in record.value and record.value[b'classifier'] == b'ready':
-                    isLocked = False
-                    # timeout to 1ms
-                    kcons.config['consumer_timeout_ms'] = 1
-        # move lokced time
-        init += time.time_ns() - lockInit
-        # Dado não rotulado para classificadores
-        log.info(f'online_init_time={time.time_ns()}')
-        kprod.send(topic='items', value=msgpack.packb({'online_init_time': time.time_ns()}), key=counter)
-        counter, nbytes = send_dataset('items', testData, kprod, counter, nbytes, report_interval, data_nbytes, init, log)
-        kprod.send(topic='items', value=msgpack.packb({'online_end_time': time.time_ns()}), key=counter)
-        log.info(f'online_end_time={time.time_ns()}')
-        log.info('testData all produced')
+        for i in range(2):
+            # Dado não rotulado para classificadores
+            log.info(f'online_init_time={time.time_ns()}')
+            counter, nbytes = send_dataset('items', testData, kprod, counter, nbytes, report_interval, data_nbytes, init, log)
+            log.info(f'online_end_time={time.time_ns()}')
+            log.info('testData all produced')
     finally:
         currentTime = time.time_ns()
         timeDiff = currentTime - init

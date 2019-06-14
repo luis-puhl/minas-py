@@ -3,6 +3,7 @@ import os
 import logging
 
 import numpy as np
+import pandas as pd
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
 import msgpack
@@ -19,11 +20,12 @@ def final_consumer(report_interval=10):
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        consumer_timeout_ms=20 * 1000,
+        # consumer_timeout_ms=20 * 1000,
         # max_poll_records=10,
         auto_offset_reset='latest',
     )
     classe_contagem = {}
+    labelCount = {}
     init = time.time()
     totalCounter = 0
     nbytes = 0
@@ -49,6 +51,14 @@ def final_consumer(report_interval=10):
                     byteSpeed = humanize_bytes(int(nbytes / elapsed))
                     log.info('{:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(elapsed, totalCounter, itemSpeed, itemTime, byteSpeed))
                     lastReport = time.time()
+            elif message.topic == 'novidades':
+                src = message.value[b'source'].decode(encoding='utf-8')
+                for cl in message.value[b'clusters']:
+                    label = cl[b'label']
+                    if label not in labelCount:
+                        labelCount[label] = 0
+                    labelCount[label] += 1
+                log.info(f'novidades {src} {labelCount}')
             else:
                 log.info(f'topic={message.topic}, key={message.key}, value={message.value}')
             #

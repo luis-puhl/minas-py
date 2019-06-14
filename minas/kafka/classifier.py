@@ -11,6 +11,7 @@ import msgpack
 from ..example import Example, Vector
 from ..cluster import Cluster
 from ..map_minas import *
+from .req_once import req_block
 
 def classifier_imp(log, time_window=1, size_window=500):
     client_id = f'client_{os.uname().machine}_{hex(os.getpid())}'
@@ -47,37 +48,30 @@ def classifier_imp(log, time_window=1, size_window=500):
     elapsed = 0
     last_clean_time = time.time()
     try:
-        while len(clusters) == 0:
-            log.info(f'WAIT ON CLUSTERS {client_id}')
-            for message in consumer:
-                if message.topic == 'clusters' and message.value[b'source'] == b'offline':
-                    for c in message.value[b'clusters']:
-                        c_decoded = { k.decode(encoding="utf-8"): v for k, v in c.items() }
-                        c_decoded['center'] = np.array(c_decoded['center'])
-                        c_decoded['label'] = c_decoded['label'].decode(encoding="utf-8")
-                        clusters.append(Cluster(**c_decoded))
-                    centers = mkCenters(clusters)
-                    log.info(f'Classifier got clusters {len(clusters)}')
-                    break
+        source = __name__
+        clusters = req_block(log, consumer, kprod, client_id, source)
         log.info(f'READY {client_id}')
-        kprod.send(topic='control-bus', value={'classifier': 'ready'})
         for message in consumer:
             # message{ topic, partition, offset, key, value }
-            if message.topic == 'clusters' and message.value[b'source'] != b'classifier':
-                clusters = []
-                for c in message.value[b'clusters']:
-                    c_decoded = { k.decode(encoding="utf-8"): v for k, v in c.items() }
-                    c_decoded['center'] = np.array(c_decoded['center'])
-                    c_decoded['label'] = c_decoded['label'].decode(encoding="utf-8")
-                    clusters.append(Cluster(**c_decoded))
-                centers = mkCenters(clusters)
-                log.info(f'Classifier got clusters {len(clusters)}')
+            if message.topic == 'clusters':
+                if message.value[b'source'] != b'classifier' and b'clusters' in message.value:
+                    clusters = []
+                    for c in message.value[b'clusters']:
+                        c_decoded = { k.decode(encoding='utf-8'): v for k, v in c.items() }
+                        c_decoded['center'] = np.array(c_decoded['center'])
+                        c_decoded['label'] = c_decoded['label'].decode(encoding='utf-8')
+                        clusters.append(Cluster(**c_decoded))
+                    centers = mkCenters(clusters)
+                    log.info(f'{client_id} got clusters {len(clusters)}')
+                else:
+                    serialClusters = [ cl.__getstate__() for cl in clusters ]
+                    kprod.send(topic='clusters', value={'source': 'classifier', 'clusters': serialClusters})
                 continue
-            if message.topic != 'items':
+            if message.topic != 'items' or np.array(message.value).dtype.type is not np.float64:
                 log.info('item unkown')
                 log.info(message.value)
                 continue
-            if len(clusters) == 0:
+            if len(clusters) == 0 or len(centers) == 0:
                 continue
             counter += 1
             init = time.time()

@@ -11,6 +11,8 @@ import msgpack
 from ..example import Example, Vector
 from ..cluster import Cluster
 from ..map_minas import *
+from ..minas_base import *
+from .req_once import req_block, decodeClusters
 
 RADIUS_FACTOR = 1.1
 EXTENTION_FACTOR = 3
@@ -19,30 +21,31 @@ MAX_K_CLUSTERS = 100
 REPR_TRESHOLD = 20
 CLEANUP_WINDOW = 100
 
-def recurenceDetection(log, clusters, sleepClusters, unknownBuffer, classified, recurence):
-    if len(sleepClusters) > 0:
-        # yield f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}'
+def recurenceDetection(log, clusters, sleepClusters, sleepClustersCenters, unknownBuffer, classified, recurence, counter):
+    if len(sleepClusters) == 0 or len(sleepClustersCenters) == 0:
+        return
+    if counter % 100 == 0:
         log.info(f'[recurenceDetection] unk={len(unknownBuffer)}, sleep={len(sleepClusters)}')
-        sleepClustersCenters = mkCenters(sleepClusters)
-        for sleepExample in unknownBuffer:
-            d, cl = minDist(sleepClusters, sleepClustersCenters, sleepExample.item)
-            if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
-                cl.maxDistance = max(cl.maxDistance, d)
-                cl.latest = counter
-                sleepExample.label = cl.label
-                unknownBuffer.remove(sleepExample)
-                classified.append(sleepExample)
-                # yield f"[CLASSIFIED] {sleepExample.n}: {cl.label}"
-                # log.info(f"[CLASSIFIED] {sleepExample.n}: {cl.label}")
-                if cl in sleepClusters:
-                    clusters.append(cl)
-                    sleepClusters.remove(cl)
-                    sleepClustersCenters = mkCenters(sleepClusters)
-                    # yield f"[Recurence] {cl.label}"
-                    log.info(f"[Recurence] {cl.label}")
-                    recurence.append(cl)
+    sleepClustersCenters = mkCenters(sleepClusters)
+    for sleepExample in unknownBuffer:
+        d, cl = minDist(sleepClusters, sleepClustersCenters, sleepExample.item)
+        if (d / max(1.0, cl.maxDistance)) <= RADIUS_FACTOR:
+            cl.maxDistance = max(cl.maxDistance, d)
+            cl.latest = counter
+            sleepExample.label = cl.label
+            unknownBuffer.remove(sleepExample)
+            classified.append(sleepExample)
+            # yield f"[CLASSIFIED] {sleepExample.n}: {cl.label}"
+            # log.info(f"[CLASSIFIED] {sleepExample.n}: {cl.label}")
+            if cl in sleepClusters:
+                clusters.append(cl)
+                sleepClusters.remove(cl)
+                sleepClustersCenters = mkCenters(sleepClusters)
+                # yield f"[Recurence] {cl.label}"
+                log.info(f"[Recurence] {cl.label}")
+                recurence.append(cl)
 
-def noveltyDetection(log, clusters, sleepClusters, unknownBuffer, classified, extensions, noveltyIndex, novelty):
+def noveltyDetection(log, clusters, sleepClusters, unknownBuffer, classified, extensions, noveltyIndex, novelty, counter):
     if len(unknownBuffer) % (BUFF_FULL // 10) == 0:
         # yield '[noveltyDetection]'
         log.info('[noveltyDetection]')
@@ -109,7 +112,7 @@ def training_online():
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        consumer_timeout_ms=10 * 1000,
+        # consumer_timeout_ms=10 * 1000,
         # max_poll_records=10,
         auto_offset_reset='latest',
     )
@@ -129,26 +132,25 @@ def training_online():
     totalTime = time.time()
     log.info('READY')
     try:
+        source = __name__
+        clusters = req_block(log, consumer, kprod, client_id, source)
+        log.info(f'READY {client_id}')
         for message in consumer:
             # message{ topic, partition, offset, key, value }
-            if message.topic == 'clusters':
-                clusters = []
-                for c in message.value[b'clusters']:
-                    c_decoded = { k.decode(encoding="utf-8"): v for k, v in c.items() }
-                    c_decoded['center'] = np.array(c_decoded['center'])
-                    c_decoded['label'] = c_decoded['label'].decode(encoding="utf-8")
-                    clusters.append(Cluster(**c_decoded))
-                centers = mkCenters(clusters)
-                log.info(f'got clusters {len(clusters)}')
+            if message.topic == 'clusters' and b'clusters' in message.value and b'source' in message.value and message.value[b'source'] == 'offline':
+                remoteClusters = decodeClusters(message.value[b'clusters'])
+                # centers = mkCenters(clusters)
+                # log.info(f'got clusters {len(clusters)}')
                 continue
             if message.topic != 'desconhecidos':
                 continue
             # 
             init = time.time()
-            example_decoded = { k.decode(encoding="utf-8"): v for k, v in message.value[b'example'].items() }
+            example_decoded = { k.decode(encoding='utf-8'): v for k, v in message.value[b'example'].items() }
             if example_decoded['label'] is not None:
-                example_decoded['label'] = example_decoded['label'].decode(encoding="utf-8")
+                example_decoded['label'] = example_decoded['label'].decode(encoding='utf-8')
             example = Example(**example_decoded)
+            example.item = np.array(example.item)
             unknownBuffer.append(example)
             counter += 1
             if counter % 10 == 0:
@@ -166,9 +168,20 @@ def training_online():
                 elapsed += time.time() - init
                 continue
             # 
-            log.info('unknownBuffer > BUFF_FULL')
-            recurenceDetection(log, clusters, sleepClusters, unknownBuffer, classified, recurence)
-            noveltyIndex = noveltyDetection(log, clusters, sleepClusters, unknownBuffer, classified, extensions, noveltyIndex, novelty)
+            # log.info('unknownBuffer > BUFF_FULL')
+            if len(sleepClusters) > 0:
+                sleepClustersCenters = mkCenters(sleepClusters)
+                if len(sleepClustersCenters) > 0:
+                    recurenceDetection(log, clusters, sleepClusters, sleepClustersCenters, unknownBuffer, classified, recurence, counter)
+                else:
+                    log.info('\n\n\tsleep Clusters Centers WARN')
+                    log.info(sleepClusters)
+                    log.info(sleepClustersCenters)
+                    log.info('\n\n')
+                # 
+            #
+            if len(unknownBuffer) % (BUFF_FULL // 10) == 0:
+                noveltyIndex = noveltyDetection(log, clusters, sleepClusters, unknownBuffer, classified, extensions, noveltyIndex, novelty, counter)
             if counter % CLEANUP_WINDOW == 0:
                 # yield '[cleanup]'
                 log.info(f'[cleanup] {counter}')
@@ -190,9 +203,9 @@ def training_online():
             if len(classified) > 0:
                 classe_contagem = {}
                 for ex in classified:
-                    if not cl.label in classe_contagem:
-                        classe_contagem[cl.label] = 0
-                    classe_contagem[cl.label] += 1
+                    if not ex.label in classe_contagem:
+                        classe_contagem[ex.label] = 0
+                    classe_contagem[ex.label] += 1
                 sortedKeys = sorted(classe_contagem, key=lambda x: x if type(x) == str else '')
                 classe_contagem = { k: classe_contagem[k] for k in sortedKeys }
                 value = {'classe-contagem': classe_contagem, 'nbytes': example.item.nbytes, 'source': 'online'}
@@ -223,7 +236,16 @@ def training_online():
     finally:
         speed = counter // max(0.001, elapsed)
         elapsed = int(elapsed)
-        log.info(f'{elapsed} s, consumed {counter} items, {speed} i/s, {time.time() - totalTime}')
+        log.info(f'DONE {elapsed} s, consumed {counter} items, {speed} i/s, {time.time() - totalTime}')
         kprod.flush()
     #
 #
+
+# def kafka2gen(kafkaConsumer):
+#     for record in kafkaConsumer:
+#         yield record
+
+# def online():
+#     minasOffline
+#     minas = MinasBase()
+#     minas.

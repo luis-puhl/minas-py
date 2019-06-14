@@ -12,13 +12,18 @@ from .example import Example, Vector
 from .cluster import Cluster
 
 def minDist(clusters, centers, item):
-    if len(clusters) == 0 or len(centers) == 0 or len(item) == 0:
-        print(clusters, centers, item)
-        msg = '"clusters" and "centers" arguments must be list and "item" argument must be NumpyArray.'
-        msg += f' Got \n\t clusters={repr(clusters)}\n\t centers={repr(centers)}\n\t item={repr(item)}'
-        raise ValueError(msg)
-    assert type(clusters[0]) is Cluster
-    # print('minDist', clusters, centers, item)
+    assert type(clusters) is list or len(clusters) > 0, f'Expected clusters to be non empty list. Got {type(clusters)} => {clusters}'
+    assert type(centers) is not list or type(centers) is np.array or len(clusters) > 0, f'Expected centers to be non empty numpy array. Got {type(centers)} => {centers}'
+    assert type(item) is np.array or len(item) > 0, f'Expected item to be non empty numpy array. Got {type(item)} => {item}'
+    assert type(clusters[0]) is Cluster, f'Expected clusters to be non empty Cluster list'
+    try:
+        assert hasattr(centers, 'shape') is not None, f'Expected centers to have shape. Got centers={centers}.'
+        assert hasattr(item, 'shape') is not None, f'Expected item to have shape. Got item={item}.'
+        assert centers.shape is not None, f'Expected centers to have shape. Got centers={centers}.'
+        assert item.shape is not None, f'Expected item to have shape. Got item={item}.'
+    except Exception as ex:
+        centers = np.array(centers)
+    assert centers.shape[1] == item.shape[0], f'Expected centers and item to have equivalent shape. Got centers={centers.shape}, item={item.shape}.'
     dists = LA.norm(centers - item, axis=1)
     d = dists.min()
     cl = clusters[ dists.tolist().index(d) ]

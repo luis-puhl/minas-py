@@ -60,10 +60,6 @@ def main():
             p = Process(target=training_offline, name='training_offline')
             processes.append(p)
             p.start()
-            while p.is_alive():
-                time.sleep(1)
-            # p.close()
-            p.join()
         if args.online or start_all:
             # pool.apply_async(training_online)
             p = Process(target=training_online, name='training_online')
@@ -99,7 +95,7 @@ def main():
                     except:
                         pass
                     processes.remove(p)
-                    log.info(f'process done {p.name}, {len(processes)}')
+                    log.info(f'process done {p.name}, {len(processes)} remaining')
                     name = p.name
                     if exitcode != 0:
                         raise Exception(f'Child died with error. {name} Exit code {exitcode}')

@@ -23,7 +23,7 @@ def training_offline():
         value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        consumer_timeout_ms=10 * 1000,
+        consumer_timeout_ms=1 * 1000,
         # max_poll_records=10,
         auto_offset_reset='latest',
     )
@@ -37,45 +37,63 @@ def training_offline():
     knownBuffer = []
     clusters = []
     counter = 0
-    log.info('onffline training READY')
+    log.info('READY')
     try:
-        while len(knownBuffer) == 0:
-            for message in consumer:
-                # message{ topic, partition, offset, key, value }
-                # {'item': data, 'label': label} = value
-                counter += 1
-                if b'item' not in message.value:
-                    log.info(f'Unknown message {message}')
-                    continue
-                item = message.value[b'item']
-                label = message.value[b'label'].decode(encoding="utf-8")
-                value = {'item': item, 'label': label}
-                knownBuffer.append(value)
-                # if counter >= 2000:
-                #     break
+        filename = f'offline_training_{counter}.yaml'
+        if os.path.exists(filename):
+            log.info(f'loading from file "{filename}".')
+            with open(filename, 'r') as f:
+                dic = yaml.load(f, Loader=yaml.SafeLoader)
+                clusters = [ Cluster(**cl) for cl in dic ]
+                assert len(clusters) > 0
+                clusters_serial = [ c.__getstate__() for c in clusters ]
+        else:
+            while len(knownBuffer) == 0:
+                for message in consumer:
+                    # message{ topic, partition, offset, key, value }
+                    # {'item': data, 'label': label} = value
+                    counter += 1
+                    if b'item' not in message.value:
+                        if message.value != {b'classifier': b'WAIT ON CLUSTERS'}:
+                            log.info(f'Unknown message {message.value}')
+                        continue
+                    item = message.value[b'item']
+                    label = message.value[b'label'].decode(encoding='utf-8')
+                    value = {'item': item, 'label': label}
+                    knownBuffer.append(value)
+                    # if counter >= 2000:
+                    #     break
+                # 
+            # 
+            log.info(f'training started with {counter} examples')
+            log.info(knownBuffer[0])
+            log.info(f'Running minasOffline and storing to file "{filename}".')
+            examplesDf = pd.DataFrame(knownBuffer)
+            clusters = minasOffline(examplesDf)
+            assert len(clusters) > 0
+            clusters_serial = [ c.__getstate__() for c in clusters ]
+            # 
+            with open(filename, 'w') as f:
+                f.write(yaml.dump(clusters_serial))
             # 
         # 
-        log.info(f'onffline training started with {counter} examples')
-        log.info(knownBuffer[0])
-        examplesDf = pd.DataFrame(knownBuffer)
-        clusters = minasOffline(examplesDf)
-        assert len(clusters) > 0
-        clusters_serial = [ c.__getstate__() for c in clusters ]
-        with open(f'offline_training_{counter}.yaml', 'w') as f:
-            f.write(yaml.dump(clusters_serial))
-        value = {'source': 'offline', 'clusters': clusters_serial}
-        kprod.send(topic='clusters', value=value)
+        elapsed = time.time() - init
+        speed = counter // max(0.001, elapsed)
+        cl = clusters[0] if len(clusters) > 0 else ''
+        log.info(f'{len(clusters)} clusters {cl}')
+        log.info(f'DONE: {elapsed} s, consumed {counter} items, {speed} i/s')
         kprod.flush()
+        value = {'source': 'offline', 'clusters': clusters_serial}
+        # 
+        for i in range(10):
+            kprod.send(topic='clusters', value=value)
+            kprod.flush()
+            time.sleep(1)
+        # 
     except KeyboardInterrupt:
         pass
     except Exception as ex:
         log.exception(ex)
         raise
     finally:
-        elapsed = time.time() - init
-        speed = counter // max(0.001, elapsed)
-        elapsed = int(elapsed * 1000)
-        cl = clusters[0] if len(clusters) > 0 else ''
-        log.info(f'{len(clusters)} clusters {cl}')
-        log.info(f'onffline training DONE: {elapsed} ms, consumed {counter} items, {speed} i/s')
-        kprod.flush()
+        log.info('EXIT')
