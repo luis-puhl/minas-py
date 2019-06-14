@@ -95,7 +95,11 @@ def main():
                     except:
                         pass
                     processes.remove(p)
-                    log.info(f'process done {p.name}, {len(processes)} remaining')
+                    if len(processes) > 5:
+                        log.info(f'process done {p.name}, {len(processes)} remaining')
+                    else:
+                        names = [ p.name for p in processes ]
+                        log.info(f'process done {p.name}, {names} remaining')
                     name = p.name
                     if exitcode != 0:
                         raise Exception(f'Child died with error. {name} Exit code {exitcode}')
