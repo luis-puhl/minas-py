@@ -89,46 +89,42 @@ def dataSetGenFake(classes=5, dim=2):
     #
     return allData
 
-def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2, readyEvent=None):
-    time.sleep(1)
+def getDataset(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_interval=2, readyEvent=None):
     setup_init = time.time()
-    if log is None:
-        log = logging.getLogger(__name__)
-    log.info(f'data_set_name={data_set_name}, delay={delay}, report_interval={report_interval}')
     if data_set_name == DATA_SET_FAKE:
         datasetgenerator = dataSetGenFake(log=log)
+        data_set_name = 'FAKE'
     elif data_set_name == DATA_SET_COVTYPE:
         datasetgenerator = dataSetGenCovtype(log=log)
+        data_set_name = 'COVTYPE'
     elif data_set_name == DATA_SET_KDD99:
         datasetgenerator = dataSetGenKdd99(log=log)
+        data_set_name = 'KDD99'
     elif data_set_name == DATA_SET_KDD_CASSALES:
         datasetgenerator = dataSetGenKddCassales(log=log)
+        data_set_name = 'KDD_CASSALES'
     #
+    log.info('all data loaded')
     data, label = datasetgenerator[0]
     data_np = np.array(data)
     data_nbytes = data_np.nbytes
     packed = msgpack.packb(data)
     log.info(f'data size={len(data)}, nbytes={data_nbytes}, serial={len(data)}, packed={len(packed)}, \n\t{repr(data)}\n=>\t{packed}')
     # 
-    N_SUBSET = min(10000, int(len(datasetgenerator)/10))
-    trainingData = [ msgpack.packb({'item': data, 'label': label}) for data, label in datasetgenerator[0:N_SUBSET] ]
-    testData = [ msgpack.packb(data) for data, label in datasetgenerator[N_SUBSET:] ]
+    N_SUBSET = int(len(datasetgenerator)/10)
+    trainingData = []
+    for data, label in datasetgenerator[0:N_SUBSET]:
+        data = msgpack.packb({'item': data, 'label': label, 'dataset': data_set_name})
+        trainingData.append(data)
+    testData = []
+    for data, label in datasetgenerator[N_SUBSET:]:
+        data = msgpack.packb({'item': data, 'dataset': data_set_name})
+        # data = msgpack.packb(data)
+        testData.append(data)
     #
-    kprod = KafkaProducer(
-        bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
-        # value_serializer=msgpack.packb,
-        key_serializer=msgpack.packb,
-        # batch_size = 16384 = 2**14
-        batch_size=max(N_SUBSET, 2**14)
-    )
     ONE_SECOND = 10**9
     report_interval *= ONE_SECOND
-    counter = 0
-    nbytes = 0
-    lastReport = time.time_ns()
-    init = time.time_ns()
-    timeDiff = 0
-    def send_dataset(topic, dataset, kprod, counter, nbytes, report_interval, data_nbytes, init, log):
+    def send_dataset(topic, dataset, kprod, counter, nbytes, init):
         lastReport = time.time_ns()
         for data in dataset:
             currentTime = time.time_ns()
@@ -145,39 +141,61 @@ def producer_imp(log=None, data_set_name=DATA_SET_FAKE, delay=0.001, report_inte
         kprod.flush()
         return ( counter, nbytes )
     log.info(f'READY in {time.time() - setup_init} s')
-    # TODO: testar também com 1/2 para treinamento com validação cruzada
-    # TODO: testar N-fold cross validation
-    # 
-    try:
-        # Dado rotulado para treinamento offline
-        log.info(f'offline_init_time={time.time_ns()}')
-        counter, nbytes = send_dataset('items-classes', trainingData, kprod, counter, nbytes, report_interval, data_nbytes, init, log)
-        log.info(f'offline_end_time={time.time_ns()}')
-        log.info('trainingData all produced')
-        # 
-        for i in range(2):
-            # Dado não rotulado para classificadores
-            log.info(f'online_init_time={time.time_ns()}')
-            counter, nbytes = send_dataset('items', testData, kprod, counter, nbytes, report_interval, data_nbytes, init, log)
-            log.info(f'online_end_time={time.time_ns()}')
-            log.info('testData all produced')
-    finally:
-        currentTime = time.time_ns()
-        timeDiff = currentTime - init
-        items = max(counter, 1)
-        timeDiff = timeDiff / ONE_SECOND
-        itemSpeed = items/timeDiff
-        itemTime = timeDiff/items * 1000
-        byteSpeed = humanize_bytes(int(nbytes / timeDiff))
-        log.info('total produced: {:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
-    
+    return send_dataset, trainingData, testData, N_SUBSET, data_nbytes
+
 def producer(**kwargs):
-    log = logging.getLogger(__name__)
-    kwargs['log'] = log
+    print('kwargs', kwargs)
     try:
-        producer_imp(**kwargs)
+        log = logging.getLogger(__name__)
+        kwargs['log'] = log
+        data_set_name   = kwargs['data_set_name']
+        delay           = kwargs['delay']
+        report_interval = kwargs['report_interval']
+        log.info(f'data_set_name={data_set_name}, delay={delay}, report_interval={report_interval}')
+        # 
+        send_dataset, trainingData, testData, N_SUBSET, data_nbytes = getDataset(**kwargs)
+        kprod = KafkaProducer(
+            bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
+            # value_serializer=msgpack.packb,
+            key_serializer=msgpack.packb,
+            # batch_size = 16384 = 2**14
+            batch_size=max(N_SUBSET, 2**14)
+        )
+        ONE_SECOND = 10**9
+        counter = 0
+        nbytes = 0
+        lastReport = time.time_ns()
+        init = time.time_ns()
+        timeDiff = 0
+        # TODO: testar também com 1/2 para treinamento com validação cruzada
+        # TODO: testar N-fold cross validation
+        # 
+        try:
+            # Dado rotulado para treinamento offline
+            log.info(f'offline_init_time={time.time_ns()}')
+            counter, nbytes = send_dataset(topic='items-classes', dataset=trainingData, kprod=kprod, counter=counter, nbytes=nbytes, init=init)
+            log.info(f'offline_end_time={time.time_ns()}')
+            log.info('trainingData all produced')
+            # 
+            for i in range(1):
+                # Dado não rotulado para classificadores
+                log.info(f'online_init_time={time.time_ns()}')
+                counter, nbytes = send_dataset(topic='items', dataset=testData, kprod=kprod, counter=counter, nbytes=nbytes, init=init)
+                log.info(f'online_end_time={time.time_ns()}')
+                log.info('testData all produced')
+        except Exception as ex:
+            log.exception(log)
+        finally:
+            currentTime = time.time_ns()
+            timeDiff = currentTime - init
+            items = max(counter, 1)
+            timeDiff = timeDiff / ONE_SECOND
+            itemSpeed = items/timeDiff
+            itemTime = timeDiff/items * 1000
+            byteSpeed = humanize_bytes(int(nbytes / timeDiff))
+            log.info('total produced: {:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(timeDiff, items, itemSpeed, itemTime, byteSpeed))
     except KeyboardInterrupt:
         pass
     except Exception as ex:
         log.exception(log)
-        exit(1)
+        raise
