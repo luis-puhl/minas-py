@@ -4,22 +4,23 @@ from multiprocessing import Process
 
 from base import *
 
-def clas(**kwargs):
-    kwargs['log'] = kwargs['log'] if 'log' in kwargs else logging.getLogger(__name__)
+def clas(name='clas', client_id=None, **kwargs):
+    log = kwargs['log'] if 'log' in kwargs else logging.getLogger(name)
     kwargs['init'] = kwargs['init'] if 'init' in kwargs else time.time_ns()
     kwargs['lastReport'] = kwargs['lastReport'] if 'lastReport' in kwargs else init
     kwargs['nbytes'] = kwargs['nbytes'] if 'nbytes' in kwargs else 0
     kwargs['counter'] = kwargs['counter'] if 'counter' in kwargs else 0
-    kwargs['prefix'] = kwargs['prefix'] if 'prefix' in kwargs else __name__
+    kwargs['prefix'] = kwargs['prefix'] if 'prefix' in kwargs else name
     # 
-    client_id = f'{__name__}_{hex(os.getpid())}'
+    if client_id is None:
+        client_id = f'{name}_{hex(os.getpid())}'
     consumer = KafkaConsumer(
         'numbers',
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
-        group_id=__name__,
+        group_id=name,
         client_id=client_id,
         # value_deserializer=msgpack.unpackb,
-        # key_deserializer=msgpack.unpackb,
+        key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
         consumer_timeout_ms=1 * 1000,
         # max_poll_records=10,
@@ -32,12 +33,15 @@ def clas(**kwargs):
         key_serializer=msgpack.packb,
     )
 
+    kwargs['lastReport'] = kwargs['init'] - report_interval
     resume = {'unknown': 0, 'not_prime': 0}
     for record in consumer:
         kwargs['counter'] += 1
         kwargs['nbytes'] += len(record.value)
         value = msgpack.unpackb(record.value)
         if value % 2 == 0:
+            resume['not_prime'] += 1
+        elif value % 3 == 0:
             resume['not_prime'] += 1
         else:
             resume['unknown'] += 1
@@ -46,9 +50,10 @@ def clas(**kwargs):
         currentTime = time.time_ns()
         if currentTime - kwargs['lastReport'] > report_interval:
             kprod.send(topic='result', value=resume, key=record.key)
-            report(currentTime=currentTime, extra=repr(resume), **kwargs)
+            log.info( report(currentTime=currentTime, key=record.key, extra=repr(resume), **kwargs) )
             kwargs['lastReport'] = currentTime
             resume = {'unknown': 0, 'not_prime': 0}
+    log.info( report(currentTime=currentTime, extra=repr(resume), **kwargs) )
     return kwargs
 
 if __name__ == '__main__':
@@ -61,14 +66,30 @@ if __name__ == '__main__':
             p = Process(target=wrap, name=f'classifier-{i}', args=(clas,))
             p.start()
             processes.append(p)
-        for p in processes:
-            p.join()
+        while len(processes) > 2:
+            time.sleep(5)
+            for p in processes:
+                if not p.is_alive():
+                    print('end', p.exitcode, p.name, hex(p.pid), len(processes))
+                    processes.remove(p)
+                    p.close()
+                else:
+                    print('waiting', p, p.name, hex(p.pid), len(processes))
+        for i in range(10):
+            for p in processes:
+                p.join(1)
+                if not p.is_alive():
+                    print('join end', p.exitcode, p.name, hex(p.pid), len(processes))
+                    processes.remove(p)
+                    p.close()
+                else:
+                    print('join waiting', p, p.name, hex(p.pid), len(processes))
     except Exception as ex:
+        print(ex)
         for p in processes:
             p.terminate()
         if type(ex) is not KeyboardInterrupt:
-            log.exception(ex)
             raise
-        else:
-            log.info('terminate')
+    print(__name__, 'DONE')
+    exit(0)
 

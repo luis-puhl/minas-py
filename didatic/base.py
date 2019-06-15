@@ -19,24 +19,30 @@ install_mp_handler()
 ONE_SECOND = 10**9
 report_interval = 10 * ONE_SECOND
 
-def report(log, currentTime, prefix, lastReport, init, counter, nbytes, extra=''):
+def report(currentTime, prefix, lastReport, init, counter, nbytes, extra='', key=None, log=None, name=None):
     timeDiff = (currentTime - init) / ONE_SECOND
     itemSpeed = counter / timeDiff
     itemTime = timeDiff / max(counter, 1) * 1000
     byteSpeed = humanize_bytes(int(nbytes / timeDiff))
     if len(extra) > 0:
         extra = '\n\t' + extra
-    log.info('{} {:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s{}'.format(prefix, timeDiff, counter, itemSpeed, itemTime, byteSpeed, extra))
+    if key is None:
+        key = ''
+    else:
+        key = ' ' + repr(key)
+    msg = '{} {:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s{}{}'
+    return msg.format(prefix, timeDiff, counter, itemSpeed, itemTime, byteSpeed, key, extra)
 
 def wrap(fn):
     init = time.time_ns()
     lastReport = init
     nbytes = 0
     counter = 0
-    log = logging.getLogger(fn.__name__)
-    log.info(f'init {fn.__name__}')
-    prefix = f'{fn.__name__}_{hex(os.getpid())}'
-    kwargs = dict(init=init, lastReport=lastReport, nbytes=nbytes, counter=counter, log=log, prefix=prefix, )
+    name = fn.__name__
+    log = logging.getLogger(name)
+    log.info(f'init {name}')
+    prefix = f'{name}_{hex(os.getpid())}'
+    kwargs = dict(init=init, lastReport=lastReport, nbytes=nbytes, counter=counter, log=log, prefix=prefix, name=name, )
     try:
         kwargs = fn(**kwargs)
     except KeyboardInterrupt:
@@ -46,4 +52,6 @@ def wrap(fn):
         raise
     finally:
         del kwargs['prefix']
-        report(currentTime=time.time_ns(), prefix=f'{prefix} DONE', **kwargs)
+        msg = report(currentTime=time.time_ns(), prefix=f'{prefix} DONE', **kwargs)
+        log.info(msg)
+    exit(0)
