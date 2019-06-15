@@ -19,12 +19,14 @@ install_mp_handler()
 ONE_SECOND = 10**9
 report_interval = 10 * ONE_SECOND
 
-def report(log, currentTime, prefix, lastReport, init, counter, nbytes):
+def report(log, currentTime, prefix, lastReport, init, counter, nbytes, extra=''):
     timeDiff = (currentTime - init) / ONE_SECOND
     itemSpeed = counter / timeDiff
     itemTime = timeDiff / max(counter, 1) * 1000
     byteSpeed = humanize_bytes(int(nbytes / timeDiff))
-    log.info('{} {:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s'.format(prefix, timeDiff, counter, itemSpeed, itemTime, byteSpeed))
+    if len(extra) > 0:
+        extra = '\n\t' + extra
+    log.info('{} {:2.4f} s, {:5} i, {:6.2f} i/s, {:4.2f} ms/i, {}/s{}'.format(prefix, timeDiff, counter, itemSpeed, itemTime, byteSpeed, extra))
 
 def wrap(fn):
     init = time.time_ns()
@@ -33,7 +35,7 @@ def wrap(fn):
     counter = 0
     log = logging.getLogger(fn.__name__)
     log.info(f'init {fn.__name__}')
-    prefix = fn.__name__
+    prefix = f'{fn.__name__}_{hex(os.getpid())}'
     kwargs = dict(init=init, lastReport=lastReport, nbytes=nbytes, counter=counter, log=log, prefix=prefix, )
     try:
         kwargs = fn(**kwargs)
