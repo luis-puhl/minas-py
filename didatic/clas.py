@@ -22,10 +22,10 @@ def clas(name='clas', client_id=None, **kwargs):
         # value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        consumer_timeout_ms=1 * 1000,
+        consumer_timeout_ms=60 * 1000,
         # max_poll_records=10,
-        # auto_offset_reset='latest',
-        auto_offset_reset='earliest',
+        auto_offset_reset='latest',
+        # auto_offset_reset='earliest',
         # enable_auto_commit=False,
     )
     kprod = KafkaProducer(
@@ -35,7 +35,7 @@ def clas(name='clas', client_id=None, **kwargs):
     )
 
     kwargs['lastReport'] = kwargs['init'] - report_interval
-    resume = {'unknown': 0, 'not_prime': 0}
+    resume = {'unknown': 0, 'not_prime': 0, 'total_clas': 0}
     partitions = {}
     # consumer
     for record in consumer:
@@ -46,9 +46,8 @@ def clas(name='clas', client_id=None, **kwargs):
             partitions[record.partition] = 0
         partitions[record.partition] += 1
         value = msgpack.unpackb(record.value)
-        if value % 2 == 0:
-            resume['not_prime'] += 1
-        elif value % 3 == 0:
+        resume['total_clas'] += 1
+        if value % 2 == 0 or value % 3 == 0:
             resume['not_prime'] += 1
         else:
             resume['unknown'] += 1
@@ -61,8 +60,8 @@ def clas(name='clas', client_id=None, **kwargs):
             resume['partitions'] = partitions
             log.info( report(currentTime=currentTime, key=record.key, extra=resume, **kwargs) )
             kwargs['lastReport'] = currentTime
-            resume = {'unknown': 0, 'not_prime': 0}
-    log.info( report(currentTime=currentTime = time.time_ns(), extra=resume, **kwargs) )
+            resume = {'unknown': 0, 'not_prime': 0, 'total_clas': 0}
+    kwargs['extra'] = {**resume, 'partitions': partitions}
     return kwargs
 
 if __name__ == '__main__':
@@ -82,8 +81,7 @@ if __name__ == '__main__':
                     print('end', p.exitcode, p.name, hex(p.pid), len(processes))
                     processes.remove(p)
                     p.close()
-                else:
-                    print('waiting', p, p.name, hex(p.pid), len(processes))
+            print('waiting', len(processes))
         for i in range(10):
             for p in processes:
                 p.join(1)

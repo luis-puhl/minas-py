@@ -1,0 +1,282 @@
+2019-06-17 17:21:00,005 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init fina
+2019-06-17 17:21:00,004 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init prod
+2019-06-17 17:21:00,062 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init detc
+2019-06-17 17:21:00,066 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 17:21:00,068 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 17:21:00,072 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 17:21:00,073 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 17:21:00,687 INFO ./didatic/clas.py:61 clas clas_0x7124 0.6178 s,     1 i,   1.62 i/s, 617.84 ms/i, 1 byte/s 2
+	{'unknown': 0, 'not_prime': 1, 'total_clas': 1, 'partitions': {7: 1}}
+2019-06-17 17:21:03,587 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x7128 DONE 3.5145 s,     0 i,   0.00 i/s, 3514.52 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'total_clas': 0, 'partitions': {}}
+2019-06-17 17:21:03,590 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x7123 DONE 3.5249 s,     0 i,   0.00 i/s, 3524.87 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'total_clas': 0, 'partitions': {}}
+2019-06-17 17:21:03,690 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x7126 DONE 3.6180 s,     0 i,   0.00 i/s, 3618.04 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'total_clas': 0, 'partitions': {}}
+2019-06-17 17:21:10,004 INFO ./didatic/prod.py:28 prod prod_0x7108 10.0000 s, 76546 i, 7654.60 i/s, 0.13 ms/i, 24.5 kB/s
+	{'partitions': {0: 7604, 3: 7675, 6: 7590, 9: 7624, 1: 7491, 4: 7509, 7: 7588, 2: 7639, 5: 7637, 8: 7608}}
+2019-06-17 17:21:10,553 INFO ./didatic/detc.py:52 detc detc_0x710a 10.4900 s,  4864 i, 463.68 i/s, 2.16 ms/i, 1.6 kB/s 35203
+	{'prime': 2378, 'not_prime': 2486}
+2019-06-17 17:21:10,571 INFO ./didatic/fina.py:39 fina fina_0x710b 10.5661 s,     2 i,   0.19 i/s, 5283.06 ms/i, 5.0 bytes/s 35203
+	{'prime': 2378, 'not_prime': 2487, 'unknown': 0, 'total_clas': 1, 'total': 4865}
+end 0 classifier-0 0x7123 4
+end 0 classifier-2 0x7126 3
+waiting 2
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 2
+join end 0 classifier-3 0x7128 2
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 1
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 1
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 1
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 1
+2019-06-17 17:21:10,686 INFO ./didatic/clas.py:61 clas clas_0x7124 10.6179 s, 15333 i, 1444.08 i/s, 0.69 ms/i, 4.8 kB/s 44333
+	{'unknown': 5189, 'not_prime': 10143, 'total_clas': 15332, 'partitions': {7: 378, 1: 378, 4: 3867, 8: 3305, 5: 2934, 3: 4471}}
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 1
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 1
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 1
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 1
+join waiting <Process(classifier-1, started)> classifier-1 0x7124 1
+__main__ DONE
+2019-06-17 17:21:20,004 INFO ./didatic/prod.py:28 prod prod_0x7108 20.0003 s, 155729 i, 7786.32 i/s, 0.13 ms/i, 31.6 kB/s
+	{'partitions': {0: 15565, 3: 15438, 6: 15439, 9: 15445, 1: 15537, 4: 15423, 7: 15514, 2: 15555, 5: 15464, 8: 15540}}
+2019-06-17 17:21:20,553 INFO ./didatic/detc.py:52 detc detc_0x710a 20.4901 s, 10203 i, 497.95 i/s, 2.01 ms/i, 1.8 kB/s 87437
+	{'prime': 4478, 'not_prime': 5725}
+2019-06-17 17:21:20,627 INFO ./didatic/fina.py:39 fina fina_0x710b 20.6221 s,     4 i,   0.19 i/s, 5155.51 ms/i, 5.0 bytes/s 87437
+	{'prime': 6856, 'not_prime': 18355, 'unknown': 5189, 'total_clas': 15333, 'total': 25211}
+2019-06-17 17:21:20,687 INFO ./didatic/clas.py:61 clas clas_0x7124 20.6182 s, 30866 i, 1497.02 i/s, 0.67 ms/i, 5.4 kB/s 92111
+	{'unknown': 5165, 'not_prime': 10368, 'total_clas': 15533, 'partitions': {7: 378, 1: 378, 4: 9072, 8: 3305, 5: 10515, 3: 7218}}
+2019-06-17 17:21:30,006 INFO ./didatic/prod.py:28 prod prod_0x7108 30.0025 s, 233907 i, 7796.24 i/s, 0.13 ms/i, 33.8 kB/s
+	{'partitions': {0: 23399, 3: 23089, 6: 23157, 9: 23280, 1: 23652, 4: 23154, 7: 23338, 2: 23600, 5: 23263, 8: 23536}}
+2019-06-17 17:21:30,686 INFO ./didatic/clas.py:61 clas clas_0x7124 30.6185 s, 46804 i, 1528.62 i/s, 0.65 ms/i, 5.7 kB/s 10478
+	{'unknown': 5338, 'not_prime': 10600, 'total_clas': 15938, 'partitions': {7: 1034, 1: 12943, 4: 11789, 8: 3305, 5: 10515, 3: 7218}}
+2019-06-17 17:21:30,691 INFO ./didatic/fina.py:39 fina fina_0x710b 30.6858 s,     6 i,   0.20 i/s, 5114.30 ms/i, 6.0 bytes/s 10478
+	{'prime': 6856, 'not_prime': 39323, 'unknown': 15692, 'total_clas': 46804, 'total': 46179}
+2019-06-17 17:21:30,838 INFO ./didatic/detc.py:52 detc detc_0x710a 30.7754 s, 15472 i, 502.74 i/s, 1.99 ms/i, 1.9 kB/s 4169
+	{'prime': 6563, 'not_prime': 8909}
+2019-06-17 17:21:40,006 INFO ./didatic/prod.py:28 prod prod_0x7108 40.0026 s, 306417 i, 7659.93 i/s, 0.13 ms/i, 34.2 kB/s
+	{'partitions': {0: 30562, 3: 30404, 6: 30515, 9: 30515, 1: 30870, 4: 30478, 7: 30562, 2: 30833, 5: 30665, 8: 30790}}
+2019-06-17 17:21:40,688 INFO ./didatic/clas.py:61 clas clas_0x7124 40.6186 s, 61232 i, 1507.49 i/s, 0.66 ms/i, 5.7 kB/s 23650
+	{'unknown': 4855, 'not_prime': 9573, 'total_clas': 14428, 'partitions': {7: 13047, 1: 12943, 4: 11789, 8: 3305, 5: 10515, 3: 7218, 2: 2415}}
+2019-06-17 17:21:40,691 INFO ./didatic/fina.py:39 fina fina_0x710b 40.6864 s,     8 i,   0.20 i/s, 5085.80 ms/i, 6.0 bytes/s 23650
+	{'prime': 13419, 'not_prime': 57805, 'unknown': 20547, 'total_clas': 61232, 'total': 71224}
+2019-06-17 17:21:40,939 INFO ./didatic/detc.py:52 detc detc_0x710a 40.8769 s, 20425 i, 499.67 i/s, 2.00 ms/i, 1.9 kB/s 20071
+	{'prime': 8464, 'not_prime': 11961}
+2019-06-17 17:21:50,006 INFO ./didatic/prod.py:28 prod prod_0x7108 50.0026 s, 383716 i, 7673.91 i/s, 0.13 ms/i, 34.9 kB/s
+	{'partitions': {0: 38178, 3: 37971, 6: 38288, 9: 38275, 1: 38792, 4: 38193, 7: 38164, 2: 38391, 5: 38338, 8: 38546}}
+2019-06-17 17:21:50,687 INFO ./didatic/clas.py:61 clas clas_0x7124 50.6189 s, 76455 i, 1510.40 i/s, 0.66 ms/i, 5.7 kB/s 42950
+	{'unknown': 5025, 'not_prime': 10198, 'total_clas': 15223, 'partitions': {7: 13047, 1: 12943, 4: 11789, 8: 7790, 5: 10515, 3: 7218, 2: 13153}}
+2019-06-17 17:21:50,691 INFO ./didatic/fina.py:39 fina fina_0x710b 50.6864 s,    10 i,   0.20 i/s, 5068.64 ms/i, 6.0 bytes/s 42950
+	{'prime': 21883, 'not_prime': 79964, 'unknown': 25572, 'total_clas': 76455, 'total': 101847}
+2019-06-17 17:21:51,430 INFO ./didatic/detc.py:52 detc detc_0x710a 51.3680 s, 25640 i, 499.14 i/s, 2.00 ms/i, 1.9 kB/s 44645
+	{'prime': 10264, 'not_prime': 15376}
+2019-06-17 17:22:00,007 INFO ./didatic/prod.py:28 prod prod_0x7108 60.0027 s, 464412 i, 7739.85 i/s, 0.13 ms/i, 35.7 kB/s
+	{'partitions': {0: 46374, 3: 46015, 6: 46312, 9: 46461, 1: 46848, 4: 46331, 7: 46178, 2: 46517, 5: 46323, 8: 46338}}
+2019-06-17 17:22:00,687 INFO ./didatic/clas.py:61 clas clas_0x7124 60.6191 s, 92188 i, 1520.78 i/s, 0.66 ms/i, 5.7 kB/s 68342
+	{'unknown': 5172, 'not_prime': 10561, 'total_clas': 15733, 'partitions': {7: 13047, 1: 12943, 4: 11789, 8: 16698, 5: 10515, 3: 7218, 2: 13153, 9: 6825}}
+2019-06-17 17:22:00,692 INFO ./didatic/fina.py:39 fina fina_0x710b 60.6869 s,    12 i,   0.20 i/s, 5057.24 ms/i, 6.0 bytes/s 68342
+	{'prime': 32147, 'not_prime': 105901, 'unknown': 30744, 'total_clas': 92188, 'total': 138048}
+2019-06-17 17:22:01,433 INFO ./didatic/detc.py:52 detc detc_0x710a 61.3704 s, 31100 i, 506.76 i/s, 1.97 ms/i, 1.9 kB/s 78467
+	{'prime': 11942, 'not_prime': 19158}
+2019-06-17 17:22:04,580 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap prod_0x7108 DONE 64.5759 s, 500000 i, 7742.83 i/s, 0.13 ms/i, 35.8 kB/s
+	{'partitions': {0: 49966, 3: 49626, 6: 49956, 9: 50047, 1: 50489, 4: 49825, 7: 49859, 2: 50137, 5: 49909, 8: 49878}}
+2019-06-17 17:22:10,689 INFO ./didatic/clas.py:61 clas clas_0x7124 70.6204 s, 105081 i, 1487.97 i/s, 0.67 ms/i, 5.6 kB/s 66253
+	{'unknown': 4358, 'not_prime': 8535, 'total_clas': 12893, 'partitions': {7: 13047, 1: 12943, 4: 11789, 8: 16698, 5: 10515, 3: 7218, 2: 13153, 9: 13084, 0: 6634}}
+2019-06-17 17:22:11,022 INFO ./didatic/fina.py:39 fina fina_0x710b 71.0175 s,    14 i,   0.20 i/s, 5072.68 ms/i, 6.0 bytes/s 66253
+	{'prime': 44089, 'not_prime': 133594, 'unknown': 35102, 'total_clas': 105081, 'total': 177683}
+2019-06-17 17:22:11,758 INFO ./didatic/detc.py:52 detc detc_0x710a 71.6952 s, 35349 i, 493.05 i/s, 2.03 ms/i, 1.9 kB/s 72913
+	{'prime': 13219, 'not_prime': 22130}
+2019-06-17 17:22:20,717 INFO ./didatic/clas.py:61 clas clas_0x7124 80.6492 s, 116845 i, 1448.81 i/s, 0.69 ms/i, 5.5 kB/s 53209
+	{'unknown': 3903, 'not_prime': 7861, 'total_clas': 11764, 'partitions': {7: 13047, 1: 12943, 4: 11789, 8: 16698, 5: 10515, 3: 7218, 2: 13153, 9: 13084, 0: 13046, 6: 5352}}
+2019-06-17 17:22:21,758 INFO ./didatic/detc.py:52 detc detc_0x710a 81.6956 s, 39249 i, 480.43 i/s, 2.08 ms/i, 1.8 kB/s 61051
+	{'prime': 14358, 'not_prime': 24891}
+2019-06-17 17:22:21,764 INFO ./didatic/fina.py:39 fina fina_0x710b 81.7590 s,    17 i,   0.21 i/s, 4809.35 ms/i, 6.0 bytes/s 61051
+	{'prime': 71666, 'not_prime': 188476, 'unknown': 39005, 'total_clas': 116845, 'total': 260142}
+2019-06-17 17:22:30,719 INFO ./didatic/clas.py:61 clas clas_0x7124 90.6499 s, 128360 i, 1416.00 i/s, 0.71 ms/i, 5.5 kB/s 110587
+	{'unknown': 3820, 'not_prime': 7695, 'total_clas': 11515, 'partitions': {7: 13047, 1: 12943, 4: 11789, 8: 16698, 5: 10515, 3: 11103, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:22:32,106 INFO ./didatic/detc.py:52 detc detc_0x710a 92.0436 s, 43175 i, 469.07 i/s, 2.13 ms/i, 1.8 kB/s 121051
+	{'prime': 15409, 'not_prime': 27766}
+2019-06-17 17:22:32,115 INFO ./didatic/fina.py:39 fina fina_0x710b 92.1105 s,    19 i,   0.21 i/s, 4847.92 ms/i, 6.0 bytes/s 121051
+	{'prime': 87075, 'not_prime': 223937, 'unknown': 42825, 'total_clas': 128360, 'total': 311012}
+2019-06-17 17:22:40,720 INFO ./didatic/clas.py:61 clas clas_0x7124 100.6510 s, 138968 i, 1380.69 i/s, 0.72 ms/i, 5.5 kB/s 206503
+	{'unknown': 3547, 'not_prime': 7061, 'total_clas': 10608, 'partitions': {7: 13047, 1: 12943, 4: 20453, 8: 16698, 5: 10515, 3: 13047, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:22:42,383 INFO ./didatic/detc.py:52 detc detc_0x710a 102.3204 s, 46831 i, 457.69 i/s, 2.18 ms/i, 1.8 kB/s 220303
+	{'prime': 16324, 'not_prime': 30507}
+2019-06-17 17:22:42,748 INFO ./didatic/fina.py:39 fina fina_0x710b 102.7429 s,    21 i,   0.20 i/s, 4892.52 ms/i, 6.0 bytes/s 220303
+	{'prime': 103399, 'not_prime': 261505, 'unknown': 46372, 'total_clas': 138968, 'total': 364904}
+2019-06-17 17:22:50,722 INFO ./didatic/clas.py:61 clas clas_0x7124 110.6538 s, 150954 i, 1364.20 i/s, 0.73 ms/i, 5.5 kB/s 326449
+	{'unknown': 4016, 'not_prime': 7970, 'total_clas': 11986, 'partitions': {7: 13047, 1: 12943, 4: 32439, 8: 16698, 5: 10515, 3: 13047, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:22:52,621 INFO ./didatic/detc.py:52 detc detc_0x710a 112.5580 s, 50987 i, 452.98 i/s, 2.21 ms/i, 1.8 kB/s 343555
+	{'prime': 17333, 'not_prime': 33654}
+2019-06-17 17:23:00,725 INFO ./didatic/clas.py:61 clas clas_0x7124 120.6570 s, 163103 i, 1351.79 i/s, 0.74 ms/i, 5.5 kB/s 446505
+	{'unknown': 4095, 'not_prime': 8054, 'total_clas': 12149, 'partitions': {7: 13047, 1: 12943, 4: 44588, 8: 16698, 5: 10515, 3: 13047, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:23:01,188 INFO ./didatic/fina.py:39 fina fina_0x710b 121.1832 s,    24 i,   0.20 i/s, 5049.30 ms/i, 6.0 bytes/s 446505
+	{'prime': 120732, 'not_prime': 311183, 'unknown': 54483, 'total_clas': 163103, 'total': 431915}
+2019-06-17 17:23:02,835 INFO ./didatic/detc.py:52 detc detc_0x710a 122.7732 s, 55087 i, 448.69 i/s, 2.23 ms/i, 1.8 kB/s 464657
+	{'prime': 18265, 'not_prime': 36822}
+2019-06-17 17:23:10,726 INFO ./didatic/clas.py:61 clas clas_0x7124 130.6572 s, 174614 i, 1336.43 i/s, 0.75 ms/i, 5.5 kB/s 193366
+	{'unknown': 3769, 'not_prime': 7742, 'total_clas': 11511, 'partitions': {7: 19321, 1: 12943, 4: 49825, 8: 16698, 5: 10515, 3: 13047, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:23:13,019 INFO ./didatic/detc.py:52 detc detc_0x710a 132.9569 s, 58731 i, 441.73 i/s, 2.26 ms/i, 1.8 kB/s 207925
+	{'prime': 19187, 'not_prime': 39544}
+2019-06-17 17:23:13,446 INFO ./didatic/fina.py:39 fina fina_0x710b 133.4416 s,    27 i,   0.20 i/s, 4942.28 ms/i, 6.0 bytes/s 207925
+	{'prime': 158184, 'not_prime': 395291, 'unknown': 58252, 'total_clas': 174614, 'total': 553475}
+2019-06-17 17:23:20,727 INFO ./didatic/clas.py:61 clas clas_0x7124 140.6586 s, 186945 i, 1329.07 i/s, 0.75 ms/i, 5.6 kB/s 317651
+	{'unknown': 4131, 'not_prime': 8200, 'total_clas': 12331, 'partitions': {7: 31652, 1: 12943, 4: 49825, 8: 16698, 5: 10515, 3: 13047, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:23:23,019 INFO ./didatic/detc.py:52 detc detc_0x710a 142.9569 s, 63175 i, 441.92 i/s, 2.26 ms/i, 1.9 kB/s 342257
+	{'prime': 20278, 'not_prime': 42897}
+2019-06-17 17:23:30,727 INFO ./didatic/clas.py:61 clas clas_0x7124 150.6592 s, 199430 i, 1323.72 i/s, 0.76 ms/i, 5.6 kB/s 443200
+	{'unknown': 4076, 'not_prime': 8409, 'total_clas': 12485, 'partitions': {7: 44137, 1: 12943, 4: 49825, 8: 16698, 5: 10515, 3: 13047, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:23:30,732 INFO ./didatic/fina.py:39 fina fina_0x710b 150.7275 s,    30 i,   0.20 i/s, 5024.25 ms/i, 6.0 bytes/s 443200
+	{'prime': 178462, 'not_prime': 454797, 'unknown': 66459, 'total_clas': 199430, 'total': 633259}
+2019-06-17 17:23:33,206 INFO ./didatic/detc.py:52 detc detc_0x710a 153.1436 s, 67295 i, 439.42 i/s, 2.28 ms/i, 1.9 kB/s 467767
+	{'prime': 21219, 'not_prime': 46076}
+2019-06-17 17:23:40,728 INFO ./didatic/clas.py:61 clas clas_0x7124 160.6599 s, 211270 i, 1315.01 i/s, 0.76 ms/i, 5.6 kB/s 188592
+	{'unknown': 3997, 'not_prime': 7843, 'total_clas': 11840, 'partitions': {7: 49859, 1: 19061, 4: 49825, 8: 16698, 5: 10515, 3: 13047, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:23:40,735 INFO ./didatic/fina.py:39 fina fina_0x710b 160.7301 s,    32 i,   0.20 i/s, 5022.81 ms/i, 6.0 bytes/s 188592
+	{'prime': 199681, 'not_prime': 508716, 'unknown': 70456, 'total_clas': 211270, 'total': 708397}
+2019-06-17 17:23:43,478 INFO ./didatic/detc.py:52 detc detc_0x710a 163.4161 s, 71404 i, 436.95 i/s, 2.29 ms/i, 1.9 kB/s 214621
+	{'prime': 22211, 'not_prime': 49193}
+2019-06-17 17:23:50,729 INFO ./didatic/clas.py:61 clas clas_0x7124 170.6612 s, 223682 i, 1310.68 i/s, 0.76 ms/i, 5.6 kB/s 312005
+	{'unknown': 4176, 'not_prime': 8236, 'total_clas': 12412, 'partitions': {7: 49859, 1: 31473, 4: 49825, 8: 16698, 5: 10515, 3: 13047, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:23:53,520 INFO ./didatic/detc.py:52 detc detc_0x710a 173.4573 s, 75575 i, 435.70 i/s, 2.30 ms/i, 1.9 kB/s 338003
+	{'prime': 23216, 'not_prime': 52359}
+2019-06-17 17:23:53,526 INFO ./didatic/fina.py:39 fina fina_0x710b 173.5209 s,    35 i,   0.20 i/s, 4957.74 ms/i, 6.0 bytes/s 338003
+	{'prime': 245108, 'not_prime': 618504, 'unknown': 74632, 'total_clas': 223682, 'total': 863612}
+2019-06-17 17:24:00,731 INFO ./didatic/clas.py:61 clas clas_0x7124 180.6627 s, 235788 i, 1305.13 i/s, 0.77 ms/i, 5.7 kB/s 430843
+	{'unknown': 4022, 'not_prime': 8084, 'total_clas': 12106, 'partitions': {7: 49859, 1: 43579, 4: 49825, 8: 16698, 5: 10515, 3: 13047, 2: 13153, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:24:03,846 INFO ./didatic/detc.py:52 detc detc_0x710a 183.7840 s, 79650 i, 433.39 i/s, 2.31 ms/i, 1.9 kB/s 461557
+	{'prime': 24150, 'not_prime': 55500}
+2019-06-17 17:24:04,095 INFO ./didatic/fina.py:39 fina fina_0x710b 184.0902 s,    37 i,   0.20 i/s, 4975.41 ms/i, 6.0 bytes/s 461557
+	{'prime': 269258, 'not_prime': 682088, 'unknown': 78654, 'total_clas': 235788, 'total': 951346}
+2019-06-17 17:24:10,731 INFO ./didatic/clas.py:61 clas clas_0x7124 190.6631 s, 247005 i, 1295.51 i/s, 0.77 ms/i, 5.7 kB/s 171969
+	{'unknown': 3748, 'not_prime': 7469, 'total_clas': 11217, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 16698, 5: 10515, 3: 13047, 2: 17460, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:24:13,847 INFO ./didatic/detc.py:52 detc detc_0x710a 193.7844 s, 83546 i, 431.13 i/s, 2.32 ms/i, 1.9 kB/s 204983
+	{'prime': 25059, 'not_prime': 58487}
+2019-06-17 17:24:20,732 INFO ./didatic/clas.py:61 clas clas_0x7124 200.6636 s, 259316 i, 1292.29 i/s, 0.77 ms/i, 5.7 kB/s 295205
+	{'unknown': 4062, 'not_prime': 8249, 'total_clas': 12311, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 16698, 5: 10515, 3: 13047, 2: 29771, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:24:20,736 INFO ./didatic/fina.py:39 fina fina_0x710b 200.7308 s,    40 i,   0.20 i/s, 5018.27 ms/i, 6.0 bytes/s 295205
+	{'prime': 294317, 'not_prime': 756293, 'unknown': 86464, 'total_clas': 259316, 'total': 1050610}
+2019-06-17 17:24:24,038 INFO ./didatic/detc.py:52 detc detc_0x710a 203.9756 s, 87583 i, 429.38 i/s, 2.33 ms/i, 1.9 kB/s 330415
+	{'prime': 26040, 'not_prime': 61543}
+2019-06-17 17:24:30,732 INFO ./didatic/clas.py:61 clas clas_0x7124 210.6637 s, 271479 i, 1288.68 i/s, 0.78 ms/i, 5.7 kB/s 418069
+	{'unknown': 4091, 'not_prime': 8072, 'total_clas': 12163, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 16698, 5: 10515, 3: 13047, 2: 41934, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:24:30,740 INFO ./didatic/fina.py:39 fina fina_0x710b 210.7354 s,    42 i,   0.20 i/s, 5017.51 ms/i, 6.0 bytes/s 418069
+	{'prime': 320357, 'not_prime': 825908, 'unknown': 90555, 'total_clas': 271479, 'total': 1146265}
+2019-06-17 17:24:34,351 INFO ./didatic/detc.py:52 detc detc_0x710a 214.2807 s, 91823 i, 428.52 i/s, 2.33 ms/i, 1.9 kB/s 455591
+	{'prime': 27002, 'not_prime': 64821}
+2019-06-17 17:24:40,734 INFO ./didatic/clas.py:61 clas clas_0x7124 220.6653 s, 282890 i, 1281.99 i/s, 0.78 ms/i, 5.7 kB/s 136549
+	{'unknown': 3734, 'not_prime': 7677, 'total_clas': 11411, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 16698, 5: 13723, 3: 13047, 2: 50137, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:24:44,345 INFO ./didatic/detc.py:52 detc detc_0x710a 224.2827 s, 95557 i, 426.06 i/s, 2.35 ms/i, 1.9 kB/s 176507
+	{'prime': 27920, 'not_prime': 67637}
+2019-06-17 17:24:44,349 INFO ./didatic/fina.py:39 fina fina_0x710b 224.3446 s,    45 i,   0.20 i/s, 4985.44 ms/i, 6.0 bytes/s 176507
+	{'prime': 375279, 'not_prime': 966043, 'unknown': 94289, 'total_clas': 282890, 'total': 1341322}
+2019-06-17 17:24:50,734 INFO ./didatic/clas.py:61 clas clas_0x7124 230.6655 s, 296439 i, 1285.15 i/s, 0.78 ms/i, 5.7 kB/s 273133
+	{'unknown': 4528, 'not_prime': 9021, 'total_clas': 13549, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 16698, 5: 27272, 3: 13047, 2: 50137, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:24:54,505 INFO ./didatic/detc.py:52 detc detc_0x710a 234.4429 s, 100158 i, 427.22 i/s, 2.34 ms/i, 1.9 kB/s 311711
+	{'prime': 29047, 'not_prime': 71111}
+2019-06-17 17:24:54,765 INFO ./didatic/fina.py:39 fina fina_0x710b 234.7603 s,    47 i,   0.20 i/s, 4994.90 ms/i, 6.0 bytes/s 311711
+	{'prime': 404326, 'not_prime': 1046175, 'unknown': 98817, 'total_clas': 296439, 'total': 1450501}
+2019-06-17 17:25:00,734 INFO ./didatic/clas.py:61 clas clas_0x7124 240.6656 s, 308699 i, 1282.69 i/s, 0.78 ms/i, 5.7 kB/s 395491
+	{'unknown': 4175, 'not_prime': 8085, 'total_clas': 12260, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 16698, 5: 39532, 3: 13047, 2: 50137, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:25:04,781 INFO ./didatic/detc.py:52 detc detc_0x710a 244.7186 s, 104404 i, 426.63 i/s, 2.34 ms/i, 1.9 kB/s 436441
+	{'prime': 30022, 'not_prime': 74382}
+2019-06-17 17:25:04,788 INFO ./didatic/fina.py:39 fina fina_0x710b 244.7837 s,    49 i,   0.20 i/s, 4995.59 ms/i, 6.0 bytes/s 436441
+	{'prime': 434348, 'not_prime': 1128642, 'unknown': 102992, 'total_clas': 308699, 'total': 1562990}
+2019-06-17 17:25:10,735 INFO ./didatic/clas.py:61 clas clas_0x7124 250.6660 s, 320118 i, 1277.07 i/s, 0.78 ms/i, 5.7 kB/s 140957
+	{'unknown': 3873, 'not_prime': 7546, 'total_clas': 11419, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 17740, 5: 49909, 3: 13047, 2: 50137, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:25:14,799 INFO ./didatic/detc.py:52 detc detc_0x710a 254.7364 s, 108403 i, 425.55 i/s, 2.35 ms/i, 1.9 kB/s 187009
+	{'prime': 30975, 'not_prime': 77428}
+2019-06-17 17:25:14,804 INFO ./didatic/fina.py:39 fina fina_0x710b 254.7989 s,    51 i,   0.20 i/s, 4996.06 ms/i, 6.0 bytes/s 187009
+	{'prime': 465323, 'not_prime': 1213616, 'unknown': 106865, 'total_clas': 320118, 'total': 1678939}
+2019-06-17 17:25:20,737 INFO ./didatic/clas.py:61 clas clas_0x7124 260.6674 s, 332516 i, 1275.63 i/s, 0.78 ms/i, 5.7 kB/s 264581
+	{'unknown': 4140, 'not_prime': 8258, 'total_clas': 12398, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 30138, 5: 49909, 3: 13047, 2: 50137, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:25:24,799 INFO ./didatic/detc.py:52 detc detc_0x710a 264.7367 s, 112453 i, 424.77 i/s, 2.35 ms/i, 1.9 kB/s 309073
+	{'prime': 31897, 'not_prime': 80556}
+2019-06-17 17:25:24,807 INFO ./didatic/fina.py:39 fina fina_0x710b 264.8027 s,    53 i,   0.20 i/s, 4996.28 ms/i, 6.0 bytes/s 309073
+	{'prime': 497220, 'not_prime': 1302430, 'unknown': 111005, 'total_clas': 332516, 'total': 1799650}
+2019-06-17 17:25:30,737 INFO ./didatic/clas.py:61 clas clas_0x7124 270.6686 s, 344974 i, 1274.53 i/s, 0.78 ms/i, 5.7 kB/s 388661
+	{'unknown': 4091, 'not_prime': 8367, 'total_clas': 12458, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 42596, 5: 49909, 3: 13047, 2: 50137, 9: 13084, 0: 13046, 6: 12982}}
+2019-06-17 17:25:34,799 INFO ./didatic/detc.py:52 detc detc_0x710a 274.7370 s, 116654 i, 424.60 i/s, 2.36 ms/i, 1.9 kB/s 435515
+	{'prime': 32925, 'not_prime': 83729}
+2019-06-17 17:25:34,811 INFO ./didatic/fina.py:39 fina fina_0x710b 274.8059 s,    55 i,   0.20 i/s, 4996.47 ms/i, 6.0 bytes/s 435515
+	{'prime': 530145, 'not_prime': 1394526, 'unknown': 115096, 'total_clas': 344974, 'total': 1924671}
+2019-06-17 17:25:40,739 INFO ./didatic/clas.py:61 clas clas_0x7124 280.6702 s, 356054 i, 1268.58 i/s, 0.79 ms/i, 5.7 kB/s 133329
+	{'unknown': 3721, 'not_prime': 7359, 'total_clas': 11080, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 13047, 2: 50137, 9: 13084, 0: 13299, 6: 12982}}
+2019-06-17 17:25:45,182 INFO ./didatic/detc.py:52 detc detc_0x710a 285.1197 s, 120522 i, 422.71 i/s, 2.37 ms/i, 1.9 kB/s 183457
+	{'prime': 33596, 'not_prime': 86926}
+2019-06-17 17:25:45,186 INFO ./didatic/fina.py:39 fina fina_0x710b 285.1812 s,    57 i,   0.20 i/s, 5003.18 ms/i, 6.0 bytes/s 183457
+	{'prime': 563741, 'not_prime': 1488811, 'unknown': 118817, 'total_clas': 356054, 'total': 2052552}
+2019-06-17 17:25:50,740 INFO ./didatic/clas.py:61 clas clas_0x7124 290.6719 s, 368954 i, 1269.31 i/s, 0.79 ms/i, 5.8 kB/s 261737
+	{'unknown': 4330, 'not_prime': 8570, 'total_clas': 12900, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 13047, 2: 50137, 9: 13084, 0: 26199, 6: 12982}}
+2019-06-17 17:25:55,204 INFO ./didatic/detc.py:52 detc detc_0x710a 295.1420 s, 124841 i, 422.99 i/s, 2.36 ms/i, 1.9 kB/s 313297
+	{'prime': 34654, 'not_prime': 90187}
+2019-06-17 17:25:55,208 INFO ./didatic/fina.py:39 fina fina_0x710b 295.2032 s,    59 i,   0.20 i/s, 5003.44 ms/i, 6.0 bytes/s 313297
+	{'prime': 598395, 'not_prime': 1587568, 'unknown': 123147, 'total_clas': 368954, 'total': 2185963}
+2019-06-17 17:26:00,740 INFO ./didatic/clas.py:61 clas clas_0x7124 300.6720 s, 381921 i, 1270.22 i/s, 0.79 ms/i, 5.8 kB/s 392694
+	{'unknown': 4341, 'not_prime': 8626, 'total_clas': 12967, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 13047, 2: 50137, 9: 13084, 0: 39166, 6: 12982}}
+2019-06-17 17:26:05,331 INFO ./didatic/detc.py:52 detc detc_0x710a 305.2682 s, 129231 i, 423.34 i/s, 2.36 ms/i, 1.9 kB/s 443609
+	{'prime': 35704, 'not_prime': 93527}
+2019-06-17 17:26:05,334 INFO ./didatic/fina.py:39 fina fina_0x710b 305.3294 s,    61 i,   0.20 i/s, 5005.40 ms/i, 6.0 bytes/s 443609
+	{'prime': 634099, 'not_prime': 1689721, 'unknown': 127488, 'total_clas': 381921, 'total': 2323820}
+2019-06-17 17:26:10,791 INFO ./didatic/clas.py:61 clas clas_0x7124 310.7231 s, 393886 i, 1267.64 i/s, 0.79 ms/i, 5.8 kB/s 142861
+	{'unknown': 3980, 'not_prime': 7985, 'total_clas': 11965, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 13047, 2: 50137, 9: 14249, 0: 49966, 6: 12982}}
+2019-06-17 17:26:15,332 INFO ./didatic/detc.py:52 detc detc_0x710a 315.2696 s, 133293 i, 422.79 i/s, 2.37 ms/i, 1.9 kB/s 197971
+	{'prime': 36656, 'not_prime': 96637}
+2019-06-17 17:26:15,345 INFO ./didatic/fina.py:39 fina fina_0x710b 315.3398 s,    63 i,   0.20 i/s, 5005.39 ms/i, 6.0 bytes/s 197971
+	{'prime': 670755, 'not_prime': 1794343, 'unknown': 131468, 'total_clas': 393886, 'total': 2465098}
+2019-06-17 17:26:20,792 INFO ./didatic/clas.py:61 clas clas_0x7124 320.7240 s, 406803 i, 1268.39 i/s, 0.79 ms/i, 5.8 kB/s 272311
+	{'unknown': 4318, 'not_prime': 8599, 'total_clas': 12917, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 13047, 2: 50137, 9: 27166, 0: 49966, 6: 12982}}
+2019-06-17 17:26:25,535 INFO ./didatic/fina.py:39 fina fina_0x710b 325.5302 s,    65 i,   0.20 i/s, 5008.16 ms/i, 6.0 bytes/s 326317
+	{'prime': 708451, 'not_prime': 1902906, 'unknown': 135786, 'total_clas': 406803, 'total': 2611357}
+2019-06-17 17:26:25,531 INFO ./didatic/detc.py:52 detc detc_0x710a 325.4691 s, 137660 i, 422.96 i/s, 2.36 ms/i, 1.9 kB/s 326317
+	{'prime': 37696, 'not_prime': 99964}
+2019-06-17 17:26:30,792 INFO ./didatic/clas.py:61 clas clas_0x7124 330.7243 s, 419740 i, 1269.15 i/s, 0.79 ms/i, 5.8 kB/s 401665
+	{'unknown': 4339, 'not_prime': 8598, 'total_clas': 12937, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 13047, 2: 50137, 9: 40103, 0: 49966, 6: 12982}}
+2019-06-17 17:26:35,532 INFO ./didatic/detc.py:52 detc detc_0x710a 335.4691 s, 141840 i, 422.81 i/s, 2.37 ms/i, 1.9 kB/s 452371
+	{'prime': 38655, 'not_prime': 103185}
+2019-06-17 17:26:36,339 INFO ./didatic/fina.py:39 fina fina_0x710b 336.3345 s,    67 i,   0.20 i/s, 5019.92 ms/i, 6.0 bytes/s 452371
+	{'prime': 747106, 'not_prime': 2014689, 'unknown': 140125, 'total_clas': 419740, 'total': 2761795}
+2019-06-17 17:26:40,795 INFO ./didatic/clas.py:61 clas clas_0x7124 340.7251 s, 431351 i, 1265.98 i/s, 0.79 ms/i, 5.8 kB/s 147263
+	{'unknown': 3830, 'not_prime': 7781, 'total_clas': 11611, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 13047, 2: 50137, 9: 50047, 0: 49966, 6: 14649}}
+2019-06-17 17:26:45,648 INFO ./didatic/detc.py:52 detc detc_0x710a 345.5855 s, 145865 i, 422.08 i/s, 2.37 ms/i, 1.9 kB/s 205769
+	{'prime': 39646, 'not_prime': 106219}
+2019-06-17 17:26:50,794 INFO ./didatic/clas.py:61 clas clas_0x7124 350.7256 s, 444243 i, 1266.64 i/s, 0.79 ms/i, 5.8 kB/s 275863
+	{'unknown': 4295, 'not_prime': 8597, 'total_clas': 12892, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 13047, 2: 50137, 9: 50047, 0: 49966, 6: 27541}}
+2019-06-17 17:26:50,798 INFO ./didatic/fina.py:39 fina fina_0x710b 350.7933 s,    70 i,   0.20 i/s, 5011.33 ms/i, 6.0 bytes/s 275863
+	{'prime': 786752, 'not_prime': 2137286, 'unknown': 148250, 'total_clas': 444243, 'total': 2924038}
+2019-06-17 17:26:55,648 INFO ./didatic/detc.py:52 detc detc_0x710a 355.5855 s, 150148 i, 422.26 i/s, 2.37 ms/i, 1.9 kB/s 334535
+	{'prime': 40672, 'not_prime': 109476}
+2019-06-17 17:27:00,794 INFO ./didatic/clas.py:61 clas clas_0x7124 360.7257 s, 457376 i, 1267.93 i/s, 0.79 ms/i, 5.8 kB/s 407751
+	{'unknown': 4272, 'not_prime': 8861, 'total_clas': 13133, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 13047, 2: 50137, 9: 50047, 0: 49966, 6: 40674}}
+2019-06-17 17:27:06,285 INFO ./didatic/detc.py:52 detc detc_0x710a 366.2229 s, 154532 i, 421.96 i/s, 2.37 ms/i, 1.9 kB/s 468373
+	{'prime': 41707, 'not_prime': 112825}
+2019-06-17 17:27:06,293 INFO ./didatic/fina.py:39 fina fina_0x710b 366.2883 s,    73 i,   0.20 i/s, 5017.65 ms/i, 6.0 bytes/s 468373
+	{'prime': 869131, 'not_prime': 2368448, 'unknown': 152522, 'total_clas': 457376, 'total': 3237579}
+2019-06-17 17:27:10,794 INFO ./didatic/clas.py:61 clas clas_0x7124 370.7259 s, 469737 i, 1267.07 i/s, 0.79 ms/i, 5.8 kB/s 162319
+	{'unknown': 4079, 'not_prime': 8282, 'total_clas': 12361, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 16126, 2: 50137, 9: 50047, 0: 49966, 6: 49956}}
+2019-06-17 17:27:16,290 INFO ./didatic/detc.py:52 detc detc_0x710a 376.2280 s, 158818 i, 422.13 i/s, 2.37 ms/i, 1.9 kB/s 229613
+	{'prime': 42752, 'not_prime': 116066}
+2019-06-17 17:27:16,394 INFO ./didatic/fina.py:39 fina fina_0x710b 376.3893 s,    75 i,   0.20 i/s, 5018.52 ms/i, 6.0 bytes/s 229613
+	{'prime': 911883, 'not_prime': 2492796, 'unknown': 156601, 'total_clas': 469737, 'total': 3404679}
+2019-06-17 17:27:20,796 INFO ./didatic/clas.py:61 clas clas_0x7124 380.7265 s, 483003 i, 1268.64 i/s, 0.79 ms/i, 5.9 kB/s 296152
+	{'unknown': 4434, 'not_prime': 8832, 'total_clas': 13266, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 29392, 2: 50137, 9: 50047, 0: 49966, 6: 49956}}
+2019-06-17 17:27:26,537 INFO ./didatic/detc.py:52 detc detc_0x710a 386.4747 s, 163312 i, 422.57 i/s, 2.37 ms/i, 2.0 kB/s 364675
+	{'prime': 43808, 'not_prime': 119504}
+2019-06-17 17:27:26,544 INFO ./didatic/fina.py:39 fina fina_0x710b 386.5387 s,    77 i,   0.20 i/s, 5019.98 ms/i, 6.0 bytes/s 364675
+	{'prime': 955691, 'not_prime': 2621132, 'unknown': 161035, 'total_clas': 483003, 'total': 3576823}
+2019-06-17 17:27:30,796 INFO ./didatic/clas.py:61 clas clas_0x7124 390.7274 s, 495970 i, 1269.35 i/s, 0.79 ms/i, 5.9 kB/s 427113
+	{'unknown': 4311, 'not_prime': 8656, 'total_clas': 12967, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 42359, 2: 50137, 9: 50047, 0: 49966, 6: 49956}}
+2019-06-17 17:27:36,540 INFO ./didatic/detc.py:52 detc detc_0x710a 396.4776 s, 167650 i, 422.85 i/s, 2.36 ms/i, 2.0 kB/s 495931
+	{'prime': 44815, 'not_prime': 122835}
+2019-06-17 17:27:36,544 INFO ./didatic/fina.py:39 fina fina_0x710b 396.5389 s,    79 i,   0.20 i/s, 5019.48 ms/i, 6.0 bytes/s 495931
+	{'prime': 1000506, 'not_prime': 2752623, 'unknown': 165346, 'total_clas': 495970, 'total': 3753129}
+2019-06-17 17:27:37,400 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x7124 DONE 397.3318 s, 503237 i, 1266.54 i/s, 0.79 ms/i, 5.9 kB/s
+	{'unknown': 2430, 'not_prime': 4837, 'total_clas': 7267, 'partitions': {7: 49859, 1: 50489, 4: 49825, 8: 53423, 5: 49909, 3: 49626, 2: 50137, 9: 50047, 0: 49966, 6: 49956}}
+2019-06-17 17:27:46,678 INFO ./didatic/detc.py:54 detc detc_0x710a 406.6157 s, 167776 i, 412.62 i/s, 2.42 ms/i, 1.9 kB/s
+	{'prime': 44843, 'not_prime': 122933}
+2019-06-17 17:27:46,782 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap detc_0x710a DONE 406.7200 s, 167776 i, 412.51 i/s, 2.42 ms/i, 1.9 kB/s
+	{'prime': 44843, 'not_prime': 122933, 'partitions': {7: 16531, 1: 16884, 8: 17693, 4: 16694, 5: 16830, 3: 16551, 2: 16692, 9: 16669, 0: 16694, 6: 16538}}
+2019-06-17 17:28:36,646 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap fina_0x710b DONE 456.6412 s,    79 i,   0.17 i/s, 5780.27 ms/i, 5.0 bytes/s
+	{'prime': 1000506, 'not_prime': 2752623, 'unknown': 165346, 'total_clas': 495970, 'total': 3753129}
+28936
+28937
+28938
+./didatic-init.sh 4 >> didatic/run/bkp/primes_x4_1.log  578.78s user 39.98s system 135% cpu 7:36.88 total

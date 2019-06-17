@@ -12,12 +12,12 @@ def prod(name='prod', **kwargs):
         key_serializer=msgpack.packb,
     )
 
-    resume = {}
+    partitions = {}
     def on_send_success(record_metadata):
-        if record_metadata.partition not in resume:
-            resume[record_metadata.partition] = 0
-        resume[record_metadata.partition] += 1
-    for i in range(500000):
+        if record_metadata.partition not in partitions:
+            partitions[record_metadata.partition] = 0
+        partitions[record_metadata.partition] += 1
+    for i in range(2, 500001):
         kwargs['counter'] = i
         value = msgpack.packb(kwargs['counter'])
         kwargs['nbytes'] += len(value)
@@ -25,9 +25,9 @@ def prod(name='prod', **kwargs):
         # 
         currentTime = time.time_ns()
         if currentTime - kwargs['lastReport'] > report_interval:
-            log.info( report(currentTime=currentTime, extra={'partitions': resume}, **kwargs) )
-            resume = {}
+            log.info( report(currentTime=currentTime, extra={'partitions': partitions}, **kwargs) )
             kwargs['lastReport'] = currentTime
+    kwargs['extra'] = {'partitions': partitions}
     return kwargs
 
 if __name__ == "__main__":

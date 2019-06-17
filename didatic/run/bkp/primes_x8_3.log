@@ -1,0 +1,64 @@
+2019-06-17 16:15:01,883 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init fina
+2019-06-17 16:15:01,884 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init prod
+2019-06-17 16:15:01,884 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init detc
+2019-06-17 16:15:01,890 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 16:15:01,895 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 16:15:01,897 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 16:15:01,893 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 16:15:01,896 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 16:15:01,900 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 16:15:01,897 INFO /home/puhl/project/minas-py/didatic/base.py:39 wrap init clas
+2019-06-17 16:15:04,517 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x3f79 DONE 2.6249 s,     0 i,   0.00 i/s, 2624.87 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'partitions': {}}
+2019-06-17 16:15:04,517 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x3f81 DONE 2.6202 s,     0 i,   0.00 i/s, 2620.18 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'partitions': {}}
+2019-06-17 16:15:04,521 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x3f7a DONE 2.6308 s,     0 i,   0.00 i/s, 2630.79 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'partitions': {}}
+2019-06-17 16:15:04,521 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x3f7d DONE 2.6267 s,     0 i,   0.00 i/s, 2626.66 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'partitions': {}}
+2019-06-17 16:15:04,532 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x3f7b DONE 2.6365 s,     0 i,   0.00 i/s, 2636.54 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'partitions': {}}
+2019-06-17 16:15:04,619 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x3f7e DONE 2.7217 s,     0 i,   0.00 i/s, 2721.67 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'partitions': {}}
+2019-06-17 16:15:11,884 INFO ./didatic/prod.py:28 prod prod_0x3f63 10.0000 s, 66091 i, 6609.09 i/s, 0.15 ms/i, 19.4 kB/s
+	{'partitions': {10: 4084, 1: 4108, 4: 4053, 7: 4100, 13: 4051, 0: 4102, 3: 4034, 6: 4187, 9: 4150, 12: 4039, 15: 4097, 5: 4006, 2: 4017, 8: 4082, 11: 4059, 14: 4133}}
+2019-06-17 16:15:12,040 ERROR /home/puhl/project/minas-py/didatic/base.py:47 wrap 'prime'
+Traceback (most recent call last):
+  File "/home/puhl/project/minas-py/didatic/base.py", line 43, in wrap
+    kwargs = fn(**kwargs)
+  File "./didatic/fina.py", line 43, in fina
+    resumeTotal['total'] = resume['prime'] + resume['not_prime']
+KeyError: 'prime'
+2019-06-17 16:15:12,047 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap fina_0x3f66 DONE 10.1646 s,     0 i,   0.00 i/s, 10164.58 ms/i, 0.0 bytes/s
+2019-06-17 16:15:12,185 INFO ./didatic/detc.py:54 detc detc_0x3f65 10.3014 s,     0 i,   0.00 i/s, 10301.40 ms/i, 0.0 bytes/s
+	{'prime': 0, 'not_prime': 0}
+2019-06-17 16:15:12,287 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap detc_0x3f65 DONE 10.4036 s,     0 i,   0.00 i/s, 10403.63 ms/i, 0.0 bytes/s
+	{'prime': 0, 'not_prime': 0, 'partitions': {}}
+end 0 classifier-0 0x3f79 7
+end 0 classifier-2 0x3f7b 6
+end 0 classifier-4 0x3f7e 5
+waiting 4
+end 0 classifier-1 0x3f7a 4
+end 0 classifier-5 0x3f81 3
+waiting 2
+join end 0 classifier-3 0x3f7d 2
+join waiting <Process(classifier-6, started)> classifier-6 0x3f84 1
+join waiting <Process(classifier-6, started)> classifier-6 0x3f84 1
+2019-06-17 16:15:14,430 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap clas_0x3f84 DONE 12.5298 s,     0 i,   0.00 i/s, 12529.76 ms/i, 0.0 bytes/s
+	{'unknown': 0, 'not_prime': 0, 'partitions': {}}
+join end 0 classifier-6 0x3f84 1
+__main__ DONE
+16227
+16227
+2019-06-17 16:15:21,945 INFO ./didatic/prod.py:28 prod prod_0x3f63 20.0612 s, 142778 i, 7117.14 i/s, 0.14 ms/i, 28.4 kB/s
+	{'partitions': {10: 8906, 1: 8985, 4: 8861, 7: 8816, 13: 8825, 0: 8905, 3: 8875, 6: 8954, 9: 8916, 12: 8830, 15: 8864, 5: 8960, 2: 8804, 8: 8927, 11: 8909, 14: 9143}}
+2019-06-17 16:15:31,945 INFO ./didatic/prod.py:28 prod prod_0x3f63 30.0612 s, 206300 i, 6862.66 i/s, 0.15 ms/i, 29.2 kB/s
+	{'partitions': {10: 12828, 1: 12867, 4: 12895, 7: 12700, 13: 12867, 0: 12954, 3: 12745, 6: 12860, 9: 12853, 12: 12825, 15: 12847, 5: 12908, 2: 12757, 8: 12915, 11: 12980, 14: 13198}}
+2019-06-17 16:15:41,945 INFO ./didatic/prod.py:28 prod prod_0x3f63 40.0613 s, 286520 i, 7152.04 i/s, 0.14 ms/i, 31.7 kB/s
+	{'partitions': {10: 17815, 1: 17878, 4: 17933, 7: 17776, 13: 17896, 0: 17943, 3: 17720, 6: 17866, 9: 17783, 12: 17821, 15: 17863, 5: 17968, 2: 17835, 8: 17866, 11: 18055, 14: 18252}}
+2019-06-17 16:15:51,947 INFO ./didatic/prod.py:28 prod prod_0x3f63 50.0635 s, 369428 i, 7379.19 i/s, 0.14 ms/i, 33.5 kB/s
+	{'partitions': {10: 22978, 1: 22908, 4: 22980, 7: 22870, 13: 23014, 0: 23073, 3: 22898, 6: 22961, 9: 23052, 12: 22971, 15: 23155, 5: 23141, 2: 23049, 8: 23097, 11: 23336, 14: 23410}}
+2019-06-17 16:16:01,947 INFO ./didatic/prod.py:28 prod prod_0x3f63 60.0635 s, 451762 i, 7521.40 i/s, 0.13 ms/i, 34.6 kB/s
+	{'partitions': {10: 28215, 1: 28095, 4: 27998, 7: 27929, 13: 28223, 0: 28211, 3: 28159, 6: 28069, 9: 28062, 12: 28189, 15: 28148, 5: 28351, 2: 28130, 8: 28285, 11: 28486, 14: 28510}}
+2019-06-17 16:16:07,683 INFO /home/puhl/project/minas-py/didatic/base.py:52 wrap prod_0x3f63 DONE 65.7999 s, 500000 i, 7598.79 i/s, 0.13 ms/i, 35.2 kB/s
+	{'partitions': {10: 31141, 1: 31111, 4: 30967, 7: 30930, 13: 31198, 0: 31365, 3: 31247, 6: 31041, 9: 31199, 12: 31261, 15: 31269, 5: 31445, 2: 31084, 8: 31383, 11: 31559, 14: 31546}}
