@@ -50,6 +50,9 @@ Sem delay entre items e relatório a cada 10s:
 - [x] carregar tudo na memória
 - [x] testar também com 1/2 para treinamento com validação cruzada
 - [ ] Tabela correlacionando tempos e N classificadores
-- [ ] Pedir a copia do artigo aceito do Gui Cassales, ISCC
+- [x] Pedir a copia do artigo aceito do Gui Cassales, ISCC
 - [ ] testar N-fold cross validation
   - provavelmente esse teste mais longo seja melhor fazer após a quali
+
+Problemas com *load-balancing* no kafka foram mencionados com o Paulo Matias que sugeriu ZeroMQ e RabbitMQ.
+O primeiro sendo destacado pela filosofia KISS (Keep It Simple, Stupid).

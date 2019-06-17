@@ -16,31 +16,30 @@ def fina(name='detc', group_id=0, **kwargs):
         # value_deserializer=msgpack.unpackb,
         key_deserializer=msgpack.unpackb,
         # StopIteration if no message after 1 sec
-        consumer_timeout_ms=10 * 1000,
+        consumer_timeout_ms=4* 60 * 1000,
         # max_poll_records=10,
-        # auto_offset_reset='latest',
-        auto_offset_reset='earliest',
+        auto_offset_reset='latest',
+        # auto_offset_reset='earliest',
     )
 
-    resume = {'unknown': 0, 'prime': 0, 'not_prime': 0}
+    resume = {'prime': 0, 'not_prime': 0}
     for record in consumer:
         kwargs['counter'] += 1
         kwargs['nbytes'] += len(record.value)
         value = msgpack.unpackb(record.value)
         for key, value in value.items():
             key = key.decode('utf-8')
+            if key not in resume:
+                resume[key] = 0
             resume[key] += value
         # 
         currentTime = time.time_ns()
         if currentTime - kwargs['lastReport'] > report_interval:
-            resumeTotal = resume.copy()
-            resumeTotal['total'] = resume['prime'] + resume['not_prime']
-            log.info( report(currentTime=currentTime, key=record.key, extra=resumeTotal, **kwargs) )
+            resume['total'] = resume['prime'] + resume['not_prime']
+            log.info( report(currentTime=currentTime, key=record.key, extra=resume, **kwargs) )
             kwargs['lastReport'] = currentTime
-            resume = {'prime': 0, 'not_prime': 0}
-    resumeTotal = resume.copy()
-    resumeTotal['total'] = resume['prime'] + resume['not_prime']
-    log.info( report(currentTime=time.time_ns(), extra=resumeTotal, **kwargs) )
+    resume['total'] = resume['prime'] + resume['not_prime']
+    kwargs['extra'] = resume
     return kwargs
 
 if __name__ == "__main__":

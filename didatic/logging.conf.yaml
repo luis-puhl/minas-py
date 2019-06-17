@@ -14,10 +14,10 @@ handlers:
     class : logging.handlers.RotatingFileHandler
     level: DEBUG
     formatter: complete
-    filename: ./didatic/run/minas.log
-    # 1MB
-    maxBytes: 1048576
-    backupCount: 10
+    filename: ./didatic/run/primes.log
+    # 100 KB
+    maxBytes: 104857
+    backupCount: 100
 root:
   level: DEBUG
   handlers: [console, file]

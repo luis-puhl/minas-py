@@ -17,7 +17,7 @@ handlers:
     filename: ./run/minas.log
     # 1MB
     maxBytes: 1048576
-    backupCount: 10
+    # backupCount: 10
 root:
   level: DEBUG
   handlers: [console, file]
