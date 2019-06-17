@@ -45,10 +45,10 @@ def detc(name='detc', **kwargs):
         currentTime = time.time_ns()
         if currentTime - kwargs['lastReport'] > report_interval:
             kprod.send(topic='result', value=resume, key=record.key)
-            log.info( report(currentTime=currentTime, key=record.key, extra=repr(resume), **kwargs) )
+            log.info( report(currentTime=currentTime, key=record.key, extra=resume, **kwargs) )
             kwargs['lastReport'] = currentTime
             resume = {'prime': 0, 'not_prime': 0}
-    log.info( report(currentTime=currentTime, extra=repr(resume), **kwargs) )
+    log.info( report(currentTime=time.time_ns(), extra=resume, **kwargs) )
     return kwargs
 
 if __name__ == "__main__":

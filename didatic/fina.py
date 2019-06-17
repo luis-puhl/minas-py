@@ -35,10 +35,12 @@ def fina(name='detc', group_id=0, **kwargs):
         if currentTime - kwargs['lastReport'] > report_interval:
             resumeTotal = resume.copy()
             resumeTotal['total'] = resume['prime'] + resume['not_prime']
-            log.info( report(currentTime=currentTime, key=record.key, extra=repr(resumeTotal), **kwargs) )
+            log.info( report(currentTime=currentTime, key=record.key, extra=resumeTotal, **kwargs) )
             kwargs['lastReport'] = currentTime
             resume = {'prime': 0, 'not_prime': 0}
-    log.info( report(currentTime=currentTime, extra=repr(resumeTotal), **kwargs) )
+    resumeTotal = resume.copy()
+    resumeTotal['total'] = resume['prime'] + resume['not_prime']
+    log.info( report(currentTime=time.time_ns(), extra=resumeTotal, **kwargs) )
     return kwargs
 
 if __name__ == "__main__":

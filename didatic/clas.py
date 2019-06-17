@@ -26,6 +26,7 @@ def clas(name='clas', client_id=None, **kwargs):
         # max_poll_records=10,
         # auto_offset_reset='latest',
         auto_offset_reset='earliest',
+        # enable_auto_commit=False,
     )
     kprod = KafkaProducer(
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
@@ -35,9 +36,15 @@ def clas(name='clas', client_id=None, **kwargs):
 
     kwargs['lastReport'] = kwargs['init'] - report_interval
     resume = {'unknown': 0, 'not_prime': 0}
+    partitions = {}
+    # consumer
     for record in consumer:
+        # consumer.com
         kwargs['counter'] += 1
         kwargs['nbytes'] += len(record.value)
+        if record.partition not in partitions:
+            partitions[record.partition] = 0
+        partitions[record.partition] += 1
         value = msgpack.unpackb(record.value)
         if value % 2 == 0:
             resume['not_prime'] += 1
@@ -49,11 +56,13 @@ def clas(name='clas', client_id=None, **kwargs):
         # 
         currentTime = time.time_ns()
         if currentTime - kwargs['lastReport'] > report_interval:
+            # committed = consumer.committed()
             kprod.send(topic='result', value=resume, key=record.key)
-            log.info( report(currentTime=currentTime, key=record.key, extra=repr(resume), **kwargs) )
+            resume['partitions'] = partitions
+            log.info( report(currentTime=currentTime, key=record.key, extra=resume, **kwargs) )
             kwargs['lastReport'] = currentTime
             resume = {'unknown': 0, 'not_prime': 0}
-    log.info( report(currentTime=currentTime, extra=repr(resume), **kwargs) )
+    log.info( report(currentTime=currentTime = time.time_ns(), extra=resume, **kwargs) )
     return kwargs
 
 if __name__ == '__main__':
