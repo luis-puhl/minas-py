@@ -16,7 +16,7 @@ def clas(name='clas', client_id=None, **kwargs):
         client_id = f'{name}_{hex(os.getpid())}'
     consumer = KafkaConsumer(
         'numbers',
-        bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
+        bootstrap_servers='localhost',
         group_id=name,
         client_id=client_id,
         # value_deserializer=msgpack.unpackb,
