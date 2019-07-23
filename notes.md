@@ -56,3 +56,12 @@ Sem delay entre items e relatório a cada 10s:
 
 Problemas com *load-balancing* no kafka foram mencionados com o Paulo Matias que sugeriu ZeroMQ e RabbitMQ.
 O primeiro sendo destacado pela filosofia KISS (Keep It Simple, Stupid).
+
+## Reunião 2019-07-16
+
+Reforço do foco na implementação.
+
+Discutindo algumas possibilidades no erro de distribuição como velocidade de produtor
+e limites nos commits e transmissão devido ao armazenamento, que talvez possam ser eliminados com tuning do kafka.
+
+Exsite alguma maneira de medir o uso de recursos: CPU cores e clocks, memória, rede e disco?
