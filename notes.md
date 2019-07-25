@@ -65,3 +65,5 @@ Discutindo algumas possibilidades no erro de distribuição como velocidade de p
 e limites nos commits e transmissão devido ao armazenamento, que talvez possam ser eliminados com tuning do kafka.
 
 Exsite alguma maneira de medir o uso de recursos: CPU cores e clocks, memória, rede e disco?
+[vmstat](https://linux.die.net/man/8/vmstat) resolve.
+Programaticamente também temos [psutil](https://github.com/giampaolo/psutil).
