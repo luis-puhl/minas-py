@@ -115,4 +115,4 @@ if __name__ == '__main__':
     ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=4, mode='expand', borderaxespad=0.)
     fig.tight_layout()
     fig.savefig('sys_monitor.png', dpi=1000)
-    fig.show()
+    plt.show()
