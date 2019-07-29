@@ -85,8 +85,8 @@ class ResourcesMonitor():
                 read_merged_count, write_merged_count, busy_time = 0, 0, 0
             if len(io_stat_curr) == 9:
                 read_count, write_count, read_bytes, write_bytes, read_time, write_time, read_merged_count, write_merged_count, busy_time = io_diff
-            self.push(f'io {disk} read Kbytes', read_bytes / 10**3)
-            self.push(f'io {disk} write Kbytes', write_bytes / 10**3)
+            self.push(f'io {disk} read Mbytes', read_bytes / 10**6)
+            self.push(f'io {disk} write Mbytes', write_bytes / 10**6)
             self.push(f'io {disk} busy_time', busy_time)
         self.io_init = io
     def gather_cpu_stats(self):
@@ -98,21 +98,18 @@ class ResourcesMonitor():
         self.push(f'ctx switches kilo', ctx_switches / 10**3)
 
 if __name__ == '__main__':
-    print('main')
     resourcesMonitor = ResourcesMonitor()
     for i in range(10):
         resourcesMonitor.gather_all_stats()
     # 
     print(resourcesMonitor.stats)
     for key, values in resourcesMonitor.stats.items():
-        # plt.figure(1)
-        # plt.subplot(211)
-        # plt.plot(t1, f(t1), 'bo', t2, f(t2), 'k')
-        print(key, '\t', type(values), '\t', len(values), '\t', values[0])
+        # print(key, '\t', type(values), '\t', len(values), '\t', values[0])
         cealing = max(values)
         if cealing < 1:
             continue
-        # values = [ v / cealing for v in values ]
-        plt.plot(values)
-    plt.ylabel('some numbers')
+        plt.plot(values, label=key)
+    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=4, mode='expand', borderaxespad=0.)
+    plt.tight_layout()
     plt.show()
+    plt.savefig('sys_monitor.png')
