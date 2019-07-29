@@ -103,13 +103,16 @@ if __name__ == '__main__':
         resourcesMonitor.gather_all_stats()
     # 
     print(resourcesMonitor.stats)
+    fig, ax = plt.subplots(figsize=(19.20,10.80))
+    # fig = plt.figure(figsize=(19.20,10.80))
     for key, values in resourcesMonitor.stats.items():
         # print(key, '\t', type(values), '\t', len(values), '\t', values[0])
         cealing = max(values)
-        if cealing < 1:
+        floor = min(values)
+        if cealing < 1 or cealing == floor:
             continue
-        plt.plot(values, label=key)
-    plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=4, mode='expand', borderaxespad=0.)
-    plt.tight_layout()
-    plt.show()
-    plt.savefig('sys_monitor.png')
+        ax.plot(values, label=key)
+    ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=4, mode='expand', borderaxespad=0.)
+    fig.tight_layout()
+    fig.savefig('sys_monitor.png', dpi=1000)
+    fig.show()
