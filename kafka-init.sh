@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# RAM DISK
+# mkdir /tmp/kafka
+# mount -t tmpfs -o size=512m tmpfs /tmp/kafka
+
 ./kafka/bin/zookeeper-server-start.sh kafka.config/zookeeper.properties &
 pids[${i}]=$!
 sleep 10

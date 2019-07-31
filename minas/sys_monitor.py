@@ -1,78 +1,60 @@
 import logging
+import time
 
 import psutil
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 log = logging.getLogger(__name__)
 log.info(__name__)
 
-class ResourcesMonitor():
+class MonitorBase():
     def __init__(self):
-        self.capabilities = {
-            'cpu_stats': lambda: psutil.cpu_stats(),
-            'disk_io_counters': lambda: psutil.disk_io_counters(perdisk=True),
-            'sensors_temperatures': lambda: psutil.sensors_temperatures().items(),
-            'virtual_memory': lambda: psutil.virtual_memory(),
-            'cpu_freq': lambda: psutil.cpu_freq(),
-            'cpu_percent': lambda: psutil.cpu_percent(interval=1, percpu=True),
-        }
-        self.capabilities_enabled = []
-        for name, func in self.capabilities.items():
-            if self.check_capability(name, func):
-                self.capabilities_enabled.append(name)
-        # 
-        self.stats = {}
-        self.cpu_stats_init = psutil.cpu_stats()
-        self.io_init = psutil.disk_io_counters(perdisk=True)
-    def check_capability(self, name, func):
+        self.columns = []
         try:
-            func()
-        except:
-            return False
-        return True
-    def push(self, key, value):
-        if key not in self.stats:
-            self.stats[key] = list()
-        self.stats[key].append(value)
-    def gather_all_stats(self):
-        self.gather_temps()
-        self.gather_ram()
-        self.gather_cpu_freq()
-        self.gather_cpu_percent()
-        self.gather_disk_io_counters()
-        self.gather_cpu_stats()
-    def gather_temps(self):
-        if 'sensors_temperatures' not in self.capabilities_enabled:
-            return
+            self.capable = True
+            stats = self.gather()
+            for column, value in stats.items():
+                self.columns.append(column)
+        except Exception as ex :
+            print('not capable', ex)
+            self.capable = False
+
+class MonitorSensorsTemperatures(MonitorBase):
+    # 'sensors_temperatures'
+    def gather(self):
+        if not self.capable:
+            return []
+        stats = {}
         for device, cores in psutil.sensors_temperatures().items():
             for shwtemp in cores:
                 label, current, high, critical = shwtemp
-                self.push(f'temp {device} {label}', current)
-    def gather_ram(self):
-        if 'virtual_memory' not in self.capabilities_enabled:
-            return
-        virtual_memory = psutil.virtual_memory()
-        if len(virtual_memory) == 5:
-            total, available, percent, used, free = virtual_memory
-            active, inactive, buffers, cached, shared, slab = 0, 0, 0, 0, 0, 0
-        if len(virtual_memory) == 11:
-            total, available, percent, used, free, active, inactive, buffers, cached, shared, slab = virtual_memory
-        self.push(f'ram percent', percent)
-        self.push(f'ram used GB', used / 10**9 )
-    def gather_cpu_freq(self):
-        if 'cpu_freq' not in self.capabilities_enabled:
-            return
-        current, _min, _max = psutil.cpu_freq()
-        self.push(f'cpu freq GHz', current / 10**3)
-    def gather_cpu_percent(self):
-        if 'cpu_percent' not in self.capabilities_enabled:
-            return
-        cpu_percent = psutil.cpu_percent(interval=1, percpu=True)
-        for i, core_uesed in enumerate(cpu_percent):
-            self.push(f'cpu percent {i}', core_uesed)
-    def gather_disk_io_counters(self):
-        if 'disk_io_counters' not in self.capabilities_enabled:
-            return
+                stats[f'temp_{device}_{label}'] = current
+        return stats
+class MonitorCpuStats(MonitorBase):
+    # 'cpu_stats'
+    def gather(self):
+        if not self.capable:
+            return []
+        stats = {}
+        if not hasattr(self, 'cpu_stats_init'):
+            self.cpu_stats_init = psutil.cpu_stats()
+        # 
+        cpu_stats = psutil.cpu_stats()
+        ctx_switches, interrupts, soft_interrupts, syscalls = ( curr - prev for curr, prev in zip(cpu_stats, self.cpu_stats_init) )
+        self.cpu_stats_init = cpu_stats
+        stats[f'kilo_ctx_switches'] = ctx_switches / 10**3
+        return stats
+class MonitorDiskIoCounters(MonitorBase):
+    # 'disk_io_counters'
+    def gather(self):
+        if not self.capable:
+            return []
+        stats = {}
+        if not hasattr(self, 'io_init'):
+            self.io_init = psutil.disk_io_counters(perdisk=True)
+        # 
         io = psutil.disk_io_counters(perdisk=True)
         for disk, io_stat_curr in io.items():
             if disk not in self.io_init:
@@ -85,34 +67,104 @@ class ResourcesMonitor():
                 read_merged_count, write_merged_count, busy_time = 0, 0, 0
             if len(io_stat_curr) == 9:
                 read_count, write_count, read_bytes, write_bytes, read_time, write_time, read_merged_count, write_merged_count, busy_time = io_diff
-            self.push(f'io {disk} read Mbytes', read_bytes / 10**6)
-            self.push(f'io {disk} write Mbytes', write_bytes / 10**6)
-            self.push(f'io {disk} busy_time', busy_time)
+            stats[f'io_{disk}_read_Mbytes'] = read_bytes / 10**6
+            stats[f'io_{disk}_write_Mbytes'] = write_bytes / 10**6
+            stats[f'io_{disk}_busy_time'] = busy_time
         self.io_init = io
-    def gather_cpu_stats(self):
-        if 'cpu_stats' not in self.capabilities_enabled:
-            return
-        cpu_stats = psutil.cpu_stats()
-        ctx_switches, interrupts, soft_interrupts, syscalls = ( curr - prev for curr, prev in zip(cpu_stats, self.cpu_stats_init) )
-        self.cpu_stats_init = cpu_stats
-        self.push(f'ctx switches kilo', ctx_switches / 10**3)
+        # 
+        return stats
+class MonitorVirtualMemory(MonitorBase):
+    # 'virtual_memory'
+    def gather(self):
+        if not self.capable:
+            return []
+        stats = {}
+        # 
+        virtual_memory = psutil.virtual_memory()
+        if len(virtual_memory) == 5:
+            total, available, percent, used, free = virtual_memory
+            active, inactive, buffers, cached, shared, slab = 0, 0, 0, 0, 0, 0
+        if len(virtual_memory) == 11:
+            total, available, percent, used, free, active, inactive, buffers, cached, shared, slab = virtual_memory
+        stats[f'ram_percent'] = percent
+        stats[f'ram_GB'] = used / 10**9 
+        # 
+        return stats
+class MonitorCpuFreq(MonitorBase):
+    # 'cpu_freq'
+    def gather(self):
+        if not self.capable:
+            return []
+        stats = {}
+        # 
+        current, _min, _max = psutil.cpu_freq()
+        stats[f'cpu_freq_GHz'] = current / 10**3
+        # 
+        return stats
+class MonitorCpuPercent(MonitorBase):
+    # 'cpu_percent'
+    def gather(self):
+        if not self.capable:
+            return []
+        stats = {}
+        # 
+        cpu_percent = psutil.cpu_percent(interval=1, percpu=True)
+        for i, core_uesed in enumerate(cpu_percent):
+            stats[f'cpu_percent_{i}'] = core_uesed
+        # 
+        return stats
+
+class ResourcesMonitor():
+    def __init__(self):
+        self.columns = ['time']
+        self.gather_functions = []
+        # 
+        monitors = [
+            MonitorSensorsTemperatures(),
+            MonitorCpuStats(),
+            MonitorDiskIoCounters(),
+            MonitorVirtualMemory(),
+            MonitorCpuFreq(),
+            MonitorCpuPercent(),
+        ]
+        for monitor in monitors:
+            if monitor.capable:
+                self.columns.extend(monitor.columns)
+                self.gather_functions.append(monitor.gather)
+        # 
+        self.stats = []
+        # 
+    def gather_all_stats(self):
+        values = { 'time': pd.datetime.fromtimestamp(int(time.time())) }
+        for gather in self.gather_functions:
+            for key, value in gather().items():
+                values[key] = value
+        self.stats.append(values)
+        return self.stats
+
 
 if __name__ == '__main__':
     resourcesMonitor = ResourcesMonitor()
-    for i in range(10):
-        resourcesMonitor.gather_all_stats()
+    try:
+        while True:
+            resourcesMonitor.gather_all_stats()
+    except KeyboardInterrupt:
+        pass
     # 
-    print(resourcesMonitor.stats)
-    fig, ax = plt.subplots(figsize=(19.20,10.80))
-    # fig = plt.figure(figsize=(19.20,10.80))
-    for key, values in resourcesMonitor.stats.items():
-        # print(key, '\t', type(values), '\t', len(values), '\t', values[0])
-        cealing = max(values)
-        floor = min(values)
-        if cealing < 1 or cealing == floor:
-            continue
-        ax.plot(values, label=key)
-    ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=4, mode='expand', borderaxespad=0.)
-    fig.tight_layout()
-    fig.savefig('sys_monitor.png', dpi=1000)
-    plt.show()
+    df = pd.DataFrame(data=resourcesMonitor.stats)
+    print(df)
+    # fig, ax = plt.subplots(figsize=(19.20,10.80))
+    # # fig = plt.figure(figsize=(19.20,10.80))
+    # for key, values in resourcesMonitor.stats.items():
+    #     # print(key, '\t', type(values), '\t', len(values), '\t', values[0])
+    #     if len(values) == 0:
+    #         continue
+    #     cealing = max(values)
+    #     floor = min(values)
+    #     if cealing < 1 or cealing == floor:
+    #         continue
+    #     ax.plot(values, label=key)
+    # ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=4, mode='expand', borderaxespad=0.)
+    # fig.tight_layout()
+    # fig.savefig('sys_monitor.png', dpi=100)
+    # plt.show()
