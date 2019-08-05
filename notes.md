@@ -67,3 +67,9 @@ e limites nos commits e transmissão devido ao armazenamento, que talvez possam 
 Exsite alguma maneira de medir o uso de recursos: CPU cores e clocks, memória, rede e disco?
 [vmstat](https://linux.die.net/man/8/vmstat) resolve.
 Programaticamente também temos [psutil](https://github.com/giampaolo/psutil).
+
+Após rodar `didatic` observa-se os tamanhos nos diretórios:
+`du -sh /tmp/kafka`
+
+- 9.2M  /tmp/kafka
+- 60K   /tmp/zookeeper

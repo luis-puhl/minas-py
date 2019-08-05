@@ -152,6 +152,7 @@ if __name__ == '__main__':
         pass
     # 
     df = pd.DataFrame(data=resourcesMonitor.stats)
+    df.to_csv('sys_monitor.py.csv')
     print(df)
     # fig, ax = plt.subplots(figsize=(19.20,10.80))
     # # fig = plt.figure(figsize=(19.20,10.80))
