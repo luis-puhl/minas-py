@@ -154,18 +154,29 @@ if __name__ == '__main__':
     df = pd.DataFrame(data=resourcesMonitor.stats)
     df.to_csv('sys_monitor.py.csv')
     print(df)
-    # fig, ax = plt.subplots(figsize=(19.20,10.80))
-    # # fig = plt.figure(figsize=(19.20,10.80))
-    # for key, values in resourcesMonitor.stats.items():
-    #     # print(key, '\t', type(values), '\t', len(values), '\t', values[0])
-    #     if len(values) == 0:
-    #         continue
-    #     cealing = max(values)
-    #     floor = min(values)
-    #     if cealing < 1 or cealing == floor:
-    #         continue
-    #     ax.plot(values, label=key)
-    # ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc='lower left', ncol=4, mode='expand', borderaxespad=0.)
-    # fig.tight_layout()
-    # fig.savefig('sys_monitor.png', dpi=100)
-    # plt.show()
+    # 
+    plt.close('all')
+    fig, ax = plt.subplots(figsize=(19.20,10.80))
+    # ax.set_yscale('log')
+    # 
+    # df= pd.read_csv('sys_monitor.py.csv')
+    df.index = df['time']
+    df = df.drop(columns=['Unnamed: 0', 'time'])
+    # aggregate cpu
+    cpu_perc = [col for col in df.columns if 'cpu_perc' in col]
+    df['cpu_perc'] = df[cpu_perc].sum(axis=1)
+    df['busy_cores'] = (cpu_df > 50).sum(axis=1) / len(cpu_perc)
+    df = df.drop(cpu_perc, axis=1)
+    # Skip low changes
+    # avg = df.std().sum() / len(df.std())
+    whoDrops = df.std()[df.std() < 1].index.values
+    whoDrops = [ cl for cl in whoDrops if cl not in ['cpu_perc', 'busy_cores'] ]
+    df_normal = df.drop(whoDrops, axis=1)
+    # Normalize
+    df_normal = df_normal /df_normal.max()
+    # plot
+    df_normal.plot(ax=ax)
+    # view and save
+    fig.tight_layout()
+    fig.savefig('sys_monitor.png', dpi=100)
+    plt.show()
