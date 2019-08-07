@@ -4,6 +4,7 @@ from .cluster import *
 from .minas_algo import *
 from .minas_base import *
 from .timed import *
+from .sys_monitor import *
 from .kafka.producer import producer
 from .kafka.classifier import classifier
 from .kafka.training_offline import training_offline

@@ -1,13 +1,12 @@
 import logging
 import time
+import datetime
+import argparse
 
 import psutil
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-
-log = logging.getLogger(__name__)
-log.info(__name__)
 
 class MonitorBase():
     def __init__(self):
@@ -142,29 +141,19 @@ class ResourcesMonitor():
         self.stats.append(values)
         return self.stats
 
-
-if __name__ == '__main__':
-    resourcesMonitor = ResourcesMonitor()
-    try:
-        while True:
-            resourcesMonitor.gather_all_stats()
-    except KeyboardInterrupt:
-        pass
-    # 
-    df = pd.DataFrame(data=resourcesMonitor.stats)
-    df.to_csv('sys_monitor.py.csv')
-    print(df)
+def show_plot(fileName):
     # 
     plt.close('all')
     fig, ax = plt.subplots(figsize=(19.20,10.80))
     # ax.set_yscale('log')
     # 
-    # df= pd.read_csv('sys_monitor.py.csv')
+    df= pd.read_csv(fileName)
     df.index = df['time']
     df = df.drop(columns=['Unnamed: 0', 'time'])
     # aggregate cpu
     cpu_perc = [col for col in df.columns if 'cpu_perc' in col]
-    df['cpu_perc'] = df[cpu_perc].sum(axis=1)
+    cpu_df = df[cpu_perc]
+    df['cpu_perc'] = cpu_df.sum(axis=1)
     df['busy_cores'] = (cpu_df > 50).sum(axis=1) / len(cpu_perc)
     df = df.drop(cpu_perc, axis=1)
     # Skip low changes
@@ -178,5 +167,34 @@ if __name__ == '__main__':
     df_normal.plot(ax=ax)
     # view and save
     fig.tight_layout()
-    fig.savefig('sys_monitor.png', dpi=100)
+    fig.savefig(f'{fileName}.png', dpi=100)
     plt.show()
+
+def sys_monitor():
+    print('init ResourcesMonitor')
+    resourcesMonitor = ResourcesMonitor()
+    print('SYSTEM MONITOR READY')
+    try:
+        while True:
+            resourcesMonitor.gather_all_stats()
+    except:
+        pass
+    # 
+    df = pd.DataFrame(data=resourcesMonitor.stats)
+    datetime_str = datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')
+    fileName = f'./run/sys_monitor/sys_monitor_{datetime_str}.py.csv'
+    df.to_csv(fileName)
+    print(df)
+    return fileName
+
+if __name__ == '__main__':
+    log = logging.getLogger(__name__)
+    log.info(__name__)
+    
+    parser = argparse.ArgumentParser(description='Minas Entrypoint.')
+    parser.add_argument("-p", "--plot", action="store_true", help="Show plot on exit.")
+    args = parser.parse_args()
+
+    fileName = sys_monitor()
+    if args.plot:
+        show_plot(fileName)
