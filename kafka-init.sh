@@ -16,11 +16,11 @@ pids[${i}]=$!
 pids[${i}]=$!
 sleep 10
 
-./kafka/bin/kafka-topics.sh --zookeeper localhost:2181 --topic items --create --replication-factor 1 --partitions 8 &
+./kafka/bin/kafka-topics.sh --zookeeper localhost:2181 --topic items --create --if-not-exists --replication-factor 1 --partitions 8 &
 pids[${i}]=$!
-./kafka/bin/kafka-topics.sh --zookeeper localhost:2181 --topic clusters --create --replication-factor 1 --partitions 8 &
+./kafka/bin/kafka-topics.sh --zookeeper localhost:2181 --topic clusters --create --if-not-exists --replication-factor 1 --partitions 8 &
 pids[${i}]=$!
-./kafka/bin/kafka-topics.sh --zookeeper localhost:2181 --topic numbers --create --replication-factor 1 --partitions 8 &
+./kafka/bin/kafka-topics.sh --zookeeper localhost:2181 --topic numbers --create --if-not-exists --replication-factor 1 --partitions 8 &
 pids[${i}]=$!
 
 # wait for all pids

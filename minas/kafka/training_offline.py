@@ -6,6 +6,7 @@ import logging
 import numpy as np
 from kafka import KafkaConsumer
 from kafka import KafkaProducer
+from kafka import TopicPartition
 import msgpack
 import yaml
 
@@ -16,7 +17,7 @@ from ..map_minas import *
 def training_offline():
     log = logging.getLogger(__name__)
     consumer = KafkaConsumer(
-        'items-classes',
+        # topics=[ 'items-classes' ],
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
         group_id='training_offline',
         client_id=f'client_{os.uname().machine}_{hex(os.getpid())}',
@@ -25,8 +26,16 @@ def training_offline():
         # StopIteration if no message after 1 sec
         consumer_timeout_ms=1 * 1000,
         # max_poll_records=10,
-        auto_offset_reset='latest',
+        # auto_offset_reset='latest',
+        auto_offset_reset='earliest',
+        # auto_offset_reset (str) – A policy for resetting offsets **on OffsetOutOfRange errors**:
+        # ‘earliest’ will move to the oldest available message, 
+        # ‘latest’ will move to the most recent. 
+        # Any other value will raise the exception. Default: ‘latest’.
     )
+    partition = TopicPartition('items-classes', 0)
+    consumer.assign([partition])
+    consumer.seek_to_beginning()
     kprod = KafkaProducer(
         bootstrap_servers='localhost:9092,localhost:9093,localhost:9094',
         value_serializer=msgpack.packb,
@@ -41,6 +50,7 @@ def training_offline():
     try:
         dataset = None
         while dataset is None:
+            log.info('NEAR')
             for message in consumer:
                 log.info('START')
                 counter += 1
