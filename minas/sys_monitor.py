@@ -191,7 +191,7 @@ def main():
     log = logging.getLogger(__name__)
     log.info(__name__)
     
-    parser = argparse.ArgumentParser(description='Minas Entrypoint.')
+    parser = argparse.ArgumentParser(description='System Monitor. Record, store and display system resources usage.')
     parser.add_argument("-p", "--plot", action="store_true", help="Show plot")
     parser.add_argument("-f", "--file", type=open, help="Don't record, load from file. Implies -p")
     args = parser.parse_args()
