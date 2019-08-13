@@ -8,15 +8,18 @@ import os
 import minas.sys_monitor as sys_monitor
 
 processes = []
+def cleanup():
+    for p in processes:
+        return_code = p.poll()
+        if hasattr(p, 'poll') and return_code is not None:
+            print(p.args[0], 'poll =>', return_code)
+            processes.remove(p)
+            continue
 def terminate():
     while len(processes) > 0:
+        cleanup()
         for p in reversed(processes):
             print('terminating', p.args[0])
-            return_code = p.poll()
-            if hasattr(p, 'poll') and return_code is not None:
-                print('poll =>', return_code)
-                processes.remove(p)
-                continue
             if hasattr(p, 'send_signal'):
                 print('send_signal')
                 p.send_signal(signal.SIGINT)
@@ -35,6 +38,7 @@ def terminate():
                 print('returned ', return_code)
             except:
                 print('waited, no return')
+                p.kill()
 def exit_gracefully(signum, frame):
     print('killed', signum, processes)
     terminate()
@@ -58,13 +62,13 @@ kafka_ready_flag = 'started (kafka.server.KafkaServer)'
 topics = [ 'items', 'clusters', 'numbers', ]
 create_topic = './kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --topic {topic} --create --if-not-exists --replication-factor 1 --partitions {cores}'
 
-def mk_proc(cmd, ready_flag, fail_flag=''):
+def mk_proc(cmd, ready_flag, fail_flag='', shell=False):
     if type(cmd) is not list:
         args = shlex.split(cmd)
     else:
         args = cmd
     print(args, 'wait for', ready_flag)
-    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf-8', env=os.environ, cwd=os.getcwd())
+    process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, encoding='utf-8', env=os.environ, cwd=os.getcwd())
     processes.append(process)
     while process.stdout.readable():
         line = str(process.stdout.readline()).strip()
@@ -88,7 +92,9 @@ if __name__ == "__main__":
         
         cores = str(cpu_count())
         for topic in topics:
-            cmd = shlex.split(create_topic.format(cores=cores, topic=topic))
-            mk_proc(cmd, '')
+            mk_proc(create_topic.format(cores=cores, topic=topic), '')
+        cleanup()
+
+        mk_proc('python ./run.py --producer', 'testData all produced')
     finally:
         terminate()

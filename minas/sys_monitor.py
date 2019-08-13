@@ -173,7 +173,7 @@ def show_plot(fileName):
 def sys_monitor():
     print('init ResourcesMonitor')
     resourcesMonitor = ResourcesMonitor()
-    print('SYSTEM MONITOR READY')
+    print('SYSTEM MONITOR READY', flush=True)
     try:
         while True:
             resourcesMonitor.gather_all_stats()
