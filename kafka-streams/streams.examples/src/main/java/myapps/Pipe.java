@@ -24,7 +24,25 @@ public class Pipe {
         //
         final Topology topology = builder.build();
         System.out.println(topology.describe());
-        System.out.println("Hello");
-        
+        // 
+        final KafkaStreams streams = new KafkaStreams(topology, props);
+        //
+        final CountDownLatch latch = new CountDownLatch(1);
+        // attach shutdown handler to catch control-c
+        Runtime.getRuntime().addShutdownHook(new Thread("streams-shutdown-hook") {
+            @Override
+            public void run() {
+                streams.close();
+                latch.countDown();
+            }
+        });
+        //
+        try {
+            streams.start();
+            latch.await();
+        } catch (Throwable e) {
+            System.exit(1);
+        }
+        System.exit(0);
     }
 }
