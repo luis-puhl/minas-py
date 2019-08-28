@@ -1,0 +1,30 @@
+mvn clean package && mvn exec:java -Dexec.mainClass=scaletest.ScaleTest
+
+[INFO] --- exec-maven-plugin:1.6.0:java (default-cli) @ streams.examples ---
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+ INFO | 2019-08-28 18:45:57,134 | Pipe.java:50 | Topologies:
+   Sub-topology: 0
+    Source: KSTREAM-SOURCE-0000000000 (topics: [minas-source])
+      --> KSTREAM-SINK-0000000001
+    Sink: KSTREAM-SINK-0000000001 (topic: minas-sink)
+      <-- KSTREAM-SOURCE-0000000000
+
+
+ INFO | 2019-08-28 18:45:57,439 | Pipe.java:53 | Pipe ready
+ INFO | 2019-08-28 18:45:57,463 | TimerSink.java:44 | Consumer Ready
+ INFO | 2019-08-28 18:45:57,463 | StressProducer.java:30 | t0 = 1567028757463
+ INFO | 2019-08-28 18:45:57,464 | Pipe.java:62 | Pipe running
+ INFO | 2019-08-28 18:45:57,469 | StressProducer.java:42 | Reading from /home/puhl/project/minas-py/kafka-streams/streams.examples/src/main/java/scaletest/KDDTe5Classes_cassales.csv
+ INFO | 2019-08-28 18:45:57,469 | TimerSink.java:50 | TimerSink running
+ INFO | 2019-08-28 18:45:57,965 | StressProducer.java:35 | [502] Reading complete.
+ INFO | 2019-08-28 18:45:57,994 | StressProducer.java:35 | [29] Producer ready.
+ INFO | 2019-08-28 18:45:58,019 | TimerSink.java:75 | [491591] sink counter update.
+ INFO | 2019-08-28 18:45:58,020 | TimerSink.java:87 | Consumer Record:(minas-control, null, producing_load =491591, 0, 11)
+ INFO | 2019-08-28 18:45:59,637 | StressProducer.java:35 | [1642] All 491591 records sent.
+ INFO | 2019-08-28 18:45:59,641 | ScaleTest.java:27 | Producer Joined
+ INFO | 2019-08-28 18:46:48,845 | TimerSink.java:54 | Pool with zero records
+ INFO | 2019-08-28 18:46:48,856 | TimerSink.java:67 | DONE, 0, msgCount=491592
+ INFO | 2019-08-28 18:46:48,857 | ScaleTest.java:29 | Timer Joined
+ INFO | 2019-08-28 18:46:48,863 | ScaleTest.java:32 | Pipe Joined
