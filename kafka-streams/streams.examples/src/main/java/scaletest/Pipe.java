@@ -47,7 +47,7 @@ public class Pipe implements Runnable {
         source.to("minas-sink");
         //
         final Topology topology = builder.build();
-        System.out.println(topology.describe());
+        logger.info(topology.describe());
         // 
         this.streams = new KafkaStreams(topology, props);
         logger.info("Pipe ready");

@@ -22,8 +22,9 @@ public class TimerSink implements Runnable {
     String sinkTopic;
     Consumer<String, String> consumer;
     long sinkConuter = 0;
+    long msgCount = 0;
     boolean runningFlag = false;
-    final Logger logger = Logger.getLogger(Pipe.class);
+    Logger logger = Logger.getLogger(TimerSink.class);
     
     public TimerSink(String controlTopic, String sinkTopic) {
         this.controlTopic = controlTopic;
@@ -40,49 +41,50 @@ public class TimerSink implements Runnable {
         this.consumer = new KafkaConsumer<>(props);
         
         this.consumer.subscribe(topics);
-        System.out.printf("Consumer Ready\n");
-        System.out.flush();
+        logger.info("Consumer Ready");
     }
     
     @Override
     public void run() {
-        final int giveUp = 10;
-        int noRecordsCount = 0;
-
+        logger = Logger.getLogger(TimerSink.class);
+        logger.info("TimerSink running");
         while (true) {
-            final ConsumerRecords<String, String> consumerRecords = this.consumer.poll(Duration.ofSeconds(1));
-
+            final ConsumerRecords<String, String> consumerRecords = this.consumer.poll(Duration.ofSeconds(5));
             if (consumerRecords.count() == 0) {
-                System.out.printf("Pool with zero records\n");
-                noRecordsCount++;
-                if (noRecordsCount > giveUp) break;
-                else continue;
+                logger.info("Pool with zero records");
+                break;
             }
             for (ConsumerRecord<String, String> record: consumerRecords) {
+                this.msgCount++;
                 this.consume(record);
-                if (runningFlag && this.sinkConuter <= 0) {
+                if (this.runningFlag && this.sinkConuter <= 0) {
                     break;
                 }
             }
-
             this.consumer.commitAsync();
-            System.out.flush();
         }
         this.consumer.close();
-        System.out.printf("DONE\n");
+        this.consumer.unsubscribe();
+        logger.info(String.format("DONE, %d, msgCount=%d", this.sinkConuter, this.msgCount));
     }
     
     void consume(ConsumerRecord<String, String> record) {
         if ( this.controlTopic.equals(record.topic()) ) {
-            if (this.runningFlag) {
-                this.sinkConuter = Integer.getInteger(record.value());
-                System.out.printf("%d sink counter update.\n", this.sinkConuter);
+            try {
+                String sourceNumber = record.value();
+                this.sinkConuter = Integer.decode(sourceNumber.split("=")[1]);
+                logger.info(String.format("[%d] sink counter update.", this.sinkConuter));
+            } catch (NumberFormatException e) {
+                // pass
+            } finally {
+                this.runningFlag = true;
             }
-            this.runningFlag = true;
-        } else if (this.runningFlag) {
+        } else if (this.runningFlag && this.sinkTopic.equals(record.topic())) {
             this.sinkConuter--;
-        } else {
-            System.out.printf("Consumer Record:(%s, %s, %s, %d, %d)\n", record.topic(), record.key(), record.value(), record.partition(), record.offset());
+            return;
         }
+        String message = "Consumer Record:(%s, %s, %s, %d, %d)";
+        message = String.format(message, record.topic(), record.key(), record.value(), record.partition(), record.offset());
+        logger.info(message);
     }
 }

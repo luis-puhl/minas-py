@@ -27,24 +27,19 @@ public class StressProducer implements Runnable {
         this.controlTopic = controlTopic;
         this.sourceTopic = sourceTopic;
         this.start = System.currentTimeMillis();
-        System.out.printf("t0 = %d\n", this.start);
+        logger.info(String.format("t0 = %d", this.start));
     }
 
     void printTime(String message, Object... args) {
-        message = "[%d] " + message + "\n";
-        Object[] moreArgs = new Object[args.length + 1];
-        moreArgs[0] = System.currentTimeMillis() - this.start;
-        if (args.length > 0) {
-            System.arraycopy(args, 0, moreArgs, 1, args.length);
-        }
-        System.out.printf(message, moreArgs);
+        String prefix = String.format("[%d] ", System.currentTimeMillis() - this.start);
+        logger.info(String.format(prefix + message, args));
         this.start = System.currentTimeMillis();
     }
 
     @Override
     public void run() {
         String fileName = "/home/puhl/project/minas-py/kafka-streams/streams.examples/src/main/java/scaletest/KDDTe5Classes_cassales.csv";
-        System.out.printf("Reading from %s\n", fileName);
+        logger.info(String.format("Reading from %s", fileName));
         List<String> csvLines;
         try {
             csvLines = Files.readAllLines(Paths.get(fileName));
@@ -66,13 +61,13 @@ public class StressProducer implements Runnable {
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
         Producer<String, String> producer = new KafkaProducer<>(props);
-        producer.send(new ProducerRecord<String, String>(this.controlTopic, "producing_load"));
-        producer.send(new ProducerRecord<String, String>(this.controlTopic, String.format("%d", recordCount)));
+        producer.send(new ProducerRecord<String, String>(this.controlTopic, String.format("producing_load =%d", recordCount)));
         this.printTime("Producer ready.");
 
         for (String line : csvLines) {
             producer.send(new ProducerRecord<>(this.sourceTopic, line));
         }
+        producer.flush();
         this.printTime("All %d records sent.", recordCount);
 
         producer.close();
