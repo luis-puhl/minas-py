@@ -8,7 +8,7 @@
     <version>0.1</version>
     <packaging>jar</packaging>
 
-    <name>Kafka Streams Quickstart :: Java</name>
+    <name>Kafka Streams Scale Tests</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -110,6 +110,11 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-streams</artifactId>
             <version>${kafka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>${log4j.version}</version>
         </dependency>
     </dependencies>
 </project>
