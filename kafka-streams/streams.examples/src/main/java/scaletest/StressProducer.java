@@ -64,8 +64,10 @@ public class StressProducer implements Runnable {
         producer.send(new ProducerRecord<String, String>(this.controlTopic, String.format("producing_load =%d", recordCount)));
         this.printTime("Producer ready.");
 
-        for (String line : csvLines) {
-            producer.send(new ProducerRecord<>(this.sourceTopic, line));
+        int keyIndex = 0;
+        for (String line: csvLines) {
+            producer.send(new ProducerRecord<>(this.sourceTopic, String.format("%d", keyIndex), line));
+            keyIndex++;
         }
         producer.flush();
         this.printTime("All %d records sent.", recordCount);
