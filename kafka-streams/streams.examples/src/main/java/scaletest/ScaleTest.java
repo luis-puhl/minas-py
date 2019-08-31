@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 public class ScaleTest {
     final String SOURCE = "minas-source";
@@ -38,9 +39,21 @@ public class ScaleTest {
         home += File.separator;
         for (int cores = 1; cores < Runtime.getRuntime().availableProcessors(); cores++) {
             ScaleTest test = new ScaleTest(home, cores);
-            test.setUp();
-            test.run();
-            test.tearDown();
+            Thread shutdownHook = new Thread(() -> {
+                try {
+                    test.tearDown();
+                } catch (IOException | InterruptedException e) {
+                    // pass
+                }
+            });
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+            try {
+                test.setUp();
+                test.run();
+            } finally {
+                test.tearDown();
+            }
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
         }
     }
 
@@ -50,21 +63,28 @@ public class ScaleTest {
     }
 
     public void setUp() throws Exception {
-        zookeeper = new SubProcess("zookeeper", zookeeperCmd.replaceAll("\\.\\/", home), ".+binding to port.+");
+        zookeeper = new SubProcess("zookeeper", zookeeperCmd, ".+binding to port.+", home);
         zookeeper.run();
         //
-        kafka = new SubProcess("kafka", kafkaBroker0Cmd.replaceAll("\\.\\/", home), "started (kafka.server.KafkaServer");
+        kafka = new SubProcess("kafka", kafkaBroker0Cmd, ".+started \\(kafka\\.server\\.KafkaServer.+", home);
         kafka.run();
     }
 
     public void tearDown() throws IOException, InterruptedException {
+        long start = System.currentTimeMillis();
         kafka.tearDown();
+        logger.info("Kafka teardown done in " + (System.currentTimeMillis() - start));
+        //
+        start = System.currentTimeMillis();
         zookeeper.tearDown();
+        logger.info("Zookeeper teardown done in " + (System.currentTimeMillis() - start));
         // rm -rf ./tmp/*
         // dataDir=./run/kafka/tmp/zookeeper
-        Process rm = Runtime.getRuntime().exec("rm -rf ./run/kafka/tmp/*".replace("\\.\\/", home));
+        logger.info("Removing temp dir");
+        Process rm = Runtime.getRuntime().exec("rm -rf ./run/kafka/tmp/*", null, new File(home));
         rm.getInputStream().transferTo(System.out);
         rm.waitFor();
+        logger.info(rm.info());
     }
 
     public void run() {
@@ -100,17 +120,19 @@ class SubProcess {
     Process proc;
     private Thread shutdownHook;
     final Logger logger = Logger.getLogger(ScaleTest.class);
+    private File pwd;
 
-    public SubProcess(String name, String cmd, String flag) {
+    public SubProcess(String name, String cmd, String flag, String dir) {
         this.name = name;
         this.cmd = cmd;
         this.flag = flag;
+        this.pwd = new File(dir);
     }
 
     public void run() throws Exception {
         logger.info("Starting " + name);
         Runtime runtime = Runtime.getRuntime();
-        proc = runtime.exec(cmd);
+        proc = runtime.exec(cmd, null, pwd);
         shutdownHook = new Thread(() -> {
             logger.info("Shutting down "+ name);
             try {
@@ -127,7 +149,9 @@ class SubProcess {
     public void tearDown() throws IOException, InterruptedException {
         Runtime runtime = Runtime.getRuntime();
         runtime.exec("kill -SIGINT " + proc.pid()).waitFor();
-        proc.waitFor();
+        if (!proc.waitFor(1, TimeUnit.SECONDS)) {
+            runtime.exec("kill -SIGKILL " + proc.pid()).waitFor();
+        }
         runtime.removeShutdownHook(shutdownHook);
     }
 
@@ -136,11 +160,12 @@ class SubProcess {
         Scanner pout = new Scanner(stream);
         long start = System.currentTimeMillis();
         while (true) {
-            System.out.print(".");
             while (pout.hasNextLine()) {
                 String line = pout.nextLine();
-                System.out.println("---" +line.substring(0, 80) + "   " + line.matches(flag));
-                if (line.matches(flag)) {
+                int lineLen = Math.min(line.length(), 160);
+                boolean found = line.matches(flag);
+                System.out.println("---" + line.substring(0, lineLen) + (found ? " ***" : " ---"));
+                if (found) {
                     return;
                 }
             }
