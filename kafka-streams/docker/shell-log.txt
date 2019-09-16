@@ -1,0 +1,35 @@
+ 4272  sudo systemctl start docker
+ 4270  docker --version
+ 4273  docker network create -d overlay --attachable kafka-net
+ 4274  docker swarm init
+ 4275  docker network create -d overlay --attachable kafka-net
+ 4276  docker run -it --rm  mcr.microsoft.com/java/jdk:11u4-zulu-alpine  bash
+ 4277  docker run -it --rm  mcr.microsoft.com/java/jdk:8u192-zulu-alpine  bash
+ 4278  docker run -it --rm  mcr.microsoft.com/java/jdk:8u192-zulu-alpine sh
+ 4279  docker run -it --rm  mcr.microsoft.com/java/jdk:11u4-zulu-alpine  sg
+ 4280  docker run -it --rm  mcr.microsoft.com/java/jdk:11u4-zulu-alpine sh
+  4283  docker run -it --rm  jdk12 sh
+ 4284  docker run -it --rm  gradle:jdk12 sh
+ 4287  docker build 
+ 4288  docker build -f docker/kafka.dockerfile
+ 4292  docker build --help
+ 4293  docker build -f kafka.dockerfile -t v0
+ 4294  docker build -f kafka.dockerfile -t v0 .
+ 4295  docker run v0
+ 4296  docker images
+ 4301  yay -S kafkacat-git
+ 4302  yay -Syu
+ 4303  yay -S kafkacat-git
+ 4304  yay -S minikube
+ 4305  cd /home/puhl/project/minas-py/kafka-streams/docker/docker-compose.yml
+ 4306  cd /home/puhl/project/minas-py/kafka-streams/docker/
+ 4308  docker-compose pull
+ 4309  docker-compose up
+ 4310  doker run confluentinc/cp-kafka
+ 4311  docker run -it --rm confluentinc/cp-kafka bash
+ 4312  docker run --file=/kafka.dockerfile
+ 4313  docker-compose up
+ 4314  htop
+ 4315  man kafkacat
+ 4316  cd project/minas-py/kafka-streams/docker
+ 4317  docker-compose -f test-load.docker-compose.yml up

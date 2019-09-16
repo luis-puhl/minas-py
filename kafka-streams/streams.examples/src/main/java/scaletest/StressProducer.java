@@ -38,7 +38,7 @@ public class StressProducer implements Runnable {
 
     @Override
     public void run() {
-        String fileName = "/home/puhl/project/minas-py/kafka-streams/streams.examples/src/main/java/scaletest/KDDTe5Classes_cassales.csv";
+        String fileName = "./tmp/KDDTe5Classes_cassales.csv";
         logger.info(String.format("Reading from %s", fileName));
         List<String> csvLines;
         try {

@@ -46,7 +46,11 @@ class SubProcess {
         if (!proc.waitFor(1, TimeUnit.SECONDS)) {
             runtime.exec("kill -SIGKILL " + proc.pid()).waitFor();
         }
-        runtime.removeShutdownHook(shutdownHook);
+        try {
+            runtime.removeShutdownHook(shutdownHook);
+        } catch (Exception e) {
+            //
+        }
     }
 
     private void waitForFlag(InputStream stream) throws Exception {
@@ -74,4 +78,3 @@ class SubProcess {
         }
     }
 }
-

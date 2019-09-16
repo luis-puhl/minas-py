@@ -4,9 +4,6 @@ import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
 public class ScaleTest {
     final String SOURCE = "minas-source";
