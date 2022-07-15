@@ -10,7 +10,7 @@ cycler==0.10.0
 dask==1.2.1
 decorator==4.4.0
 defusedxml==0.6.0
-distributed==1.27.1
+distributed==2021.10.0
 entrypoints==0.3
 extras==1.0.0
 fixtures==3.0.0
